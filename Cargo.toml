@@ -15,5 +15,6 @@ members = [
   "frontend",
   "shared/cookie",
   "shared/domain",
-  "tools/project-init", "shared/endpoint",
+  "shared/endpoint",
+  "tools/project-init",
 ]
