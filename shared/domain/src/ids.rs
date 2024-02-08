@@ -12,6 +12,7 @@ macro_rules! new_id {
             Ord,
             PartialOrd,
         )]
+
         #[cfg_attr(feature = "query", derive(DieselNewType))]
         pub struct $name(uuid::Uuid);
 
