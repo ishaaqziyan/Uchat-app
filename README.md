@@ -1,4 +1,5 @@
-# uChat Project Info
+# uChat
+Uchat is a revolutionary full-stack chat app Built completely on [Rust](https://www.rust-lang.org/), while leveraging the capabilities of [WASM](https://webassembly.org/)
 
 ## Design
 
