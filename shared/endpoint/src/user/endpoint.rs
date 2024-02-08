@@ -21,19 +21,19 @@ pub struct CreateUserOk {
     pub username: Username,
 }
 
-#[derive(Clone,Deserialize,Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Login {
-   pub username: Username,
-   pub password: Password,
+    pub username: Username,
+    pub password: Password,
 }
 
 impl Endpoint for Login {
     const URL: &'static str = "/account/login";
 }
 
-#[derive(Clone,Deserialize,Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct LoginOk {
-    pub session_signature:String,
+    pub session_signature: String,
     pub session_id: SessionId,
     pub session_expires: DateTime<Utc>,
 

@@ -12,7 +12,10 @@ use tower_http::{
     LatencyUnit,
 };
 use tracing::Level;
-use uchat_endpoint::{user::endpoint::{CreateUser, Login}, Endpoint};
+use uchat_endpoint::{
+    user::endpoint::{CreateUser, Login},
+    Endpoint,
+};
 
 use crate::{handler::with_public_handler, AppState};
 

@@ -1,24 +1,33 @@
 macro_rules! new_id {
-    ($name: ident) => {
+    ($name:ident) => {
         #[derive(
-            Clone, Copy, Debug, Eq, Hash, serde::Deserialize, serde::Serialize, PartialEq, Ord, PartialOrd,
+            Clone,
+            Copy,
+            Debug,
+            Eq,
+            Hash,
+            serde::Deserialize,
+            serde::Serialize,
+            PartialEq,
+            Ord,
+            PartialOrd,
         )]
         #[cfg_attr(feature = "query", derive(DieselNewType))]
         pub struct $name(uuid::Uuid);
-        
+
         impl $name {
             pub fn new() -> Self {
                 Self(uuid::Uuid::new_v4())
             }
-        
+
             pub fn into_inner(self) -> uuid::Uuid {
                 self.0
             }
-        
+
             pub fn as_uuid(&self) -> &uuid::Uuid {
                 &self.0
             }
-        
+
             pub fn to_string(&self) -> String {
                 self.0.to_string()
             }
@@ -28,13 +37,13 @@ macro_rules! new_id {
                 Self::new()
             }
         }
-        
+
         impl From<uuid::Uuid> for $name {
             fn from(id: uuid::Uuid) -> Self {
                 $name(id)
             }
         }
-        
+
         impl std::str::FromStr for $name {
             type Err = IdError;
             fn from_str(id: &str) -> Result<Self, Self::Err> {
@@ -43,7 +52,6 @@ macro_rules! new_id {
                     .map_err(|_| IdError::Parse)
             }
         }
-        
     };
 }
 

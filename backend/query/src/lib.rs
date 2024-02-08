@@ -15,4 +15,3 @@ pub use util::{AsyncConnection, AsyncConnectionPool, OwnedAsyncConnection};
 
 pub mod session;
 pub mod user;
-

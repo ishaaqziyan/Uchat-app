@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use dioxus::{html::data, prelude::*};
+use dioxus::prelude::*;
 use uchat_domain::UserFacingError;
 
 use crate::{
@@ -102,17 +102,17 @@ pub fn Login(cx: Scope) -> Element {
                 .unwrap(),
             }
         };
-            let response = fetch_json!(<LoginOk>, api_client,request_data);
-            match response {
-                Ok(res) => {
-                 crate::util::cookie::set_session(
+        let response = fetch_json!(<LoginOk>, api_client, request_data);
+        match response {
+            Ok(res) => {
+                crate::util::cookie::set_session(
                     res.session_signature,
                     res.session_id,
                     res.session_expires,
-                 );
-                }
-                Err(e) => (),
+                );
             }
+            Err(e) => (),
+        }
     });
 
     let username_oninput = sync_handler!([page_state], move |ev: FormEvent| {
