@@ -4,6 +4,7 @@ use serde::Deserialize;
 use crate::{error::ApiResult, extractor::{DbConnection, UserSession}, AppState};
 
 pub mod user;
+pub mod post;
 
 #[async_trait]
 pub trait PublicApiRequest {
