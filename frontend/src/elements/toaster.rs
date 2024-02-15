@@ -10,13 +10,13 @@ pub fn use_toaster(cx: &ScopeState) -> &UseAtomRef<Toaster> {
     use_atom_ref(cx, crate::app::TOASTER)
 }
 
-pub enum ToastKind{
+pub enum ToastKind {
     Error,
     Info,
-    Success
+    Success,
 }
 
-pub struct Toast{
+pub struct Toast {
     pub message: String,
     pub expires: DateTime<Utc>,
     pub kind: ToastKind,
@@ -25,15 +25,15 @@ pub struct Toast{
 #[derive(Default)]
 pub struct Toaster {
     toasts: HashMap<usize, Toast>,
-    next_id: usize
+    next_id: usize,
 }
 
-impl Toaster{
+impl Toaster {
     fn increment_id(&mut self) {
-        self.next_id +=1;
+        self.next_id += 1;
     }
 
-    pub fn push(&mut self, toast: Toast){
+    pub fn push(&mut self, toast: Toast) {
         self.toasts.insert(self.next_id, toast);
         self.increment_id();
     }
@@ -42,7 +42,7 @@ impl Toaster{
         self.toasts.remove(&id);
     }
 
-    pub fn success<T: Into<String>>(&mut self, message: T, duration: Duration){
+    pub fn success<T: Into<String>>(&mut self, message: T, duration: Duration) {
         let toast = Toast {
             message: message.into(),
             expires: Utc::now() + duration,
@@ -51,7 +51,7 @@ impl Toaster{
         self.push(toast);
     }
 
-    pub fn info<T: Into<String>>(&mut self, message: T, duration: Duration){
+    pub fn info<T: Into<String>>(&mut self, message: T, duration: Duration) {
         let toast = Toast {
             message: message.into(),
             expires: Utc::now() + duration,
@@ -60,7 +60,7 @@ impl Toaster{
         self.push(toast);
     }
 
-    pub fn error<T: Into<String>>(&mut self, message: T, duration: Duration){
+    pub fn error<T: Into<String>>(&mut self, message: T, duration: Duration) {
         let toast = Toast {
             message: message.into(),
             expires: Utc::now() + duration,
@@ -74,10 +74,43 @@ impl Toaster{
     }
 }
 
+#[derive(Props)]
 pub struct ToastRootProps<'a> {
-    toaster:& 'a UseAtomRef<Toaster>
+    toaster: &'a UseAtomRef<Toaster>,
 }
 
 pub fn ToastRoot<'a>(cx: Scope<'a, ToastRootProps<'a>>) -> Element {
-      todo!()
+    let toaster = cx.props.toaster;
+
+    let toasts = &toaster.read();
+
+    let ToastElements = toasts.iter().map(|(&id, toast)| {
+        let toast_style = match toast.kind {
+            ToastKind::Info => "bg-slate-200 border-slate-300",
+            ToastKind::Error => "bg-rose-300 border-rose-400",
+            ToastKind::Success => "bg-emerald-200 border-emerald-300",
+        };
+        rsx! {
+            div {
+                key: "{id}",
+                class: "{toast_style} p-3 cursor-pointer border-solid border rounded",
+                onclick: move |_| {
+                    toaster.write().remove(id);
+                },
+                "{toast.message}"
+            }
+        }
+    });
+
+    cx.render(rsx! {
+        div {
+            class: "fixed bottom-[var(--navbar-height)]
+                    w-screen
+                    max-w-[var(--content-max-width)]",
+            div {
+                class: "flex flex-col gap-5 px-5 mb-5",
+                ToastElements,
+            }
+        }
+    })
 }
