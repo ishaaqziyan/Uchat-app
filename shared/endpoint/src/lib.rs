@@ -31,6 +31,7 @@ route!("/account/login"=> user::endpoint::Login);
 
 // Authorized Routes
 route!("/post/new"=> post::endpoint::NewPost);
+route!("/posts/trending"=> post::endpoint::TrendingPosts);
 
 
 
