@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::{fetch_json, prelude::*};
+use crate::{elements::post::PublicPostEntry, fetch_json, prelude::*};
 use dioxus::prelude::*;
 
 pub fn Trending(cx: Scope) -> Element {
@@ -27,7 +27,22 @@ pub fn Trending(cx: Scope) -> Element {
         })
     };
 
+    let TrendingPosts = post_manager
+        .read()
+        .posts
+        .iter()
+        .map(|(&id, _)| {
+            rsx! {
+                div {
+                    PublicPostEntry {
+                        post_id: id,
+                    }
+                }
+            }
+        })
+        .collect::<Vec<LazyNodes>>();
+
     cx.render(rsx! {
-        h1 {"trending"}
+        TrendingPosts.into_iter(),
     })
 }
