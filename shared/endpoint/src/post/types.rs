@@ -2,7 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uchat_domain::{
     ids::{PostId, UserId},
-    post::{Headline, Message}, Username,
+    post::{Headline, Message},
+    Username,
 };
 
 use crate::user::types::PublicUserProfile;
@@ -42,23 +43,38 @@ impl Default for NewPostOptions {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub enum LikeStatus{
+pub enum LikeStatus {
     Dislike,
     Like,
-    NoReaction
+    NoReaction,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct PublicPost{
-    pub id:PostId,
+pub struct PublicPost {
+    pub id: PostId,
     pub by_user: PublicUserProfile,
     pub content: Content,
     pub time_posted: DateTime<Utc>,
     pub reply_to: Option<(Username, UserId, PostId)>,
     pub like_status: LikeStatus,
-    pub bookmarked:bool,
+    pub bookmarked: bool,
     pub boosted: bool,
     pub likes: i64,
     pub dislikes: i64,
     pub boosts: i64,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
+pub enum BookmarkAction {
+    Add,
+    Remove,
+}
+
+impl From<BookmarkAction> for bool {
+    fn from(value: BookmarkAction) -> Self {
+        match value {
+            BookmarkAction::Add => true,
+            BookmarkAction::Remove => false,
+        }
+    }
 }
