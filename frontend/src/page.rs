@@ -1,7 +1,7 @@
-pub mod login;
-pub mod register;
 pub mod home;
+pub mod login;
 pub mod new_post;
+pub mod register;
 pub mod trending;
 
 pub use home::Home;
@@ -9,7 +9,6 @@ pub use login::Login;
 pub use new_post::*;
 pub use register::Register;
 pub use trending::Trending;
-
 
 pub use route::*;
 

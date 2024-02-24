@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-pub mod user;
 pub mod post;
+pub mod user;
 
 pub trait Endpoint {
     const URL: &'static str;
@@ -12,7 +12,7 @@ pub trait Endpoint {
 
 macro_rules! route {
     ($url:literal => $request_type:ty) => {
-        impl Endpoint for $request_type{
+        impl Endpoint for $request_type {
             const URL: &'static str = $url;
         }
     };
@@ -24,17 +24,13 @@ pub struct RequestFailed {
     pub msg: String,
 }
 
-// Public Routes
-route!("/account/create"=> user::endpoint::CreateUser);
-route!("/account/login"=> user::endpoint::Login);
+// public routes
+route!("/account/create" => user::endpoint::CreateUser);
+route!("/account/login" => user::endpoint::Login);
 
-
-// Authorized Routes
-route!("/post/new"=> post::endpoint::NewPost);
-route!("/post/bookmark"=> post::endpoint::Bookmark);
-route!("/post/boost"=> post::endpoint::Boost);
-route!("/post/react"=> post::endpoint::React);
-route!("/posts/trending"=> post::endpoint::TrendingPosts);
-
-
-
+// authorized routes
+route!("/post/new" => post::endpoint::NewPost);
+route!("/post/bookmark" => post::endpoint::Bookmark);
+route!("/post/boost" => post::endpoint::Boost);
+route!("/post/react" => post::endpoint::React);
+route!("/posts/trending" => post::endpoint::TrendingPosts);

@@ -15,7 +15,7 @@ pub fn Home(cx: Scope) -> Element {
             onclick: move |_| {
                 toaster.write().success("success", Duration::seconds(5));
                 toaster.write().info("info", Duration::seconds(5));
-                toaster.write().error("error", Duration::seconds(15));
+                toaster.write().error("error", Duration::seconds(5));
             },
             "toast"
         }

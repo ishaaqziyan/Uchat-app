@@ -1,10 +1,9 @@
 #![allow(non_snake_case)]
 
-use crate::{fetch_json, prelude::*, util::api_client::{self, ApiClient}};
+use crate::{fetch_json, prelude::*};
 use chrono::Duration;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-use uchat_endpoint::post::{endpoint::{NewPost, NewPostOk}, types::NewPostOptions};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct PageState {
@@ -12,16 +11,18 @@ pub struct PageState {
     pub headline: String,
 }
 
-impl PageState{
+impl PageState {
     pub fn can_submit(&self) -> bool {
-        use uchat_domain::post::{Headline,Message};
+        use uchat_domain::post::{Headline, Message};
 
         if Message::new(&self.message).is_err() {
             return false;
         }
+
         if !self.headline.is_empty() && Headline::new(&self.headline).is_err() {
             return false;
         }
+
         true
     }
 }
@@ -71,7 +72,7 @@ pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
 
     let wrong_len = maybe_class!(
         "err-text-color",
-        page_state.read().headline.len() > max_chars 
+        page_state.read().headline.len() > max_chars
     );
 
     cx.render(rsx! {
@@ -99,7 +100,6 @@ pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     })
 }
 
-
 pub fn NewChat(cx: Scope) -> Element {
     let api_client = ApiClient::global();
     let router = use_router(cx);
@@ -108,7 +108,7 @@ pub fn NewChat(cx: Scope) -> Element {
 
     let form_onsubmit = async_handler!(
         &cx,
-        [api_client, page_state,toaster,router],
+        [api_client, page_state, toaster, router],
         move |_| async move {
             use uchat_domain::post::{Headline, Message};
             use uchat_endpoint::post::endpoint::{NewPost, NewPostOk};
@@ -116,16 +116,17 @@ pub fn NewChat(cx: Scope) -> Element {
 
             let request = NewPost {
                 content: Chat {
-                    headline: { 
-                         let headline = &page_state.read().headline;
-                         if headline.is_empty(){
+                    headline: {
+                        let headline = &page_state.read().headline;
+                        if headline.is_empty() {
                             None
-                         } else {
+                        } else {
                             Some(Headline::new(headline).unwrap())
-                         }
+                        }
                     },
                     message: Message::new(&page_state.read().message).unwrap(),
-                }.into(),
+                }
+                .into(),
                 options: NewPostOptions::default(),
             };
             let response = fetch_json!(<NewPostOk>, api_client, request);
@@ -135,10 +136,13 @@ pub fn NewChat(cx: Scope) -> Element {
                     router.replace_route(page::HOME, None, None);
                 }
                 Err(e) => {
-                    toaster.write().error("Post Failed: {e}", Duration::seconds(3));
+                    toaster
+                        .write()
+                        .error(format!("Post failed: {e}"), Duration::seconds(3));
                 }
             }
-        });
+        }
+    );
 
     let submit_btn_style = maybe_class!("btn-disabled", !page_state.read().can_submit());
 
@@ -147,8 +151,8 @@ pub fn NewChat(cx: Scope) -> Element {
             class: "flex flex-col gap-4",
             onsubmit: form_onsubmit,
             prevent_default: "onsubmit",
-            MessageInput{ page_state: page_state.clone() },
-            HeadlineInput{ page_state: page_state.clone() },
+            MessageInput { page_state: page_state.clone() },
+            HeadlineInput { page_state: page_state.clone() },
             button {
                 class: "btn {submit_btn_style}",
                 r#type: "submit",

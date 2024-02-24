@@ -1,10 +1,14 @@
 use axum::{async_trait, extract::State, response::IntoResponse, Json};
 use serde::Deserialize;
 
-use crate::{error::ApiResult, extractor::{DbConnection, UserSession}, AppState};
+use crate::{
+    error::ApiResult,
+    extractor::{DbConnection, UserSession},
+    AppState,
+};
 
-pub mod user;
 pub mod post;
+pub mod user;
 
 #[async_trait]
 pub trait PublicApiRequest {
@@ -47,6 +51,5 @@ pub async fn with_handler<'a, Req>(
 where
     Req: AuthorizedApiRequest + Deserialize<'a>,
 {
-    payload.process_request(conn,session, state).await
+    payload.process_request(conn, session, state).await
 }
-

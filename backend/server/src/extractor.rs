@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use axum::{
-    async_trait, extract::FromRequestParts, http::request::Parts, Extension, Json, RequestPartsExt
+    async_trait, extract::FromRequestParts, http::request::Parts, Extension, Json, RequestPartsExt,
 };
 use hyper::{header, StatusCode};
 use tracing::info;
@@ -32,12 +32,11 @@ where
     }
 }
 
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct UserSession {
     pub user_id: UserId,
-    pub session_id: SessionId
+    pub session_id: SessionId,
 }
-
 #[async_trait]
 impl<S> FromRequestParts<S> for UserSession
 where
@@ -50,38 +49,39 @@ where
             (
                 StatusCode::UNAUTHORIZED,
                 Json(RequestFailed {
-                    msg: "unauthoriized".into(),
-                })
+                    msg: "unauthorized".into(),
+                }),
             )
         };
+
         let DbConnection(mut conn) = parts.extract::<DbConnection>().await.unwrap();
         let Extension(state) = parts.extract::<Extension<AppState>>().await.unwrap();
 
         let cookies = parts
-                  .headers
-                  .get(header::COOKIE)
-                  .and_then(|header| header.to_str().ok())
-                  .ok_or_else(unauthorized)?;
+            .headers
+            .get(header::COOKIE)
+            .and_then(|header| header.to_str().ok())
+            .ok_or_else(unauthorized)?;
 
-    
         let session_id = uchat_cookie::get_from_str(cookies, uchat_cookie::SESSION_ID)
-        .and_then(|id| SessionId::from_str(id).ok())
-        .ok_or_else(unauthorized)?;
+            .and_then(|id| SessionId::from_str(id).ok())
+            .ok_or_else(unauthorized)?;
 
-        let session_signature = uchat_cookie::get_from_str(cookies, uchat_cookie::SESSION_SIGNATURE)
-        .and_then(|sig| uchat_crypto::decode_base64(sig).ok())
-        .and_then(|sig| uchat_crypto::sign::signature_from_bytes(sig).ok())
-        .ok_or_else(unauthorized)?;
+        let session_signature =
+            uchat_cookie::get_from_str(cookies, uchat_cookie::SESSION_SIGNATURE)
+                .and_then(|sig| uchat_crypto::decode_base64(sig).ok())
+                .and_then(|sig| uchat_crypto::sign::signature_from_bytes(sig).ok())
+                .ok_or_else(unauthorized)?;
 
-        state  
+        state
             .signing_keys
             .verify(session_id.as_uuid().as_bytes(), session_signature)
             .map_err(|_| unauthorized())?;
 
         let session = uchat_query::session::get(&mut conn, session_id)
-          .ok()
-          .flatten()
-          .ok_or_else(unauthorized)?;
+            .ok()
+            .flatten()
+            .ok_or_else(unauthorized)?;
 
         info!(
             user_id = session.user_id.into_inner().to_string(),
@@ -90,7 +90,7 @@ where
 
         Ok(Self {
             user_id: session.user_id,
-            session_id: session_id,
+            session_id: session.id,
         })
     }
 }

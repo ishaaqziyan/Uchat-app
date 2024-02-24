@@ -10,11 +10,12 @@ pub struct CreateUser {
     pub username: Username,
     pub password: Password,
 }
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct CreateUserOk {
     pub user_id: UserId,
     pub username: Username,
-    
+
     pub session_signature: String,
     pub session_id: SessionId,
     pub session_expires: DateTime<Utc>,

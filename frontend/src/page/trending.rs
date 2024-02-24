@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::{elements::post::PublicPostEntry, fetch_json, prelude::*};
+use crate::{elements::post::PublicPostEntry, prelude::*};
 use dioxus::prelude::*;
 
 pub fn Trending(cx: Scope) -> Element {

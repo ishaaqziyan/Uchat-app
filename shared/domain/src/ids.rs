@@ -12,7 +12,6 @@ macro_rules! new_id {
             Ord,
             PartialOrd,
         )]
-
         #[cfg_attr(feature = "query", derive(DieselNewType))]
         pub struct $name(uuid::Uuid);
 
@@ -63,5 +62,5 @@ pub enum IdError {
 }
 
 new_id!(UserId);
-new_id!(SessionId);
 new_id!(PostId);
+new_id!(SessionId);

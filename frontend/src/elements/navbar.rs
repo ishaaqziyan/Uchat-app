@@ -6,6 +6,7 @@ use dioxus::prelude::*;
 #[inline_props]
 pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
     let router = use_router(cx);
+
     let hide_class = maybe_class!("hidden", *hide.get());
 
     const BUTTON_CLASS: &str = "grid grid-cols-[20px_1fr] gap-4 pl-4
@@ -85,6 +86,7 @@ pub fn NavButton<'a>(cx: Scope<'a, NavButtonProps<'a>>) -> Element {
 
 pub fn Navbar(cx: Scope) -> Element {
     let hide_new_post_popup = use_state(cx, || true);
+    let router = use_router(cx);
 
     cx.render(rsx! {
         nav {
@@ -96,12 +98,13 @@ pub fn Navbar(cx: Scope) -> Element {
                 NavButton {
                     img: "/static/icons/icon-home.svg",
                     label: "Home",
-                    onclick: |_| (),
+                    // onclick: |_| (),
+                    onclick: move |_| router.navigate_to(page::HOME),
                 },
                 NavButton {
                     img: "/static/icons/icon-trending.svg",
                     label: "Trending",
-                    onclick: |_| (),
+                    onclick: move |_| router.navigate_to(page::POSTS_TRENDING),
                 }
                 NavButton {
                     img: "/static/icons/icon-new-post.svg",
