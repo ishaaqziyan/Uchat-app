@@ -108,7 +108,7 @@ pub fn CaptionInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                 r#for: "caption",
                 div {
                     class: "flex flex-row justify-between",
-                    span { "Caption (optional)" },
+                    span { "Catpion (optional)" },
                     span {
                         class: "text-right {wrong_len}",
                         "{page_state.read().caption.len()}/{max_chars}",
