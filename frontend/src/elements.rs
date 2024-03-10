@@ -1,9 +1,10 @@
+pub mod appbar;
 pub mod keyed_notification_box;
+pub mod local_profile;
 pub mod navbar;
 pub mod post;
 pub mod toaster;
-pub mod appbar;
 
+pub use appbar::Appbar;
 pub use keyed_notification_box::KeyedNotificationBox;
 pub use navbar::Navbar;
-pub use appbar::Appbar;
