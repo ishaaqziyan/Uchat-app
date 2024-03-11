@@ -4,6 +4,7 @@ pub mod local_profile;
 pub mod navbar;
 pub mod post;
 pub mod toaster;
+pub mod sidebar;
 
 pub use appbar::Appbar;
 pub use keyed_notification_box::KeyedNotificationBox;
