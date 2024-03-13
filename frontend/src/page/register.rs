@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use dioxus::prelude::*;
+use dioxus_router::Link;
 use uchat_domain::UserFacingError;
 
 use crate::{
@@ -82,14 +83,27 @@ pub fn UsernameInput<'a>(
     })
 }
 
+pub fn LoginLink(cx: Scope) -> Element {
+    cx.render(rsx! {
+        Link {
+            class: "link text-center",
+            to: page::ACCOUNT_LOGIN,
+            "Existing User Login"
+        }
+    })
+}
+
 pub fn Register(cx: Scope) -> Element {
     let api_client = ApiClient::global();
     let page_state = PageState::new(cx);
     let page_state = use_ref(cx, || page_state);
     let router = use_router(cx);
+    let local_profile = use_local_profile(cx);
 
-    let form_onsubmit =
-        async_handler!(&cx, [api_client, page_state, router], move |_| async move {
+    let form_onsubmit = async_handler!(
+        &cx,
+        [api_client, page_state, router, local_profile],
+        move |_| async move {
             use uchat_endpoint::user::endpoint::{CreateUser, CreateUserOk};
             let request_data = {
                 use uchat_domain::{Password, Username};
@@ -112,11 +126,13 @@ pub fn Register(cx: Scope) -> Element {
                         res.session_id,
                         res.session_expires,
                     );
+                    local_profile.write().user_id = Some(res.user_id);
                     router.navigate_to(page::HOME)
                 }
                 Err(e) => (),
             }
-        });
+        }
+    );
 
     let username_oninput = sync_handler!([page_state], move |ev: FormEvent| {
         if let Err(e) = uchat_domain::Username::new(&ev.value) {
@@ -154,7 +170,7 @@ pub fn Register(cx: Scope) -> Element {
                 state: page_state.with(|state| state.password.clone()),
                 oninput: password_oninput,
             },
-
+            LoginLink {},
             KeyedNotificationBox {
                 legend: "Form Errors",
                 notifications: page_state.clone().with(|state| state.form_errors.clone()),
