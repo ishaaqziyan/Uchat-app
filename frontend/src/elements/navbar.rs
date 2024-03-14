@@ -21,7 +21,10 @@ pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
                     navbar-bg-color text-white text-sm",
             div {
                 class: BUTTON_CLASS,
-                onclick: move |_| (),
+                onclick: move |_| {
+                    router.navigate_to(page::POST_NEW_POLL);
+                    hide.set(true);
+                },
                 img {
                     class: "invert",
                     src: "/static/icons/icon-poll.svg",
@@ -30,7 +33,11 @@ pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
             }
             div {
                 class: BUTTON_CLASS,
-                onclick: move |_| (),
+                onclick: move |_| {
+                    router.navigate_to(page::POST_NEW_IMAGE);
+                    hide.set(true);
+                },
+
                 img {
                     class: "invert",
                     src: "/static/icons/icon-image.svg",
@@ -87,6 +94,24 @@ pub fn NavButton<'a>(cx: Scope<'a, NavButtonProps<'a>>) -> Element {
 pub fn Navbar(cx: Scope) -> Element {
     let hide_new_post_popup = use_state(cx, || true);
     let router = use_router(cx);
+    let route = use_route(cx);
+
+    let hide_navbar = use_state(cx, || false);
+
+    let current_route = route.url().path().to_string();
+
+    use_effect(cx, (&current_route,), |(current_route,)| {
+        to_owned![hide_navbar];
+        async move {
+            let should_hide =
+                current_route == page::ACCOUNT_LOGIN || current_route == page::ACCOUNT_REGISTER;
+            hide_navbar.set(should_hide);
+        }
+    });
+
+    if *hide_navbar.get() {
+        return None;
+    }
 
     cx.render(rsx! {
         nav {
