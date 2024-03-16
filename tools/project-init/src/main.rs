@@ -176,7 +176,7 @@ fn main() {
                 println!("{}", "abort".red());
                 let msg = msg.red();
                 eprintln!("  {msg}");
-                if let Some(Install::Url(url)) = dep.install.get(0) {
+                if let Some(Install::Url(url)) = dep.install.first() {
                     manual_install.push((dep.name, *url));
                 }
                 break 'depcheck;

@@ -129,7 +129,7 @@ pub fn Register(cx: Scope) -> Element {
                     local_profile.write().user_id = Some(res.user_id);
                     router.navigate_to(page::HOME)
                 }
-                Err(e) => (),
+                Err(_e) => (),
             }
         }
     );

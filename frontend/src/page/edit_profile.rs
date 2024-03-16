@@ -322,7 +322,7 @@ pub fn EditProfile(cx: Scope) -> Element {
 
             let response = fetch_json!(<UpdateProfileOk>, api_client, request_data);
             match response {
-                Ok(res) => {
+                Ok(_res) => {
                     toaster.write().success("Profile updated", chrono::Duration::seconds(3));
                     router.navigate_to(crate::page::HOME)
                 }
