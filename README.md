@@ -126,14 +126,14 @@ gets updated.
 Check the two different targets (frontend and backend):
 
 ```bash
-cargo check -p frtonend --target wasm32-unknown-unknown
+cargo check -p frontend --target wasm32-unknown-unknown
 cargo check --workspace --exclude frontend
 ```
 
 Run clippy for the two different targets (frontend and backend):
 
 ```bash
-cargo check -p frtonend --target wasm32-unknown-unknown
+cargo check -p frontend --target wasm32-unknown-unknown
 cargo check --workspace --exclude frontend
 ```
 
