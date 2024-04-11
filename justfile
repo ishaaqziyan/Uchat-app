@@ -20,8 +20,8 @@ clippy:
 
 # run clippy fix
 fix:
-    cargo clippy -p frontend --fix --target wasm32-unknown-unknown
-    cargo clippy --workspace --fix --exclude frontend
+    cargo clippy -p frontend --fix --target wasm32-unknown-unknown --allow-dirty
+    cargo clippy --workspace --fix --exclude frontend --allow-dirty
 
 # build docs. use --open to open in browser
 doc *ARGS:
@@ -33,7 +33,7 @@ serve-frontend *ARGS:
 
 # run API server
 serve-api *ARGS:
-    watchexec -r -i "frontend/**" -i "target/**" --exts rs,sql,toml cargo run -p uchat_server {{ ARGS }}
+    cargo run -p uchat_server {{ ARGS }}
 
 # set up project dependencies
 init:
