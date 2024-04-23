@@ -1,8 +1,9 @@
 # uChat
 Uchat is a revolutionary full-stack chat app Built completely on [Rust](https://www.rust-lang.org/), while leveraging the capabilities of [WASM](https://webassembly.org/)
 <br>
-![image](https://github.com/ishaaqziyan/Uchat-app/assets/98882071/25b49c46-3ebd-425b-92b7-910ab06afb55)
-
+<br>
+![image](https://github.com/ishaaqziyan/Uchat-app/assets/98882071/0c0621f0-cb36-4634-9790-e6a0a240f235)
+<br>
 <br>
 
 ## Design
