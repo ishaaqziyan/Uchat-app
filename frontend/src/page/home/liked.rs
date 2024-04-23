@@ -69,7 +69,7 @@ pub fn HomeLiked(cx: Scope) -> Element {
             AppbarImgButton {
                 click_handler: move |_| router.navigate_to(page::HOME_BOOKMARKED),
                 img: "/static/icons/icon-bookmark.svg",
-                label: "Saved",
+                label: "Bookmarked",
                 title: "Show bookmarked posts",
             },
             AppbarImgButton {
