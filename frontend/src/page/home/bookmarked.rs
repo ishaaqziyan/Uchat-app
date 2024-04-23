@@ -67,7 +67,7 @@ pub fn HomeBookmarked(cx: Scope) -> Element {
             AppbarImgButton {
                 click_handler: move |_| (),
                 img: "/static/icons/icon-bookmark.svg",
-                label: "Saved",
+                label: "Bookmarked",
                 title: "Show bookmarked posts",
                 disabled: true,
                 append_class: appbar::BUTTON_SELECTED,
