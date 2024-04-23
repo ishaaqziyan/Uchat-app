@@ -80,8 +80,15 @@ be packaged separately depending on your operating system and package manager
 Create a `.env` file in the workspace directory containing:
 
 ```bash
-DATABASE_URL=postgres://DATABASE_USER:PASSWORD@localhost/uchat
-TEST_DATABASE_URL=postgres://DATABASE_USER:PASSWORD@localhost/uchat_test
+API_DATABASE_URL = postgres://DATABASE_USER:PASSWORD@localhost/uchatfinal
+API_PRIVATE_KEY = API_PRIVATE_KEY_HERE
+API_URL = "http://127.0.0.1:8070/"
+API_BIND= "127.0.0.1:8070"
+
+# development only
+DATABASE_URL = postgres://DATABASE_USER:PASSWORD@localhost/uchatfinal
+TEST_DATABASE_URL = postgres://DATABASE_USER:PASSWORD@localhost/uchatfinal_test
+FRONTEND_URL = "http://127.0.0.1:8080"
 ```
 
 
