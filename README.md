@@ -84,6 +84,7 @@ DATABASE_URL=postgres://DATABASE_USER:PASSWORD@localhost/uchat
 TEST_DATABASE_URL=postgres://DATABASE_USER:PASSWORD@localhost/uchat_test
 ```
 
+
 Substitute these:
 
 - `DATABASE_USER`: role created to access PostgreSQL
