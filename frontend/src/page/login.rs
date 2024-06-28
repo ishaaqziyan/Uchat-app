@@ -167,7 +167,13 @@ pub fn Login(cx: Scope) -> Element {
             KeyedNotificationBox {
                 legend: "Login Errors",
                 notifications: page_state.clone().with(|state| state.server_messages.clone()),
-            }
+            },
+
+            img {
+                src: "/static/icons/uchat.jpg", // Adjust the path to your logo file
+                alt: "Logo",
+                class: "mx-auto mb-4", // Center the logo and add bottom margin
+            },
 
             UsernameInput {
                 state: page_state.with(|state| state.username.clone()),
