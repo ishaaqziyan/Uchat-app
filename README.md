@@ -162,6 +162,16 @@ To build the project for distribution:
 trunk --config Trunk-release.toml build
 cargo build --release --workspace --exclude frontend
 ```
+Now run the following:<br>
+Frontend:
+```bash
+trunk serve --release --config Trunk-release.toml
+```
+Backend:<br>
+Switch to <B> Uchat-app/target/release/</B> and run:
+```bash
+./api
+```
 
 ### Migrations
 
