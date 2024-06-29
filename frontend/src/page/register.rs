@@ -162,9 +162,9 @@ pub fn Register(cx: Scope) -> Element {
             onsubmit: form_onsubmit,
 
             img {
-                src: "/static/icons/uchat.jpg", // Adjust the path to your logo file
+                src: "/static/icons/uchat.jpg", 
                 alt: "Logo",
-                class: "mx-auto mb-4", // Center the logo and add bottom margin
+                class: "mx-auto mb-4", 
             },
 
             UsernameInput {
