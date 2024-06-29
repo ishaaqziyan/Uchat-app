@@ -161,6 +161,12 @@ pub fn Register(cx: Scope) -> Element {
             prevent_default: "onsubmit",
             onsubmit: form_onsubmit,
 
+            img {
+                src: "/static/icons/uchat.jpg", 
+                alt: "Logo",
+                class: "mx-auto mb-4", 
+            },
+
             UsernameInput {
                 state: page_state.with(|state| state.username.clone()),
                 oninput: username_oninput,
