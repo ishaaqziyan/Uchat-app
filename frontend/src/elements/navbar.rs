@@ -3,7 +3,7 @@
 use crate::prelude::*;
 use dioxus::prelude::*;
 
-#[inline_props]
+#[component]
 pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
     let router = use_router(cx);
 

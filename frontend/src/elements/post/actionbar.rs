@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 use uchat_domain::ids::PostId;
 use uchat_endpoint::post::types::LikeStatus;
 
-#[inline_props]
+#[component]
 pub fn LikeDislike(
     cx: Scope,
     post_id: PostId,
@@ -89,7 +89,7 @@ pub fn LikeDislike(
     })
 }
 
-#[inline_props]
+#[component]
 pub fn Boost(cx: Scope, post_id: PostId, boosted: bool, boosts: i64) -> Element {
     let post_manager = use_post_manager(cx);
     let toaster = use_toaster(cx);
@@ -147,7 +147,7 @@ pub fn Boost(cx: Scope, post_id: PostId, boosted: bool, boosts: i64) -> Element 
     })
 }
 
-#[inline_props]
+#[component]
 pub fn Bookmark(cx: Scope, post_id: PostId, bookmarked: bool) -> Element {
     let post_manager = use_post_manager(cx);
     let toaster = use_toaster(cx);
@@ -196,7 +196,7 @@ pub fn Bookmark(cx: Scope, post_id: PostId, bookmarked: bool) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn Comment(cx: Scope, opened: UseState<bool>) -> Element {
     let comment_onclick = sync_handler!([opened], move |_| {
         let current = *opened.get();
@@ -215,7 +215,7 @@ pub fn Comment(cx: Scope, opened: UseState<bool>) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn QuickRespondBox(cx: Scope, opened: UseState<bool>) -> Element {
     let element = match *opened.get() {
         true => {
@@ -228,7 +228,7 @@ pub fn QuickRespondBox(cx: Scope, opened: UseState<bool>) -> Element {
     cx.render(rsx! {element})
 }
 
-#[inline_props]
+#[component]
 pub fn Actionbar(cx: Scope, post_id: PostId) -> Element {
     let post_manager = use_post_manager(cx);
     let quick_respond_opened = use_state(cx, || false).clone();

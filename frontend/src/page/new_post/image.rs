@@ -29,7 +29,7 @@ impl PageState {
     }
 }
 
-#[inline_props]
+#[component]
 pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     let toaster = use_toaster(cx);
 
@@ -66,7 +66,7 @@ pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn ImagePreview(cx: Scope, page_state: UseRef<PageState>) -> Element {
     let image_data = page_state.read().clone().image;
     let Preview = if let Some(ref image) = image_data {
@@ -91,7 +91,7 @@ pub fn ImagePreview(cx: Scope, page_state: UseRef<PageState>) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn CaptionInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     use uchat_domain::post::Caption;
 
