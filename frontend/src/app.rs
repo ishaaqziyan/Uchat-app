@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 
 use dioxus::prelude::*;
-use dioxus_router::{Route, Router};
+use dioxus_router::prelude::*; // Use prelude for correct imports
 use fermi::{use_init_atom_root, AtomRef};
-
 use crate::elements::{
     post::PostManager,
     toaster::{ToastRoot, Toaster},
@@ -18,12 +17,12 @@ pub static SIDEBAR: AtomRef<SidebarManager> = |_| SidebarManager::default();
 
 pub fn Init(cx: Scope) -> Element {
     let api_client = ApiClient::global();
-    let router = use_router(cx);
+    let navigator = use_navigator(cx).unwrap();
     let toaster = use_toaster(cx);
     let local_profile = use_local_profile(cx);
 
     let _fetch_local_profile = {
-        to_owned![api_client, toaster, router, local_profile];
+        to_owned![api_client, toaster, navigator, local_profile];
         use_future(cx, (), |_| async move {
             use uchat_endpoint::user::endpoint::{GetMyProfile, GetMyProfileOk};
             let response = fetch_json!(<GetMyProfileOk>, api_client, GetMyProfile);
@@ -37,19 +36,18 @@ pub fn Init(cx: Scope) -> Element {
                         "Please log in or create an account to continue.",
                         chrono::Duration::seconds(5),
                     );
-                    router.navigate_to(page::ACCOUNT_LOGIN)
+                    navigator.push("/account/login");
                 }
             }
         })
     };
+
     None
 }
 
 pub fn App(cx: Scope) -> Element {
-    use_init_atom_root(cx);
-
+    use_init_atom_root(cx.scope_state());
     let _api_client = ApiClient::global();
-
     let toaster = use_toaster(cx);
 
     cx.render(rsx! {
@@ -63,19 +61,18 @@ pub fn App(cx: Scope) -> Element {
                 mb-[var(--navbar-height)]
                 mx-auto
                 p-4",
-                Route { to: page::ACCOUNT_REGISTER, page::Register {} },
-                Route { to: page::ACCOUNT_LOGIN, page::Login {} },
-                Route { to: page::HOME, page::Home {} },
-                Route { to: page::HOME_BOOKMARKED, page::HomeBookmarked {} },
-                Route { to: page::HOME_LIKED, page::HomeLiked {} },
-                Route { to: page::POST_NEW_CHAT, page::NewChat {} },
-                Route { to: page::POST_NEW_IMAGE, page::NewImage {} },
-                Route { to: page::POST_NEW_POLL, page::NewPoll {} },
-                Route { to: page::POSTS_TRENDING, page::Trending {} },
-                Route { to: page::PROFILE_EDIT, page::EditProfile {} },
-                Route { to: page::PROFILE_VIEW, page::ViewProfile {} },
+                Route { to: "/account/register", component: page::Register {} },
+                Route { to: "/account/login", component: page::Login {} },
+                Route { to: "/", component: page::Home {} },
+                Route { to: "/home/bookmarked", component: page::HomeBookmarked {} },
+                Route { to: "/home/liked", component: page::HomeLiked {} },
+                Route { to: "/post/new/chat", component: page::NewChat {} },
+                Route { to: "/post/new/image", component: page::NewImage {} },
+                Route { to: "/post/new/poll", component: page::NewPoll {} },
+                Route { to: "/posts/trending", component: page::Trending {} },
+                Route { to: "/profile/edit", component: page::EditProfile {} },
+                Route { to: "/profile/view", component: page::ViewProfile {} },
             }
-
             ToastRoot { toaster: toaster },
             Navbar {}
         }

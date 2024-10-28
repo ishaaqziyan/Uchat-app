@@ -2,13 +2,12 @@
 
 use crate::prelude::*;
 use dioxus::prelude::*;
+use dioxus_router::prelude::*; // Importing the required prelude
 
 #[component]
 pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
-    let router = use_router(cx);
-
+    let navigator = use_navigator(cx).unwrap();
     let hide_class = maybe_class!("hidden", *hide.get());
-
     const BUTTON_CLASS: &str = "grid grid-cols-[20px_1fr] gap-4 pl-4
                                 justify-center items-center
                                 w-full h-12
@@ -22,41 +21,40 @@ pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    router.navigate_to(page::POST_NEW_POLL);
+                    navigator.push("/post/new/poll");
                     hide.set(true);
                 },
                 img {
                     class: "invert",
                     src: "/static/icons/icon-poll.svg",
                 },
-                "Poll"
-            }
+                "Poll",
+            },
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    router.navigate_to(page::POST_NEW_IMAGE);
+                    navigator.push("/post/new/image");
                     hide.set(true);
                 },
-
                 img {
                     class: "invert",
                     src: "/static/icons/icon-image.svg",
                 },
-                "Image"
-            }
+                "Image",
+            },
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    router.navigate_to(page::POST_NEW_CHAT);
+                    navigator.push("/post/new/chat");
                     hide.set(true);
                 },
                 img {
                     class: "invert",
                     src: "/static/icons/icon-messages.svg",
                 },
-                "Chat"
-            }
-        }
+                "Chat",
+            },
+        },
     })
 }
 
@@ -69,9 +67,9 @@ pub struct NavButtonProps<'a> {
     children: Element<'a>,
 }
 
+#[component]
 pub fn NavButton<'a>(cx: Scope<'a, NavButtonProps<'a>>) -> Element {
     let selected_bgcolor = maybe_class!("bg-slate-500", matches!(cx.props.highlight, Some(true)));
-
     cx.render(rsx! {
         button {
             class: "cursor-pointer flex flex-col items-center justify-center h-full {selected_bgcolor}",
@@ -84,27 +82,26 @@ pub fn NavButton<'a>(cx: Scope<'a, NavButtonProps<'a>>) -> Element {
             },
             div {
                 class: "text-sm text-white",
-                cx.props.label
+                cx.props.label,
             },
-            &cx.props.children
-        }
+            &cx.props.children,
+        },
     })
 }
 
+#[component]
 pub fn Navbar(cx: Scope) -> Element {
     let hide_new_post_popup = use_state(cx, || true);
-    let router = use_router(cx);
+    let navigator = use_navigator(cx).unwrap();
     let route = use_route(cx);
-
     let hide_navbar = use_state(cx, || false);
-
     let current_route = route.url().path().to_string();
 
     use_effect(cx, (&current_route,), |(current_route,)| {
         to_owned![hide_navbar];
         async move {
             let should_hide =
-                current_route == page::ACCOUNT_LOGIN || current_route == page::ACCOUNT_REGISTER;
+                current_route == "/account/login" || current_route == "/account/register";
             hide_navbar.set(should_hide);
         }
     });
@@ -123,24 +120,23 @@ pub fn Navbar(cx: Scope) -> Element {
                 NavButton {
                     img: "/static/icons/icon-home.svg",
                     label: "Home",
-                    // onclick: |_| (),
-                    onclick: move |_| router.navigate_to(page::HOME),
+                    onclick: move |_| navigator.push("/"),
                 },
                 NavButton {
                     img: "/static/icons/icon-trending.svg",
                     label: "Trending",
-                    onclick: move |_| router.navigate_to(page::POSTS_TRENDING),
-                }
+                    onclick: move |_| navigator.push("/posts/trending"),
+                },
                 NavButton {
                     img: "/static/icons/icon-new-post.svg",
                     label: "Post",
                     onclick: move |_| {
                         let is_hidden = *hide_new_post_popup.get();
                         hide_new_post_popup.set(!is_hidden);
-                    }
-                    NewPostPopup { hide: hide_new_post_popup.clone() }
-                }
-            }
-        }
+                    },
+                    NewPostPopup { hide: hide_new_post_popup.clone() },
+                },
+            },
+        },
     })
 }
