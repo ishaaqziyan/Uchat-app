@@ -8,6 +8,7 @@ use crate::elements::{
     toaster::{ToastRoot, Toaster},
     Navbar,
 };
+use crate::page::{Register, Login, Home, HomeBookmarked, HomeLiked, NewChat, NewImage, NewPoll, Trending, EditProfile, ViewProfile}; // Ensure correct component imports
 pub use crate::prelude::*;
 
 pub static TOASTER: AtomRef<Toaster> = |_| Toaster::default();
@@ -45,6 +46,32 @@ pub fn Init(cx: Scope) -> Element {
     None
 }
 
+#[derive(Routable, Clone)]
+pub enum Route {
+    #[route("/account/register")]
+    AccountRegister,
+    #[route("/account/login")]
+    AccountLogin,
+    #[route("/")]
+    Home,
+    #[route("/home/bookmarked")]
+    HomeBookmarked,
+    #[route("/home/liked")]
+    HomeLiked,
+    #[route("/post/new/chat")]
+    NewChat,
+    #[route("/post/new/image")]
+    NewImage,
+    #[route("/post/new/poll")]
+    NewPoll,
+    #[route("/posts/trending")]
+    Trending,
+    #[route("/profile/edit")]
+    EditProfile,
+    #[route("/profile/view")]
+    ViewProfile,
+}
+
 pub fn App(cx: Scope) -> Element {
     use_init_atom_root(cx.scope_state());
     let _api_client = ApiClient::global();
@@ -52,6 +79,7 @@ pub fn App(cx: Scope) -> Element {
 
     cx.render(rsx! {
         Router {
+            Route::routes(), // Ensure routes method is correctly used
             Init {},
             Sidebar {},
             main {
@@ -61,17 +89,17 @@ pub fn App(cx: Scope) -> Element {
                 mb-[var(--navbar-height)]
                 mx-auto
                 p-4",
-                Route { to: "/account/register", component: page::Register {} },
-                Route { to: "/account/login", component: page::Login {} },
-                Route { to: "/", component: page::Home {} },
-                Route { to: "/home/bookmarked", component: page::HomeBookmarked {} },
-                Route { to: "/home/liked", component: page::HomeLiked {} },
-                Route { to: "/post/new/chat", component: page::NewChat {} },
-                Route { to: "/post/new/image", component: page::NewImage {} },
-                Route { to: "/post/new/poll", component: page::NewPoll {} },
-                Route { to: "/posts/trending", component: page::Trending {} },
-                Route { to: "/profile/edit", component: page::EditProfile {} },
-                Route { to: "/profile/view", component: page::ViewProfile {} },
+                Route::AccountRegister {},
+                Route::AccountLogin {},
+                Route::Home {},
+                Route::HomeBookmarked {},
+                Route::HomeLiked {},
+                Route::NewChat {},
+                Route::NewImage {},
+                Route::NewPoll {},
+                Route::Trending {},
+                Route::EditProfile {},
+                Route::ViewProfile {},
             }
             ToastRoot { toaster: toaster },
             Navbar {}
