@@ -8,7 +8,7 @@ pub fn HomeLiked(cx: Scope) -> Element {
     let toaster = use_toaster(cx);
     let api_client = ApiClient::global();
     let post_manager = use_post_manager(cx);
-    let router = use_router(cx);
+    let router = use_route(cx);
 
     let _fetch_posts = {
         to_owned![api_client, toaster, post_manager];

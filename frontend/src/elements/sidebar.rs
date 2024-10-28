@@ -29,7 +29,7 @@ impl SidebarManager {
 
 pub fn Sidebar(cx: Scope) -> Element {
     let sidebar = use_sidebar(cx);
-    let router = use_router(cx);
+    let router = use_route(cx);
     let local_profile = use_local_profile(cx);
 
     let sidebar_width = if sidebar.read().is_open() {

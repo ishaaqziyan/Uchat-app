@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 
 pub fn Trending(cx: Scope) -> Element {
     let api_client = ApiClient::global();
-    let router = use_router(cx);
+    let router = use_route(cx);
     let post_manager = use_post_manager(cx);
     let toaster = use_toaster(cx);
 

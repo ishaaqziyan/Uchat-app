@@ -8,6 +8,8 @@ use crate::elements::{
     toaster::{ToastRoot, Toaster},
     Navbar,
 };
+use crate::app::Route::AccountRegister;
+use crate::app::Route::AccountLogin;
 use crate::page::{Register, Login, Home, HomeBookmarked, HomeLiked, NewChat, NewImage, NewPoll, Trending, EditProfile, ViewProfile}; // Ensure correct component imports
 pub use crate::prelude::*;
 

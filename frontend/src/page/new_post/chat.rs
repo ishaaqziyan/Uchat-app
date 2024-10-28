@@ -102,7 +102,7 @@ pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
 
 pub fn NewChat(cx: Scope) -> Element {
     let api_client = ApiClient::global();
-    let router = use_router(cx);
+    let router = use_route(cx);
     let toaster = use_toaster(cx);
     let page_state = use_ref(cx, PageState::default);
 

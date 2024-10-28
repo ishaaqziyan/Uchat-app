@@ -248,7 +248,7 @@ pub fn EmailInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
 pub fn EditProfile(cx: Scope) -> Element {
     let api_client = ApiClient::global();
     let page_state = use_ref(cx, PageState::default);
-    let router = use_router(cx);
+    let router = use_route(cx);
     let toaster = use_toaster(cx);
 
     let _fetch_profile = {
