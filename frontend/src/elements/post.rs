@@ -5,7 +5,7 @@ use crate::{
     prelude::*,
 };
 use dioxus::prelude::*;
-use dioxus_router::RouterContext;
+use dioxus_router::prelude::*; // Correct import
 use fermi::{use_atom_ref, UseAtomRef};
 use indexmap::IndexMap;
 use uchat_domain::ids::{PostId, UserId};
@@ -76,32 +76,29 @@ impl PostManager {
 }
 
 pub fn view_profile_onclick(
-    router: &RouterContext,
+    navigator: &Navigator,
     user_id: UserId,
 ) -> impl FnMut(MouseEvent) + '_ {
-    sync_handler!([router], move |_| {
+    sync_handler!([navigator], move |_| {
         let route = crate::page::route::profile_view(user_id);
-        router.navigate_to(&route)
+        navigator.push(&route);
     })
 }
 
 #[component]
 pub fn ProfileImage<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
-    let router = use_router(cx);
-
+    let navigator = use_navigator(cx).unwrap();
     let poster_info = &post.by_user;
-
     let profile_img_src = &poster_info
         .profile_image
         .as_ref()
         .map(|url| url.as_str())
         .unwrap_or_else(|| "");
-
     cx.render(rsx! {
         div {
             img {
                 class: "profile-portrait cursor-pointer",
-                onclick: view_profile_onclick(router, post.by_user.id),
+                onclick: view_profile_onclick(&navigator, post.by_user.id),
                 src: "{profile_img_src}",
             }
         }
@@ -115,14 +112,11 @@ pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
         let time = post.time_posted.format("%H:%M:%S");
         (date, time)
     };
-
     let display_name = match &post.by_user.display_name {
         Some(name) => name.as_ref(),
         None => "",
     };
-
     let handle = &post.by_user.handle;
-
     cx.render(rsx! {
         div {
             class: "flex flex-row justify-between",
@@ -147,13 +141,11 @@ pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
 #[component]
 pub fn PublicPostEntry(cx: Scope, post_id: PostId) -> Element {
     let post_manager = use_post_manager(cx);
-    let _router = use_router(cx);
-
+    let _navigator = use_navigator(cx).unwrap();
     let this_post = {
         let post = post_manager.read().get(post_id).unwrap().clone();
         use_state(cx, || post)
     };
-
     cx.render(rsx! {
         div {
             key: "{this_post.id.to_string()}",

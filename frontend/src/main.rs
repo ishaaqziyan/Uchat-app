@@ -4,13 +4,14 @@
 #![allow(non_snake_case)]
 
 pub mod util;
-
 pub mod app;
 pub mod elements;
 pub mod page;
 
 use cfg_if::cfg_if;
 use util::ApiClient;
+use dioxus::prelude::*;
+use dioxus_router::prelude::*;
 
 pub const ROOT_API_URL: &str = uchat_endpoint::app_url::API_URL;
 
@@ -28,22 +29,19 @@ cfg_if! {
 fn main() {
     init_log();
     ApiClient::init();
-    dioxus_web::launch(app::App)
+    dioxus_web::launch(app::App);
 }
 
 mod prelude {
     pub use crate::page;
-
     pub use crate::util::api_client::fetch_json;
     pub use crate::util::ApiClient;
     pub use crate::util::{async_handler, maybe_class, sync_handler};
-
     pub use crate::elements::appbar::{self, Appbar, AppbarImgButton};
     pub use crate::elements::local_profile::{use_local_profile, LocalProfile};
     pub use crate::elements::post::use_post_manager;
     pub use crate::elements::post::PublicPostEntry;
     pub use crate::elements::sidebar::{use_sidebar, Sidebar, SidebarManager};
     pub use crate::elements::toaster::use_toaster;
-
-    pub use dioxus_router::{use_route, use_router};
+    pub use dioxus_router::prelude::*; // Ensure all router-related items are imported
 }

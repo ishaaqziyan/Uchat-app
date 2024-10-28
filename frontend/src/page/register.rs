@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 
 use dioxus::prelude::*;
-use dioxus_router::Link;
+use dioxus_router::prelude::*; // Correct import for Link
 use uchat_domain::UserFacingError;
-
 use crate::{
     elements::{keyed_notification_box::KeyedNotifications, KeyedNotificationBox},
     fetch_json,
@@ -25,6 +24,7 @@ impl PageState {
             form_errors: KeyedNotifications::default(),
         }
     }
+
     pub fn can_submit(&self) -> bool {
         !(self.form_errors.has_messages()
             || self.username.current().is_empty()
@@ -83,26 +83,28 @@ pub fn UsernameInput<'a>(
     })
 }
 
+#[component]
 pub fn LoginLink(cx: Scope) -> Element {
     cx.render(rsx! {
         Link {
             class: "link text-center",
-            to: page::ACCOUNT_LOGIN,
+            to: "/account/login", // Corrected path
             "Existing User Login"
         }
     })
 }
 
+#[component]
 pub fn Register(cx: Scope) -> Element {
     let api_client = ApiClient::global();
     let page_state = PageState::new(cx);
     let page_state = use_ref(cx, || page_state);
-    let router = use_router(cx);
+    let navigator = use_navigator(cx).unwrap();
     let local_profile = use_local_profile(cx);
 
     let form_onsubmit = async_handler!(
         &cx,
-        [api_client, page_state, router, local_profile],
+        [api_client, page_state, navigator, local_profile],
         move |_| async move {
             use uchat_endpoint::user::endpoint::{CreateUser, CreateUserOk};
             let request_data = {
@@ -112,7 +114,7 @@ pub fn Register(cx: Scope) -> Element {
                         page_state.with(|state| state.username.current().to_string()),
                     )
                     .unwrap(),
-                    password: Password::new(
+                    password: Password.new(
                         page_state.with(|state| state.password.current().to_string()),
                     )
                     .unwrap(),
@@ -127,7 +129,7 @@ pub fn Register(cx: Scope) -> Element {
                         res.session_expires,
                     );
                     local_profile.write().user_id = Some(res.user_id);
-                    router.navigate_to(page::HOME)
+                    navigator.push("/"); // Updated navigation method
                 }
                 Err(_e) => (),
             }
@@ -160,18 +162,15 @@ pub fn Register(cx: Scope) -> Element {
             class: "flex flex-col gap-5",
             prevent_default: "onsubmit",
             onsubmit: form_onsubmit,
-
             img {
-                src: "/static/icons/uchat.jpg", 
+                src: "/static/icons/uchat.jpg",
                 alt: "Logo",
-                class: "mx-auto mb-4", 
+                class: "mx-auto mb-4",
             },
-
             UsernameInput {
                 state: page_state.with(|state| state.username.clone()),
                 oninput: username_oninput,
             },
-
             PasswordInput {
                 state: page_state.with(|state| state.password.clone()),
                 oninput: password_oninput,
@@ -180,8 +179,7 @@ pub fn Register(cx: Scope) -> Element {
             KeyedNotificationBox {
                 legend: "Form Errors",
                 notifications: page_state.clone().with(|state| state.form_errors.clone()),
-            }
-
+            },
             button {
                 class: "btn {submit_btn_style}",
                 r#type: "submit",
