@@ -35,6 +35,11 @@ serve-frontend *ARGS:
 serve-api *ARGS:
     watchexec -r -i "frontend/**" -i "target/**" --exts rs,sql,toml cargo run -p uchat_server {{ ARGS }}
 
+# run both frontend and API server
+serve-all:
+    just serve-frontend &
+    just serve-api
+        
 # set up project dependencies
 init:
     cargo run -p project-init
