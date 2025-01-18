@@ -26,7 +26,7 @@ pub struct PageState {
     profile_image: Option<PreviewImageData>,
 }
 
-#[inline_props]
+#[component]
 pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     let toaster = use_toaster(cx);
 
@@ -63,7 +63,7 @@ pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn ImagePreview(cx: Scope, page_state: UseRef<PageState>) -> Element {
     let image_data = page_state.with(|state| state.profile_image.clone());
 
@@ -90,7 +90,7 @@ pub fn ImagePreview(cx: Scope, page_state: UseRef<PageState>) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn DisplayNameInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     use uchat_domain::user::DisplayName;
 
@@ -136,7 +136,7 @@ pub fn DisplayNameInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
         }
     })
 }
-#[inline_props]
+#[component]
 pub fn PasswordInput(cx: Scope, state: UseRef<PageState>) -> Element {
     use uchat_domain::user::Password;
 
@@ -207,7 +207,7 @@ pub fn PasswordInput(cx: Scope, state: UseRef<PageState>) -> Element {
  
 
 
-#[inline_props]
+#[component]
 pub fn EmailInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     use uchat_domain::user::Email;
 

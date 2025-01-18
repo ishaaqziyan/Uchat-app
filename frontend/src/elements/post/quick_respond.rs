@@ -9,7 +9,7 @@ fn can_submit(message: &str) -> bool {
     message.len() <= Message::MAX_CHARS && !message.is_empty()
 }
 
-#[inline_props]
+#[component]
 pub fn MessageInput<'a>(
     cx: Scope<'a>,
     message: &'a str,
@@ -37,7 +37,7 @@ pub fn MessageInput<'a>(
     })
 }
 
-#[inline_props]
+#[component]
 pub fn QuickRespond(cx: Scope, opened: UseState<bool>) -> Element {
     let api_client = ApiClient::global();
     let toaster = use_toaster(cx);

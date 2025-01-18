@@ -11,7 +11,7 @@ use uchat_endpoint::post::types::{
     Chat as EndpointChat, Image as EndpointImage, ImageKind, Poll as EndpointPoll, PublicPost, VoteCast,
 };
 
-#[inline_props]
+#[component]
 pub fn Chat<'a>(cx: Scope<'a>, content: &'a EndpointChat) -> Element {
     let Headline = content.headline.as_ref().map(|headline| {
         rsx! {
@@ -30,7 +30,7 @@ pub fn Chat<'a>(cx: Scope<'a>, content: &'a EndpointChat) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn Image<'a>(cx: Scope<'a>, content: &'a EndpointImage) -> Element {
     let url = if let ImageKind::Url(url) = &content.kind {
         url
@@ -55,7 +55,7 @@ pub fn Image<'a>(cx: Scope<'a>, content: &'a EndpointImage) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn Poll<'a>(cx: Scope<'a>, post_id: PostId, content: &'a EndpointPoll) -> Element {
     let toaster = use_toaster(cx);
     let api_client = ApiClient::global();
@@ -145,7 +145,7 @@ pub fn Poll<'a>(cx: Scope<'a>, post_id: PostId, content: &'a EndpointPoll) -> El
     })
 }
 
-#[inline_props]
+#[component]
 pub fn Content<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
     use uchat_endpoint::post::types::Content as EndpointContent;
     cx.render(rsx! {

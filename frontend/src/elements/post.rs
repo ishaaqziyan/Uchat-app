@@ -85,7 +85,7 @@ pub fn view_profile_onclick(
     })
 }
 
-#[inline_props]
+#[component]
 pub fn ProfileImage<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
     let router = use_router(cx);
 
@@ -108,7 +108,7 @@ pub fn ProfileImage<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
     let (post_date, post_time) = {
         let date = post.time_posted.format("%Y-%m-%d");
@@ -144,7 +144,7 @@ pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn PublicPostEntry(cx: Scope, post_id: PostId) -> Element {
     let post_manager = use_post_manager(cx);
     let _router = use_router(cx);

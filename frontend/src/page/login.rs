@@ -34,7 +34,7 @@ impl PageState {
     }
 }
 
-#[inline_props]
+#[component]
 pub fn PasswordInput<'a>(
     cx: Scope<'a>,
     state: UseState<String>,
@@ -60,7 +60,7 @@ pub fn PasswordInput<'a>(
     })
 }
 
-#[inline_props]
+#[component]
 pub fn UsernameInput<'a>(
     cx: Scope<'a>,
     state: UseState<String>,

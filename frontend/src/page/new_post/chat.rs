@@ -27,7 +27,7 @@ impl PageState {
     }
 }
 
-#[inline_props]
+#[component]
 pub fn MessageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     use uchat_domain::post::Message;
 
@@ -64,7 +64,7 @@ pub fn MessageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     use uchat_domain::post::Headline;
 

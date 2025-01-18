@@ -66,7 +66,7 @@ impl PageState {
     }
 }
 
-#[inline_props]
+#[component]
 pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     let max_chars = PollHeadline::MAX_CHARS;
 
@@ -100,7 +100,7 @@ pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
     })
 }
 
-#[inline_props]
+#[component]
 pub fn PollChoices(cx: Scope, page_state: UseRef<PageState>) -> Element {
     let choices = page_state
         .read()
