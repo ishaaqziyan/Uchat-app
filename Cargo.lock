@@ -420,15 +420,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
-name = "bumpslab"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e5816c875b50b9866d759fa24d46159dccab0d7942c0ccbfd700b4f45dd961e"
-dependencies = [
- "bumpalo",
-]
-
-[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -761,30 +752,12 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d9e3b0725e520250bf23213f996d241cca29cea4360a9bf08a44e0033f8e569"
 dependencies = [
- "dioxus-core 0.4.3",
+ "dioxus-core",
  "dioxus-core-macro",
  "dioxus-hooks",
  "dioxus-hot-reload",
  "dioxus-html",
  "dioxus-rsx",
-]
-
-[[package]]
-name = "dioxus-core"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e4d15b0bb9c58d015b2295f240600dd76e427758377569fa33783afc295706a"
-dependencies = [
- "bumpalo",
- "bumpslab",
- "futures-channel",
- "futures-util",
- "indexmap 1.9.3",
- "log",
- "longest-increasing-subsequence",
- "rustc-hash",
- "slab",
- "smallbox",
 ]
 
 [[package]]
@@ -811,7 +784,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "21afaccb28587aed0ba98856335912f5ce7052c0aafa74b213829a3b8bfd2345"
 dependencies = [
  "constcat",
- "dioxus-core 0.4.3",
+ "dioxus-core",
  "dioxus-rsx",
  "prettyplease",
  "proc-macro2 1.0.92",
@@ -831,7 +804,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bb23ce82df4fb13e9ddaa01d1469f1f32d683dd4636204bd0a0eaf434b65946"
 dependencies = [
- "dioxus-core 0.4.3",
+ "dioxus-core",
  "dioxus-debug-cell",
  "futures-channel",
  "slab",
@@ -845,7 +818,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7d8c9e89e866a6b84b8ad696f0ff2f6f6563d2235eb99acc6952f19e516cc09"
 dependencies = [
- "dioxus-core 0.4.3",
+ "dioxus-core",
  "dioxus-html",
  "dioxus-rsx",
  "interprocess-docfix",
@@ -861,7 +834,7 @@ checksum = "828a42a2d70688a2412a8538c8b5a5eceadf68f682f899dc4455a0169db39dfd"
 dependencies = [
  "async-channel 1.9.0",
  "async-trait",
- "dioxus-core 0.4.3",
+ "dioxus-core",
  "enumset",
  "euclid",
  "keyboard-types",
@@ -925,7 +898,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c974133c7c95497a486d587e40449927711430b308134b9cd374b8d35eceafb3"
 dependencies = [
- "dioxus-core 0.4.3",
+ "dioxus-core",
  "proc-macro2 1.0.92",
  "quote 1.0.37",
  "syn 2.0.96",
@@ -940,7 +913,7 @@ dependencies = [
  "async-channel 1.9.0",
  "async-trait",
  "console_error_panic_hook",
- "dioxus-core 0.4.3",
+ "dioxus-core",
  "dioxus-html",
  "dioxus-interpreter-js",
  "futures-channel",
@@ -1112,13 +1085,13 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
 name = "fermi"
-version = "0.3.0"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8cbef6a46bdda1730180e97a07e0cbeaee0fbc5aa9a436babc496c8d3f49032"
+checksum = "6bc4bef3f03ad801dac8ffda8dc272bbabc70e0f7d18fb23fb40db86d3b166c1"
 dependencies = [
- "dioxus-core 0.3.3",
+ "dioxus-core",
  "im-rc",
- "log",
+ "tracing",
 ]
 
 [[package]]

@@ -12,5 +12,5 @@ pub struct LocalProfile {
 }
 
 pub fn use_local_profile(cx: &ScopeState) -> &UseAtomRef<LocalProfile> {
-    use_atom_ref(cx, crate::app::LOCAL_PROFILE)
+    use_atom_ref(cx, &crate::app::LOCAL_PROFILE) // Pass a reference to LOCAL_PROFILE
 }
