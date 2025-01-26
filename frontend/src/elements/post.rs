@@ -5,7 +5,7 @@ use crate::{
     prelude::*,
 };
 use dioxus::prelude::*;
-use dioxus_router::RouterContext;
+use dioxus_router::Router;
 use fermi::{use_atom_ref, UseAtomRef};
 use indexmap::IndexMap;
 use uchat_domain::ids::{PostId, UserId};
@@ -16,7 +16,7 @@ pub mod content;
 pub mod quick_respond;
 
 pub fn use_post_manager(cx: &ScopeState) -> &UseAtomRef<PostManager> {
-    use_atom_ref(cx, crate::app::POSTMANAGER)
+    use_atom_ref(cx, &crate::app::POSTMANAGER) // Pass a reference to POSTMANAGER
 }
 
 #[derive(Default)]
@@ -76,7 +76,7 @@ impl PostManager {
 }
 
 pub fn view_profile_onclick(
-    router: &RouterContext,
+    router: &Router, // Use the correct type
     user_id: UserId,
 ) -> impl FnMut(MouseEvent) + '_ {
     sync_handler!([router], move |_| {
@@ -150,7 +150,7 @@ pub fn PublicPostEntry(cx: Scope, post_id: PostId) -> Element {
     let _router = use_router(cx);
 
     let this_post = {
-        let post = post_manager.read().get(post_id).unwrap().clone();
+        let post = post_manager.read().get(&post_id).unwrap().clone();
         use_state(cx, || post)
     };
 

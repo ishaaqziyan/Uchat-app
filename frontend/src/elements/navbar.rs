@@ -123,22 +123,21 @@ pub fn Navbar(cx: Scope) -> Element {
                 NavButton {
                     img: "/static/icons/icon-home.svg",
                     label: "Home",
-                    // onclick: |_| (),
                     onclick: move |_| router.navigate_to(page::HOME),
                 },
                 NavButton {
                     img: "/static/icons/icon-trending.svg",
                     label: "Trending",
                     onclick: move |_| router.navigate_to(page::POSTS_TRENDING),
-                }
+                },
                 NavButton {
                     img: "/static/icons/icon-new-post.svg",
                     label: "Post",
                     onclick: move |_| {
                         let is_hidden = *hide_new_post_popup.get();
                         hide_new_post_popup.set(!is_hidden);
-                    }
-                    NewPostPopup { hide: hide_new_post_popup.clone() }
+                    },
+                    NewPostPopup { hide: hide_new_post_popup.clone() },
                 }
             }
         }
