@@ -86,6 +86,7 @@ mod exe {
     pub const TRUNK: &str = "trunk";
     pub const NPX: &str = "npx";
     pub const JUST: &str = "just";
+    pub const WATCHEXEC: &str = "watchexec";
 }
 
 fn main() {
@@ -114,35 +115,9 @@ fn main() {
             install: vec![Install::Url("https://rustup.rs/")],
         },
         Dependency {
-            name: "rust wasm32 target",
-            locate: Box::new(|| {
-                command!("rustup target list")
-                    .output()
-                    .map(|out| {
-                        if String::from_utf8_lossy(&out.stdout)
-                            .lines()
-                            .any(|line| line == "wasm32-unknown-unknown (installed)")
-                        {
-                            LocateStatus::Found
-                        } else {
-                            LocateStatus::NotFound
-                        }
-                    })
-                    .unwrap_or(LocateStatus::NotFound)
-            }),
-            install: vec![Install::Cmd(command!(
-                "rustup target add wasm32-unknown-unknown"
-            ))],
-        },
-        Dependency {
             name: exe::TRUNK,
             locate: Box::new(|| exists(exe::TRUNK)),
-            install: vec![
-                Install::Cmd(command!("cargo install trunk --locked --git https://github.com/trunk-rs/trunk --branch main")),
-                // Needed for M1 Macs
-                #[cfg(target_os = "macos")]
-                Install::Cmd(command!("cargo install --locked wasm-bindgen-cli")),
-            ],
+            install: vec![Install::Cmd(command!("cargo install trunk --locked"))],
         },
         Dependency {
             name: exe::JUST,
@@ -163,6 +138,11 @@ fn main() {
             install: vec![Install::Cmd(command!(
                 "cargo install diesel_cli --no-default-features --features postgres"
             ))],
+        },
+        Dependency {
+            name: exe::WATCHEXEC,
+            locate: Box::new(|| exists(exe::WATCHEXEC)),
+            install: vec![Install::Cmd(command!("cargo install --locked watchexec-cli"))],
         },
     ];
 
