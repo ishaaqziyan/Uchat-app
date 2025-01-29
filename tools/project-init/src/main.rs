@@ -81,12 +81,10 @@ fn install(mut spinner: Spinner, mut cmd: Command, dep: &str) -> InstallStatus {
 
 mod exe {
     pub const PSQL: &str = "psql";
-    pub const DIESEL: &str = "diesel";
     pub const RUSTUP: &str = "rustup";
-    pub const TRUNK: &str = "trunk";
     pub const NPX: &str = "npx";
-    pub const JUST: &str = "just";
     pub const WATCHEXEC: &str = "watchexec";
+    pub const NEXTEST: &str = "nextest";
 }
 
 fn main() {
@@ -115,34 +113,35 @@ fn main() {
             install: vec![Install::Url("https://rustup.rs/")],
         },
         Dependency {
-            name: exe::TRUNK,
-            locate: Box::new(|| exists(exe::TRUNK)),
-            install: vec![Install::Cmd(command!("cargo install trunk --locked"))],
-        },
-        Dependency {
-            name: exe::JUST,
-            locate: Box::new(|| exists(exe::JUST)),
-            install: vec![Install::Cmd(command!("cargo install just"))],
-        },
-        Dependency {
-            name: exe::DIESEL,
+            name: "rust wasm32 target",
             locate: Box::new(|| {
-                if exists(exe::PSQL) != LocateStatus::Found {
-                    LocateStatus::Abort(
-                        "Installation of `psql` is required before compiling 'diesel' dependency",
-                    )
-                } else {
-                    exists(exe::DIESEL)
-                }
+                command!("rustup target list")
+                    .output()
+                    .map(|out| {
+                        if String::from_utf8_lossy(&out.stdout)
+                            .lines()
+                            .any(|line| line == "wasm32-unknown-unknown (installed)")
+                        {
+                            LocateStatus::Found
+                        } else {
+                            LocateStatus::NotFound
+                        }
+                    })
+                    .unwrap_or(LocateStatus::NotFound)
             }),
             install: vec![Install::Cmd(command!(
-                "cargo install diesel_cli --no-default-features --features postgres"
+                "rustup target add wasm32-unknown-unknown"
             ))],
         },
         Dependency {
             name: exe::WATCHEXEC,
-            locate: Box::new(|| exists(exe::WATCHEXEC)),
+            locate: Box::new(|| exists("watchexec")),
             install: vec![Install::Cmd(command!("cargo install --locked watchexec-cli"))],
+        },
+        Dependency {
+            name: exe::NEXTEST,
+            locate: Box::new(|| exists("cargo-nextest")),
+            install: vec![Install::Cmd(command!("cargo install cargo-nextest --locked"))],
         },
     ];
 
@@ -182,21 +181,6 @@ fn main() {
                     }
                 }
             }
-        }
-    }
-
-    if !manual_install.is_empty() {
-        println!("\nManual installation required:");
-        for (name, url) in manual_install {
-            println!("  {name} : {url}");
-        }
-    }
-
-    if errors.is_empty() {
-        println!("\nAll dependencies located. Project is ready to build.");
-    } else {
-        for error in errors {
-            eprintln!("{error}")
         }
     }
 }
