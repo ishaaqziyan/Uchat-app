@@ -85,6 +85,7 @@ mod exe {
     pub const NPX: &str = "npx";
     pub const WATCHEXEC: &str = "watchexec";
     pub const NEXTEST: &str = "nextest";
+    pub const TAILWINDCSS: &str = "tailwindcss";
 }
 
 fn main() {
@@ -142,6 +143,12 @@ fn main() {
             name: exe::NEXTEST,
             locate: Box::new(|| exists("cargo-nextest")),
             install: vec![Install::Cmd(command!("cargo install cargo-nextest --locked"))],
+        },
+        // New tailwindcss dependency added here
+        Dependency {
+            name: "tailwindcss@3.4.17",
+            locate: Box::new(|| exists(exe::TAILWINDCSS)),
+            install: vec![Install::Cmd(command!("npm install tailwindcss@3.4.17"))],
         },
     ];
 
