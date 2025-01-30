@@ -47,7 +47,7 @@ pub fn Trending(cx: Scope) -> Element {
         Appbar {
             title: "Trending Posts",
             AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
+                click_handler: move |_| router.navigate_to(page::HOME),
                 img: "/static/icons/icon-back.svg",
                 label: "Back",
                 title: "Go to the previous page",

@@ -233,35 +233,45 @@ pub fn Actionbar(cx: Scope, post_id: PostId) -> Element {
     let post_manager = use_post_manager(cx);
     let quick_respond_opened = use_state(cx, || false).clone();
 
-    let this_post = post_manager.read();
-    let this_post = this_post.get(post_id).unwrap();
-    let this_post_id = this_post.id;
+    let this_post = post_manager.read().get(&post_id).cloned();
 
-    cx.render(rsx! {
-        div {
-            class: "flex flex-row justify-between w-full opacity-70 mt-4",
-            Boost {
-                post_id: this_post_id,
-                boosts: this_post.boosts,
-                boosted: this_post.boosted,
-            }
+    match this_post {
+        Some(post) => {
+            cx.render(rsx! {
+                div {
+                    class: "flex flex-row justify-between w-full opacity-70 mt-4",
+                    Boost {
+                        post_id: post.id,
+                        boosts: post.boosts,
+                        boosted: post.boosted,
+                    }
 
-            Bookmark {
-                bookmarked: this_post.bookmarked,
-                post_id: this_post_id,
-            },
-            LikeDislike {
-                post_id: this_post.id,
-                likes: this_post.likes,
-                dislikes: this_post.dislikes,
-                like_status: this_post.like_status,
-            }
-            Comment {
-                opened: quick_respond_opened.clone(),
-            }
+                    Bookmark {
+                        bookmarked: post.bookmarked,
+                        post_id: post.id,
+                    },
+                    LikeDislike {
+                        post_id: post.id,
+                        likes: post.likes,
+                        dislikes: post.dislikes,
+                        like_status: post.like_status,
+                    }
+                    Comment {
+                        opened: quick_respond_opened.clone(),
+                    }
+                }
+                QuickRespondBox {
+                    opened: quick_respond_opened,
+                }
+            })
+        },
+        None => {
+            // Handle the case where the post does not exist
+            cx.render(rsx! {
+                div {
+                    "Post not found"
+                }
+            })
         }
-        QuickRespondBox {
-            opened: quick_respond_opened,
-        }
-    })
+    }
 }
