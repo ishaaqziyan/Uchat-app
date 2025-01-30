@@ -61,3 +61,15 @@ db-reset:
 # create a new database migration
 db-new-migration NAME:
     diesel migration generate {{ NAME }}
+
+# run tests with cargo nextest
+test:
+    cargo nextest run
+
+# run production frontend server
+serve-pro-frontend:
+    trunk serve --release --config {{TRUNK_RELEASE_CONFIG_FILE}}
+
+# run production API server
+serve-pro-api:
+    cd target/release && ./api
