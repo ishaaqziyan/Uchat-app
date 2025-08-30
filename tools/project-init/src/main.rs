@@ -86,6 +86,9 @@ mod exe {
     pub const WATCHEXEC: &str = "watchexec";
     pub const NEXTEST: &str = "nextest";
     pub const TAILWINDCSS: &str = "tailwindcss";
+    pub const JUST: &str = "just";
+    pub const TRUNK: &str = "trunk";
+    pub const DIESEL: & str = "diesel";
 }
 
 fn main() {
@@ -150,6 +153,21 @@ fn main() {
             locate: Box::new(|| exists(exe::TAILWINDCSS)),
             install: vec![Install::Cmd(command!("npm install tailwindcss@3.4.17"))],
         },
+        Dependency {
+            name: "just",
+            locate: Box::new(|| exists(exe::JUST)),
+            install: vec![Install::Cmd(command!("cargo install just"))],
+        },
+        Dependency {
+            name: "trunk",
+            locate: Box::new(|| exists(exe::TRUNK)),
+            install: vec![Install::Cmd(command!("cargo install --locked trunk"))],
+        },
+        Dependency {
+            name: "diesel",
+            locate: Box::new(|| exists(exe::DIESEL)),
+            install: vec![Install::Cmd(command!("cargo install diesel_cli --no-default-features --features postgres"))],
+        }
     ];
 
     let mut manual_install = Vec::new();
