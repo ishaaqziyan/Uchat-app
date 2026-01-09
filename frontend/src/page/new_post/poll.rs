@@ -67,127 +67,131 @@ impl PageState {
 }
 
 #[component]
-pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
+pub fn HeadlineInput(page_state: Signal<PageState>) -> Element {
     let max_chars = PollHeadline::MAX_CHARS;
+    let state = page_state.read();
 
     let wrong_len = maybe_class!(
         "err-text-color",
-        page_state.read().headline.len() > max_chars || page_state.read().headline.is_empty()
+        state.headline.len() > max_chars || state.headline.is_empty()
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "headline",
                 div {
                     class: "flex flex-row justify-between",
-                    span { "Headline" },
+                    span { "Headline" }
                     span {
                         class: "text-right {wrong_len}",
-                        "{page_state.read().headline.len()}/{max_chars}",
+                        "{state.headline.len()}/{max_chars}",
                     }
                 }
-            },
+            }
             input {
                 class: "input-field",
                 id: "headline",
-                value: "{page_state.read().headline}",
+                value: "{state.headline}",
                 oninput: move |ev| {
-                    page_state.with_mut(|state| state.headline = ev.data.value.clone());
+                    page_state.write().headline = ev.value();
                 }
             }
         }
-    })
+    }
 }
 
 #[component]
-pub fn PollChoices(cx: Scope, page_state: UseRef<PageState>) -> Element {
-    let choices = page_state
-        .read()
+pub fn PollChoices(page_state: Signal<PageState>) -> Element {
+    let state = page_state.read();
+    let choices: Vec<_> = state
         .poll_choices
         .iter()
-        .map(|(&key, choice)| {
-            let choice = choice.clone();
-            let max_chars = PollChoiceDescription::MAX_CHARS;
-            let wrong_len = maybe_class!(
-                "err-text-color",
-                PollChoiceDescription::new(&choice).is_err()
-            );
-            rsx! {
-                li {
-                    key: "{key}",
-                    div {
-                        class: "grid grid-cols-[1fr_3rem_3rem] w-full gap-2 items-center h-8",
-                        input {
-                            class: "input-field",
-                            placeholder: "Choice Description",
-                            oninput: move |ev| {
-                                page_state.with_mut(|state| state.replace_choice(key, &ev.data.value))
-                            },
-                            value: "{choice}",
-                        }
-                        div {
-                            class: "text-right {wrong_len}",
-                            "{choice.len()}/{max_chars}"
-                        }
-                        button {
-                            class: "btn p-0 h-full bg-red-700",
-                            prevent_default: "onclick",
-                            onclick: move |_| {
-                                page_state.with_mut(|state| state.poll_choices.remove(&key));
-                            },
-                            "X"
+        .map(|(&key, choice)| (key, choice.clone()))
+        .collect();
+    drop(state); // Release lock
+
+    rsx! {
+        div {
+            class: "flex flex-col gap-2",
+            "Poll Choices"
+            ol {
+                class: "list-decimal ml-4 flex flex-col gap-2",
+                for (key, choice) in choices {
+                    {
+                        let max_chars = PollChoiceDescription::MAX_CHARS;
+                        let wrong_len = maybe_class!(
+                            "err-text-color",
+                            PollChoiceDescription::new(&choice).is_err()
+                        );
+                        
+                        rsx! {
+                            li {
+                                key: "{key}",
+                                div {
+                                    class: "grid grid-cols-[1fr_3rem_3rem] w-full gap-2 items-center h-8",
+                                    input {
+                                        class: "input-field",
+                                        placeholder: "Choice Description",
+                                        oninput: move |ev| {
+                                            page_state.write().replace_choice(key, ev.value())
+                                        },
+                                        value: "{choice}",
+                                    }
+                                    div {
+                                        class: "text-right {wrong_len}",
+                                        "{choice.len()}/{max_chars}"
+                                    }
+                                    button {
+                                        class: "btn p-0 h-full bg-red-700",
+                                        prevent_default: "onclick",
+                                        onclick: move |_| {
+                                            page_state.write().poll_choices.remove(&key);
+                                        },
+                                        "X"
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-        }).collect::<Vec<LazyNodes>>();
-
-    cx.render(rsx! {
-        div {
-            class: "flex flex-col gap-2",
-            "Poll Choices",
-            ol {
-                class: "list-decimal ml-4 flex flex-col gap-2",
-                choices.into_iter()
-            },
             div {
                 class: "flex flex-row justify-end",
                 button {
                     class: "btn w-12",
                     prevent_default: "onclick",
                     onclick: move |_| {
-                        page_state.with_mut(|state| state.push_choice(""))
+                        page_state.write().push_choice("")
                     },
                     "+"
                 }
             }
         }
-    })
+    }
 }
 
-pub fn NewPoll(cx: Scope) -> Element {
+#[component]
+pub fn NewPoll() -> Element {
     let api_client = ApiClient::global();
-    let router = use_router(cx);
-    let toaster = use_toaster(cx);
+    let nav = use_navigator();
+    let toaster = use_toaster();
 
-    let page_state = use_ref(cx, PageState::default);
+    let mut page_state = use_signal(PageState::default);
 
-    let form_onsubmit = async_handler!(
-        &cx,
-        [api_client, page_state, toaster, router],
-        move |_| async move {
+    let form_onsubmit = move |_| {
+        spawn(async move {
             use uchat_endpoint::post::endpoint::{NewPost, NewPostOk};
 
+            let state = page_state.read();
             let request = NewPost {
                 content: Poll {
                     headline: {
-                        let headline = &page_state.read().headline;
+                        let headline = &state.headline;
                         PollHeadline::new(headline).unwrap()
                     },
                     choices: {
-                        page_state
-                            .read()
+                        state
                             .poll_choices
                             .values()
                             .map(|choice| {
@@ -205,11 +209,13 @@ pub fn NewPoll(cx: Scope) -> Element {
                 .into(),
                 options: NewPostOptions::default(),
             };
+            drop(state); // Release lock before async operation
+
             let response = fetch_json!(<NewPostOk>, api_client, request);
             match response {
                 Ok(_) => {
                     toaster.write().success("Posted!", Duration::seconds(3));
-                    router.replace_route(page::HOME, None, None);
+                    nav.replace(page::HOME);
                 }
                 Err(e) => {
                     toaster
@@ -217,55 +223,57 @@ pub fn NewPoll(cx: Scope) -> Element {
                         .error(format!("Post failed: {e}"), Duration::seconds(3));
                 }
             }
-        }
-    );
+        });
+    };
 
-    let submit_btn_style = maybe_class!("btn-disabled", !page_state.read().can_submit());
+    let can_submit = page_state.read().can_submit();
+    let submit_btn_style = maybe_class!("btn-disabled", !can_submit);
 
-    cx.render(rsx! {
+    rsx! {
         Appbar {
-            title: "New Poll",
-            AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_CHAT, None, None),
-                img: "/static/icons/icon-messages.svg",
-                label: "Chat",
-                title: "Post a new chat",
-            },
-            AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_IMAGE, None, None),
-                img: "/static/icons/icon-image.svg",
-                label: "Image",
-                title: "Post a new image",
-            },
-            AppbarImgButton {
-                click_handler: move |_| (),
-                img: "/static/icons/icon-poll.svg",
-                label: "Poll",
-                disabled: true,
-                title: "Post a new poll",
-                append_class: appbar::BUTTON_SELECTED,
-            },
-            AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
-                img: "/static/icons/icon-back.svg",
-                label: "Back",
-                title: "Go to the previous page",
+            title: "New Poll".to_string(),
+            children: rsx! {
+                AppbarImgButton {
+                    click_handler: move |_| nav.replace(page::POST_NEW_CHAT),
+                    img: "/static/icons/icon-messages.svg".to_string(),
+                    label: "Chat".to_string(),
+                    title: Some("Post a new chat".to_string()),
+                }
+                AppbarImgButton {
+                    click_handler: move |_| nav.replace(page::POST_NEW_IMAGE),
+                    img: "/static/icons/icon-image.svg".to_string(),
+                    label: "Image".to_string(),
+                    title: Some("Post a new image".to_string()),
+                }
+                AppbarImgButton {
+                    click_handler: move |_| (),
+                    img: "/static/icons/icon-poll.svg".to_string(),
+                    label: "Poll".to_string(),
+                    disabled: Some(true),
+                    title: Some("Post a new poll".to_string()),
+                    append_class: Some(appbar::BUTTON_SELECTED.to_string()),
+                }
+                AppbarImgButton {
+                    click_handler: move |_| { let _ = nav.go_back(); },
+                    img: "/static/icons/icon-back.svg".to_string(),
+                    label: "Back".to_string(),
+                    title: Some("Go to the previous page".to_string()),
+                }
             }
-        },
-
+        }
 
         form {
             class: "flex flex-col gap-4",
             onsubmit: form_onsubmit,
             prevent_default: "onsubmit",
-            HeadlineInput { page_state: page_state.clone() },
-            PollChoices { page_state: page_state.clone() },
+            HeadlineInput { page_state }
+            PollChoices { page_state }
             button {
                 class: "btn {submit_btn_style}",
                 r#type: "submit",
-                disabled: !page_state.read().can_submit(),
+                disabled: !can_submit,
                 "Post"
             }
         }
-    })
+    }
 }

@@ -28,7 +28,7 @@ cfg_if! {
 fn main() {
     init_log();
     ApiClient::init();
-    dioxus_web::launch(app::App)
+    dioxus::launch(app::App)
 }
 
 mod prelude {
@@ -36,7 +36,7 @@ mod prelude {
 
     pub use crate::util::api_client::fetch_json;
     pub use crate::util::ApiClient;
-    pub use crate::util::{async_handler, maybe_class, sync_handler};
+    pub use crate::util::maybe_class;
 
     pub use crate::elements::appbar::{self, Appbar, AppbarImgButton};
     pub use crate::elements::local_profile::{use_local_profile, LocalProfile};

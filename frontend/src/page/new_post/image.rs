@@ -30,23 +30,22 @@ impl PageState {
 }
 
 #[component]
-pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
-    let toaster = use_toaster(cx);
+pub fn ImageInput(page_state: Signal<PageState>) -> Element {
+    let toaster = use_toaster();
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "image-input",
                 "Upload Image"
-            },
+            }
             input {
                 class: "w-full",
                 id: "image-input",
                 r#type: "file",
                 accept: "image/*",
-                oninput: |_| {
-                    to_owned![page_state, toaster];
-                    async move {
+                oninput: move |_| {
+                    spawn(async move {
                         use gloo_file::{File, futures::read_as_data_url};
                         use wasm_bindgen::JsCast;
 
@@ -56,95 +55,91 @@ pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                             .unchecked_into::<HtmlInputElement>();
                         let file: File = el.files().unwrap().get(0).unwrap().into();
                         match read_as_data_url(&file).await {
-                            Ok(data) => page_state.with_mut(|state| state.image = Some(data)),
+                            Ok(data) => page_state.write().image = Some(data),
                             Err(e) => toaster.write().error(format!("Error loading file: {e}"), chrono::Duration::seconds(5)),
                         }
-                    }
+                    });
                 }
             }
         }
-    })
+    }
 }
 
 #[component]
-pub fn ImagePreview(cx: Scope, page_state: UseRef<PageState>) -> Element {
-    let image_data = page_state.read().clone().image;
-    let Preview = if let Some(ref image) = image_data {
-        rsx! {
-            img {
-                class: "max-w-[calc(var(--content-max-width)/2)]
-                        max-h-[40vh]",
-                src: "{image}"
-            }
-        }
-    } else {
-        rsx! {
-            div { "no image uploaded" }
-        }
-    };
+pub fn ImagePreview(page_state: Signal<PageState>) -> Element {
+    let image_data = page_state.read().image.clone();
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "flex flex-row justify-center",
-            Preview
+            if let Some(image) = image_data {
+                img {
+                    class: "max-w-[calc(var(--content-max-width)/2)]
+                            max-h-[40vh]",
+                    src: "{image}"
+                }
+            } else {
+                div { "no image uploaded" }
+            }
         }
-    })
+    }
 }
 
 #[component]
-pub fn CaptionInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
+pub fn CaptionInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::post::Caption;
 
     let max_chars = Caption::MAX_CHARS;
+    let state = page_state.read();
 
     let wrong_len = maybe_class!(
         "err-text-color",
-        page_state.read().caption.len() > max_chars
+        state.caption.len() > max_chars
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "caption",
                 div {
                     class: "flex flex-row justify-between",
-                    span { "Caption (optional)" },
+                    span { "Caption (optional)" }
                     span {
                         class: "text-right {wrong_len}",
-                        "{page_state.read().caption.len()}/{max_chars}",
+                        "{state.caption.len()}/{max_chars}",
                     }
                 }
-            },
+            }
             input {
                 class: "input-field",
                 id: "caption",
-                value: "{page_state.read().caption}",
+                value: "{state.caption}",
                 oninput: move |ev| {
-                    page_state.with_mut(|state| state.caption = ev.data.value.clone());
+                    page_state.write().caption = ev.value();
                 }
             }
         }
-    })
+    }
 }
 
-pub fn NewImage(cx: Scope) -> Element {
+#[component]
+pub fn NewImage() -> Element {
     let api_client = ApiClient::global();
-    let router = use_router(cx);
-    let toaster = use_toaster(cx);
+    let nav = use_navigator();
+    let toaster = use_toaster();
 
-    let page_state = use_ref(cx, PageState::default);
+    let mut page_state = use_signal(PageState::default);
 
-    let form_onsubmit = async_handler!(
-        &cx,
-        [api_client, page_state, toaster, router],
-        move |_| async move {
+    let form_onsubmit = move |_| {
+        spawn(async move {
             use uchat_domain::post::Caption;
             use uchat_endpoint::post::endpoint::{NewPost, NewPostOk};
 
+            let state = page_state.read();
             let request = NewPost {
                 content: Image {
                     caption: {
-                        let caption = &page_state.read().caption;
+                        let caption = &state.caption;
                         if caption.is_empty() {
                             None
                         } else {
@@ -152,18 +147,20 @@ pub fn NewImage(cx: Scope) -> Element {
                         }
                     },
                     kind: {
-                        let image = &page_state.read().image;
+                        let image = &state.image;
                         ImageKind::DataUrl(image.clone().unwrap())
                     },
                 }
                 .into(),
                 options: NewPostOptions::default(),
             };
+            drop(state); // Release lock before async operation
+
             let response = fetch_json!(<NewPostOk>, api_client, request);
             match response {
                 Ok(_) => {
                     toaster.write().success("Posted!", Duration::seconds(3));
-                    router.replace_route(page::HOME, None, None);
+                    nav.replace(page::HOME);
                 }
                 Err(e) => {
                     toaster
@@ -171,55 +168,58 @@ pub fn NewImage(cx: Scope) -> Element {
                         .error(format!("Post failed: {e}"), Duration::seconds(3));
                 }
             }
-        }
-    );
+        });
+    };
 
-    let submit_btn_style = maybe_class!("btn-disabled", !page_state.read().can_submit());
+    let can_submit = page_state.read().can_submit();
+    let submit_btn_style = maybe_class!("btn-disabled", !can_submit);
 
-    cx.render(rsx! {
+    rsx! {
         Appbar {
-            title: "New Image",
-            AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_CHAT, None, None),
-                img: "/static/icons/icon-messages.svg",
-                label: "Chat",
-                title: "Post a new chat",
-            },
-            AppbarImgButton {
-                click_handler: move |_| (),
-                img: "/static/icons/icon-image.svg",
-                label: "Image",
-                disabled: true,
-                title: "Post a new image",
-                append_class: appbar::BUTTON_SELECTED,
-            },
-            AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_POLL, None, None),
-                img: "/static/icons/icon-poll.svg",
-                label: "Poll",
-                title: "Post a new poll",
-            },
-            AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
-                img: "/static/icons/icon-back.svg",
-                label: "Back",
-                title: "Go to the previous page",
+            title: "New Image".to_string(),
+            children: rsx! {
+                AppbarImgButton {
+                    click_handler: move |_| nav.replace(page::POST_NEW_CHAT),
+                    img: "/static/icons/icon-messages.svg".to_string(),
+                    label: "Chat".to_string(),
+                    title: Some("Post a new chat".to_string()),
+                }
+                AppbarImgButton {
+                    click_handler: move |_| (),
+                    img: "/static/icons/icon-image.svg".to_string(),
+                    label: "Image".to_string(),
+                    disabled: Some(true),
+                    title: Some("Post a new image".to_string()),
+                    append_class: Some(appbar::BUTTON_SELECTED.to_string()),
+                }
+                AppbarImgButton {
+                    click_handler: move |_| nav.replace(page::POST_NEW_POLL),
+                    img: "/static/icons/icon-poll.svg".to_string(),
+                    label: "Poll".to_string(),
+                    title: Some("Post a new poll".to_string()),
+                }
+                AppbarImgButton {
+                    click_handler: move |_| { let _ = nav.go_back(); },
+                    img: "/static/icons/icon-back.svg".to_string(),
+                    label: "Back".to_string(),
+                    title: Some("Go to the previous page".to_string()),
+                }
             }
-        },
+        }
 
         form {
             class: "flex flex-col gap-4",
             onsubmit: form_onsubmit,
             prevent_default: "onsubmit",
-            ImageInput { page_state: page_state.clone() },
-            ImagePreview { page_state: page_state.clone() },
-            CaptionInput { page_state: page_state.clone() },
+            ImageInput { page_state }
+            ImagePreview { page_state }
+            CaptionInput { page_state }
             button {
                 class: "btn {submit_btn_style}",
                 r#type: "submit",
-                disabled: !page_state.read().can_submit(),
+                disabled: !can_submit,
                 "Post"
             }
         }
-    })
+    }
 }

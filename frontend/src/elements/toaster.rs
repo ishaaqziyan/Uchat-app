@@ -4,10 +4,9 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Duration, Utc};
 use dioxus::prelude::*;
-use fermi::{use_atom_ref, UseAtomRef};
 
-pub fn use_toaster(cx: &ScopeState) -> &UseAtomRef<Toaster> {
-    use_atom_ref(cx, crate::app::TOASTER)
+pub fn use_toaster() -> Signal<Toaster> {
+    *crate::app::TOASTER
 }
 
 pub enum ToastKind {
@@ -22,7 +21,7 @@ pub struct Toast {
     pub kind: ToastKind,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Toaster {
     toasts: HashMap<usize, Toast>,
     next_id: usize,
@@ -74,41 +73,42 @@ impl Toaster {
     }
 }
 
-#[derive(Props)]
-pub struct ToastRootProps<'a> {
-    toaster: &'a UseAtomRef<Toaster>,
+// Need to manually implement Clone for Toast since ToastKind doesn't derive it
+impl Clone for Toast {
+    fn clone(&self) -> Self {
+        Self {
+            message: self.message.clone(),
+            expires: self.expires,
+            kind: match self.kind {
+                ToastKind::Error => ToastKind::Error,
+                ToastKind::Info => ToastKind::Info,
+                ToastKind::Success => ToastKind::Success,
+            },
+        }
+    }
 }
 
-pub fn ToastRoot<'a>(cx: Scope<'a, ToastRootProps<'a>>) -> Element {
-    let toaster = cx.props.toaster;
+#[component]
+pub fn ToastRoot() -> Element {
+    let toaster = use_toaster();
 
-    let toasts = &toaster.read();
+    let toasts = toaster.read();
+    let total_toasts = toasts.toasts.len();
 
-    let ToastElements = toasts.iter().map(|(&id, toast)| {
-        let toast_style = match toast.kind {
-            ToastKind::Info => "bg-slate-200 border-slate-300",
-            ToastKind::Error => "bg-rose-300 border-rose-400",
-            ToastKind::Success => "bg-emerald-200 border-emerald-300",
-        };
-        rsx! {
-            div {
-                key: "{id}",
-                class: "{toast_style} p-3 cursor-pointer border-solid border rounded",
-                onclick: move |_| {
-                    toaster.write().remove(id);
-                },
-                "{toast.message}"
-            }
-        }
-    });
+    // Collect toast data for rendering
+    let toast_data: Vec<_> = toasts
+        .iter()
+        .map(|(&id, toast)| (id, toast.clone()))
+        .collect();
 
-    let total_toasts = &toaster.read().toasts.len();
+    drop(toasts); // Release the read lock
 
-    let _remove_expired = use_future(cx, (total_toasts,), |_| {
-        let toaster = toaster.clone();
+    use_future(move || {
         async move {
-            while !toaster.read().toasts.is_empty() {
-                let expired_ids = toaster
+            loop {
+                gloo_timers::future::TimeoutFuture::new(200_u32).await;
+
+                let expired_ids: Vec<usize> = toaster
                     .read()
                     .iter()
                     .filter_map(|(&id, toast)| {
@@ -118,26 +118,50 @@ pub fn ToastRoot<'a>(cx: Scope<'a, ToastRootProps<'a>>) -> Element {
                             None
                         }
                     })
-                    .collect::<Vec<usize>>();
+                    .collect();
 
-                expired_ids
-                    .iter()
-                    .for_each(|&id| toaster.write().remove(id));
+                if !expired_ids.is_empty() {
+                    let mut toaster_write = toaster.write();
+                    for id in expired_ids {
+                        toaster_write.remove(id);
+                    }
+                }
 
-                gloo_timers::future::TimeoutFuture::new(200_u32).await;
+                if toaster.read().toasts.is_empty() {
+                    break;
+                }
             }
         }
     });
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "fixed bottom-[var(--navbar-height)]
                     w-screen
                     max-w-[var(--content-max-width)]",
             div {
                 class: "flex flex-col gap-5 px-5 mb-5",
-                ToastElements,
+                for (id, toast) in toast_data {
+                    {
+                        let toast_style = match toast.kind {
+                            ToastKind::Info => "bg-slate-200 border-slate-300",
+                            ToastKind::Error => "bg-rose-300 border-rose-400",
+                            ToastKind::Success => "bg-emerald-200 border-emerald-300",
+                        };
+                        
+                        rsx! {
+                            div {
+                                key: "{id}",
+                                class: "{toast_style} p-3 cursor-pointer border-solid border rounded",
+                                onclick: move |_| {
+                                    toaster.write().remove(id);
+                                },
+                                "{toast.message}"
+                            }
+                        }
+                    }
+                }
             }
         }
-    })
+    }
 }

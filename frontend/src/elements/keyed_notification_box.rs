@@ -32,33 +32,30 @@ impl KeyedNotifications {
     }
 }
 
-#[derive(PartialEq, Props)]
-pub struct KeyedNotificationsProps<'a> {
-    legend: Option<&'a str>,
+#[component]
+pub fn KeyedNotificationBox(
+    legend: Option<String>,
     notifications: KeyedNotifications,
-}
+) -> Element {
+    let legend = legend.as_deref().unwrap_or("Errors");
 
-pub fn KeyedNotificationBox<'a>(cx: Scope<'a, KeyedNotificationsProps<'a>>) -> Element {
-    let notifications = cx.props.notifications.messages().map(|msg| {
-        rsx! { li { "{msg}" } }
-    });
+    if !notifications.has_messages() {
+        return None;
+    }
 
-    let legend = cx.props.legend.unwrap_or("Errors");
-
-    match cx.props.notifications.has_messages() {
-        true => cx.render(rsx! {
-            fieldset {
-                class: "fieldset border-red-300 rounded",
-                legend {
-                    class: "bg-red-300 px-4",
-                    "{legend}"
-                }
-                ul {
-                    class: "list-disc ml-4",
-                    notifications
+    rsx! {
+        fieldset {
+            class: "fieldset border-red-300 rounded",
+            legend {
+                class: "bg-red-300 px-4",
+                "{legend}"
+            }
+            ul {
+                class: "list-disc ml-4",
+                for msg in notifications.messages() {
+                    li { "{msg}" }
                 }
             }
-        }),
-        false => None,
+        }
     }
 }

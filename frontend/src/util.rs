@@ -36,61 +36,15 @@ macro_rules! maybe_class {
 }
 pub use maybe_class;
 
-#[macro_export]
-macro_rules! async_handler {
-    (&$cx:ident, [$($cap:ident),*],  move |$($args:tt : $types:ty),*| $body:expr) => {
-        move |$($args),*| {
-            $(
-                #[allow(unused_mut)]
-                let mut $cap = $cap.to_owned();
-            )*
-            $cx.spawn($body);
-        }
-    };
-    (&$cx:ident, [$($cap:ident),*],  move |$($args:tt),*| $body:expr) => {
-        move |$($args),*| {
-            $(
-                #[allow(unused_mut)]
-                let mut $cap = $cap.to_owned();
-            )*
-            $cx.spawn($body);
-        }
-    };
-    (&$cx:ident, move |$($args:tt),*| $body:expr) => {
-        move |$($args),*| {
-            $cx.spawn($body);
-        }
-    };
-}
-pub use async_handler;
-
-#[macro_export]
-macro_rules! sync_handler {
-    ([$($cap:ident),*],  move |$($args:tt : $types:ty),*| $body:expr) => {
-        move |$($args: $types),*| {
-            $(
-                #[allow(unused_mut)]
-                let mut $cap = $cap.to_owned();
-            )*
-            $body
-        }
-    };
-    ([$($cap:ident),*],  move |$($args:tt),*| $body:expr) => {
-        move |$($args),*| {
-            $(
-                #[allow(unused_mut)]
-                let mut $cap = $cap.to_owned();
-            )*
-            $body
-        }
-    };
-    (move |$($args:tt),*| $body:expr) => {
-        move |$($args),*| {
-            $body
-        }
-    };
-}
-pub use sync_handler;
+// async_handler and sync_handler macros are removed - use closures directly in 0.6+
+// Example replacements:
+// async_handler!(&cx, [api_client], move |_| async move { ... })
+// becomes:
+// move |_| spawn(async move { ... })
+//
+// sync_handler!([state], move |ev| { ... })
+// becomes:
+// move |ev| { ... }
 
 pub fn window() -> Window {
     web_sys::window().expect("missing Window object")

@@ -3,23 +3,22 @@
 use crate::prelude::*;
 use chrono::Duration;
 use dioxus::prelude::*;
-use uchat_domain::{post::Message};
+use uchat_domain::post::Message;
 
 fn can_submit(message: &str) -> bool {
     message.len() <= Message::MAX_CHARS && !message.is_empty()
 }
 
 #[component]
-pub fn MessageInput<'a>(
-    cx: Scope<'a>,
-    message: &'a str,
-    on_input: EventHandler<'a, FormEvent>,
+pub fn MessageInput(
+    message: String,
+    on_input: EventHandler<FormEvent>,
 ) -> Element {
     let max_chars = Message::MAX_CHARS;
 
-    let wrong_len = maybe_class!("err-text-color", !can_submit(message));
+    let wrong_len = maybe_class!("err-text-color", !can_submit(&message));
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "flex flex-row relative",
             textarea {
@@ -28,26 +27,24 @@ pub fn MessageInput<'a>(
                 rows: 3,
                 value: "{message}",
                 oninput: move |ev| on_input.call(ev),
-            },
+            }
             div {
                 class: "text-right {wrong_len} absolute bottom-1 right-1",
                 "{message.len()}/{max_chars}"
             }
         }
-    })
+    }
 }
 
 #[component]
-pub fn QuickRespond(cx: Scope, opened: UseState<bool>) -> Element {
+pub fn QuickRespond(opened: Signal<bool>) -> Element {
     let api_client = ApiClient::global();
-    let toaster = use_toaster(cx);
+    let toaster = use_toaster();
 
-    let message = use_state(cx, || "".to_string());
+    let mut message = use_signal(|| "".to_string());
 
-    let form_onsubmit = async_handler!(
-        &cx,
-        [api_client, toaster, message, opened],
-        move |_| async move {
+    let form_onsubmit = move |_| {
+        spawn(async move {
             use uchat_domain::post::Message;
             use uchat_endpoint::post::endpoint::{NewPost, NewPostOk};
             use uchat_endpoint::post::types::{Chat, NewPostOptions};
@@ -55,7 +52,7 @@ pub fn QuickRespond(cx: Scope, opened: UseState<bool>) -> Element {
             let request = NewPost {
                 content: Chat {
                     headline: None,
-                    message: Message::new(message.get()).unwrap(),
+                    message: Message::new(&message.read()).unwrap(),
                 }
                 .into(),
                 options: NewPostOptions::default(),
@@ -72,23 +69,24 @@ pub fn QuickRespond(cx: Scope, opened: UseState<bool>) -> Element {
                         .error(format!("Reply failed: {e}"), Duration::seconds(3));
                 }
             }
-        }
-    );
+        });
+    };
 
-    let submit_cursor = if can_submit(message.get()) {
+    let message_val = message.read();
+    let submit_cursor = if can_submit(&message_val) {
         "cursor-pointer"
     } else {
         "cursor-not-allowed"
     };
 
-    let submit_btn_style = maybe_class!("btn-disabled", !can_submit(message.get()));
+    let submit_btn_style = maybe_class!("btn-disabled", !can_submit(&message_val));
 
-    cx.render(rsx! {
+    rsx! {
         form {
             onsubmit: form_onsubmit,
             prevent_default: "onsubmit",
             MessageInput {
-                message: message,
+                message: message_val.clone(),
                 on_input: move |ev: FormEvent| {
                     message.set(ev.value.clone());
                 }
@@ -98,10 +96,10 @@ pub fn QuickRespond(cx: Scope, opened: UseState<bool>) -> Element {
                 button {
                     class: "mt-2 btn {submit_cursor} {submit_btn_style}",
                     r#type: "submit",
-                    disabled: !can_submit(message.get()),
+                    disabled: !can_submit(&message_val),
                     "Respond"
                 }
             }
         }
-    })
+    }
 }

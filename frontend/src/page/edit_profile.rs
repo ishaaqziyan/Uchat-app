@@ -27,23 +27,22 @@ pub struct PageState {
 }
 
 #[component]
-pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
-    let toaster = use_toaster(cx);
+pub fn ImageInput(page_state: Signal<PageState>) -> Element {
+    let toaster = use_toaster();
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "image-input",
                 "Upload Image"
-            },
+            }
             input {
                 class: "w-full",
                 id: "image-input",
                 r#type: "file",
                 accept: "image/*",
-                oninput: |_| {
-                    to_owned![page_state, toaster];
-                    async move {
+                oninput: move |_| {
+                    spawn(async move {
                         use gloo_file::{File, futures::read_as_data_url};
                         use wasm_bindgen::JsCast;
 
@@ -53,129 +52,141 @@ pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                             .unchecked_into::<HtmlInputElement>();
                         let file: File = el.files().unwrap().get(0).unwrap().into();
                         match read_as_data_url(&file).await {
-                            Ok(data) => page_state.with_mut(|state| state.profile_image = Some(PreviewImageData::DataUrl(data))),
+                            Ok(data) => page_state.write().profile_image = Some(PreviewImageData::DataUrl(data)),
                             Err(e) => toaster.write().error(format!("Error loading file: {e}"), chrono::Duration::seconds(5)),
                         }
-                    }
+                    });
                 }
             }
         }
-    })
+    }
 }
 
 #[component]
-pub fn ImagePreview(cx: Scope, page_state: UseRef<PageState>) -> Element {
-    let image_data = page_state.with(|state| state.profile_image.clone());
+pub fn ImagePreview(page_state: Signal<PageState>) -> Element {
+    let image_data = page_state.read().profile_image.clone();
 
-    let img_el = |img_src| {
-        rsx! {
-            img {
-                class: "profile-portrait-lg",
-                src:"{img_src}",
-            }
-        }
-    };
-
-    let image_data = match image_data {
-        Some(PreviewImageData::DataUrl(ref data)) => img_el(data),
-        Some(PreviewImageData::Remote(ref url)) => img_el(url),
-        None => rsx! { div { "No image uploaded"}},
-    };
-
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "flex flex-row justify-center",
-            image_data
+            match image_data {
+                Some(PreviewImageData::DataUrl(data)) => rsx! {
+                    img {
+                        class: "profile-portrait-lg",
+                        src: "{data}",
+                    }
+                },
+                Some(PreviewImageData::Remote(url)) => rsx! {
+                    img {
+                        class: "profile-portrait-lg",
+                        src: "{url}",
+                    }
+                },
+                None => rsx! { div { "No image uploaded" } },
+            }
         }
-    })
+    }
 }
 
 #[component]
-pub fn DisplayNameInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
+pub fn DisplayNameInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::user::DisplayName;
 
     let max_chars = DisplayName::MAX_CHARS;
+    let state = page_state.read();
 
     let wrong_len = maybe_class!(
         "err-text-color",
-        page_state.read().display_name.len() > max_chars
+        state.display_name.len() > max_chars
     );
 
-
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "display-name",
                 div {
                     class: "flex flex-row justify-between",
-                    span { "Display Name" },
+                    span { "Display Name" }
                     span {
                         class: "text-right {wrong_len}",
-                        "{page_state.read().display_name.len()}/{max_chars}",
+                        "{state.display_name.len()}/{max_chars}",
                     }
- 
                 }
-            },
+            }
             input {
                 id: "display-name",
                 class: "input-field",
                 placeholder: "Display Name",
-                value: "{page_state.read().display_name}",
+                value: "{state.display_name}",
                 oninput: move |ev| {
-                    match DisplayName::new(&ev.value) {
+                    let value = ev.value();
+                    match DisplayName::new(&value) {
                         Ok(_) => {
-                            page_state.with_mut(|state| state.form_errors.remove("bad-displayname"));
+                            page_state.write().form_errors.remove("bad-displayname");
                         }
                         Err(e) => {
-                            page_state.with_mut(|state| state.form_errors.set("bad-displayname", e.formatted_error()));
+                            page_state.write().form_errors.set("bad-displayname", e.formatted_error());
                         }
                     }
-                    page_state.with_mut(|state| state.display_name = ev.value.clone());
+                    page_state.write().display_name = value;
                 }
             }
         }
-    })
+    }
 }
+
 #[component]
-pub fn PasswordInput(cx: Scope, state: UseRef<PageState>) -> Element {
+pub fn PasswordInput(state: Signal<PageState>) -> Element {
     use uchat_domain::user::Password;
 
     let check_password_mismatch = move || {
-        let password_matches = state.with(|state| state.password == state.password_confirmation);
+        let state_read = state.read();
+        let password_matches = state_read.password == state_read.password_confirmation;
+        drop(state_read);
+        
         match password_matches {
-            true => state.with_mut(|state| state.form_errors.remove("password-mismatch")),
-            false => state.with_mut(|state| state.form_errors.set("password-mismatch", "Passwords must match")),
+            true => state.write().form_errors.remove("password-mismatch"),
+            false => state.write().form_errors.set("password-mismatch", "Passwords must match"),
         }
     };
 
-    cx.render(rsx!{
+    let state_read = state.read();
+    let password_val = state_read.password.clone();
+    let password_confirmation_val = state_read.password_confirmation.clone();
+    drop(state_read);
+
+    rsx! {
         fieldset {
             class: "fieldset",
-            legend { "Set new password" },
+            legend { "Set new password" }
             div {
                 class: "flex flex-row w-full gap-2",
                 div {
                     label {
                         r#for: "password",
                         "Password"
-                    },
+                    }
                     input {
                         id: "password",
                         class: "input-field",
                         r#type: "password",
                         placeholder: "Password",
-                        value: "{state.read().password}",
+                        value: "{password_val}",
                         oninput: move |ev| {
-                            match Password::new(&ev.value) {
-                                Ok(_) => state.with_mut(|state| state.form_errors.remove("bad-password")),
-                                Err(e) => state.with_mut(|state| state.form_errors.set("bad-password", e.formatted_error())),
+                            let value = ev.value();
+                            match Password::new(&value) {
+                                Ok(_) => state.write().form_errors.remove("bad-password"),
+                                Err(e) => state.write().form_errors.set("bad-password", e.formatted_error()),
                             }
-                            state.with_mut(|state| state.password = ev.value.clone());
-                            state.with_mut(|state| state.password_confirmation = "".to_string());
+                            let mut state_write = state.write();
+                            state_write.password = value.clone();
+                            state_write.password_confirmation = "".to_string();
+                            drop(state_write);
 
-                            if state.with(|state| state.password.is_empty()) {
-                                state.with_mut(|state| state.form_errors.remove("bad-password"));
-                                state.with_mut(|state| state.form_errors.remove("password-mismatch"));
+                            if value.is_empty() {
+                                let mut state_write = state.write();
+                                state_write.form_errors.remove("bad-password");
+                                state_write.form_errors.remove("password-mismatch");
                             } else {
                                 check_password_mismatch();
                             }
@@ -186,107 +197,105 @@ pub fn PasswordInput(cx: Scope, state: UseRef<PageState>) -> Element {
                     label {
                         r#for: "password-confirm",
                         "Confirm"
-                    },
+                    }
                     input {
                         id: "password-confirm",
                         class: "input-field",
                         r#type: "password",
                         placeholder: "Confirm",
-                        value: "{state.read().password_confirmation}",
+                        value: "{password_confirmation_val}",
                         oninput: move |ev| {
-                            state.with_mut(|state| state.password_confirmation = ev.value.clone());
+                            state.write().password_confirmation = ev.value();
                             check_password_mismatch();
                         }
- 
+                    }
                 }
             }
         }
     }
-    })
 }
- 
-
 
 #[component]
-pub fn EmailInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
+pub fn EmailInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::user::Email;
 
-    cx.render(rsx! {
+    let state = page_state.read();
+    let email_val = state.email.clone();
+    drop(state);
+
+    rsx! {
         div {
             label {
                 r#for: "email",
                 div {
                     class: "flex flex-row justify-between",
-                    span { "Email Address" },
+                    span { "Email Address" }
                 }
-            },
+            }
             input {
                 class: "input-field",
                 id: "email",
                 placeholder: "Email Address",
-                value: "{page_state.read().email}",
+                value: "{email_val}",
                 oninput: move |ev| {
-                    if !&ev.value.is_empty() {
-                        match Email::new(&ev.value) {
+                    let value = ev.value();
+                    if !value.is_empty() {
+                        match Email::new(&value) {
                             Ok(_) => {
-                                page_state.with_mut(|state| state.form_errors.remove("bad-email"));
+                                page_state.write().form_errors.remove("bad-email");
                             }
                             Err(e) => {
-                                page_state.with_mut(|state| state.form_errors.set("bad-email", e.formatted_error()));
+                                page_state.write().form_errors.set("bad-email", e.formatted_error());
                             }
                         }
                     } else {
-                        page_state.with_mut(|state| state.form_errors.remove("bad-email"));
+                        page_state.write().form_errors.remove("bad-email");
                     }
-                    page_state.with_mut(|state| state.email = ev.value.clone());
+                    page_state.write().email = value;
                 }
             }
         }
-    })
+    }
 }
 
-pub fn EditProfile(cx: Scope) -> Element {
+#[component]
+pub fn EditProfile() -> Element {
     let api_client = ApiClient::global();
-    let page_state = use_ref(cx, PageState::default);
-    let router = use_router(cx);
-    let toaster = use_toaster(cx);
+    let mut page_state = use_signal(PageState::default);
+    let nav = use_navigator();
+    let toaster = use_toaster();
 
-    let _fetch_profile = {
-        to_owned![api_client, toaster, page_state];
-        use_future(cx, (), |_| async move {
-            use uchat_endpoint::user::endpoint::{GetMyProfile, GetMyProfileOk};
-            toaster
-                .write()
-                .info("Retrieving profile ...", chrono::Duration::seconds(3));
-            let response = fetch_json!(<GetMyProfileOk>, api_client, GetMyProfile);
-            match response {
-                Ok(res) => {
-                    page_state.with_mut(|state| {
-                        state.display_name = res.display_name.unwrap_or_default();
-                        state.email = res.email.unwrap_or_default();
-                        state.profile_image = res.profile_image.map(|img| PreviewImageData::Remote(img.to_string()));
-                    });
-                }
-                Err(e) => toaster.write().error(
-                    format!("Failed to retrieve profile: {e}"),
-                    chrono::Duration::seconds(3),
-                ),
+    use_future(move || async move {
+        use uchat_endpoint::user::endpoint::{GetMyProfile, GetMyProfileOk};
+        toaster
+            .write()
+            .info("Retrieving profile ...", chrono::Duration::seconds(3));
+        let response = fetch_json!(<GetMyProfileOk>, api_client, GetMyProfile);
+        match response {
+            Ok(res) => {
+                let mut state = page_state.write();
+                state.display_name = res.display_name.unwrap_or_default();
+                state.email = res.email.unwrap_or_default();
+                state.profile_image = res.profile_image.map(|img| PreviewImageData::Remote(img.to_string()));
             }
-        })
-    };
+            Err(e) => toaster.write().error(
+                format!("Failed to retrieve profile: {e}"),
+                chrono::Duration::seconds(3),
+            ),
+        }
+    });
 
-
-
-    let form_onsubmit =
-        async_handler!(&cx, [api_client, page_state, router, toaster], move |_| async move {
+    let form_onsubmit = move |_| {
+        spawn(async move {
             use uchat_endpoint::user::endpoint::{UpdateProfile, UpdateProfileOk};
             use uchat_endpoint::Update;
 
+            let state = page_state.read();
             let request_data = {
-                use uchat_domain::{Password};
+                use uchat_domain::Password;
                 UpdateProfile {
                     display_name: {
-                        let name = page_state.with(|state| state.display_name.clone());
+                        let name = state.display_name.clone();
                         if name.is_empty() {
                             Update::SetNull
                         } else {
@@ -294,7 +303,7 @@ pub fn EditProfile(cx: Scope) -> Element {
                         }
                     },
                     email: {
-                        let email = page_state.with(|state| state.email.clone());
+                        let email = state.email.clone();
                         if email.is_empty() {
                             Update::SetNull
                         } else {
@@ -302,7 +311,7 @@ pub fn EditProfile(cx: Scope) -> Element {
                         }
                     },
                     password: {
-                        let password = page_state.with(|state| state.password.clone());
+                        let password = state.password.clone();
                         if password.is_empty() {
                             Update::NoChange
                         } else {
@@ -310,7 +319,7 @@ pub fn EditProfile(cx: Scope) -> Element {
                         }
                     },
                     profile_image: {
-                        let profile_image = page_state.with(|state| state.profile_image.clone());
+                        let profile_image = state.profile_image.clone();
                         match profile_image {
                             Some(PreviewImageData::DataUrl(data)) => Update::Change(data),
                             Some(PreviewImageData::Remote(_)) => Update::NoChange,
@@ -319,62 +328,65 @@ pub fn EditProfile(cx: Scope) -> Element {
                     },
                 }
             };
+            drop(state);
 
             let response = fetch_json!(<UpdateProfileOk>, api_client, request_data);
             match response {
                 Ok(_res) => {
                     toaster.write().success("Profile updated", chrono::Duration::seconds(3));
-                    router.navigate_to(crate::page::HOME)
+                    nav.push(crate::page::HOME)
                 }
                 Err(e) => {
                     toaster.write().error(format!("Failed to update profile: {}", e), chrono::Duration::seconds(3));
                 }
             }
         });
+    };
 
-
-
-    let disable_submit = page_state.with(|state| state.form_errors.has_messages());
+    let disable_submit = page_state.read().form_errors.has_messages();
     let submit_btn_style = maybe_class!("btn-disabled", disable_submit);
+    let form_errors = page_state.read().form_errors.clone();
 
-    cx.render(rsx! {
+    rsx! {
         Appbar {
-            title: "Edit Profile",
-            AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
-                img: "/static/icons/icon-back.svg",
-                label: "Back",
-                title: "Go to the previous page",
+            title: "Edit Profile".to_string(),
+            children: rsx! {
+                AppbarImgButton {
+                    click_handler: move |_| { let _ = nav.go_back(); },
+                    img: "/static/icons/icon-back.svg".to_string(),
+                    label: "Back".to_string(),
+                    title: Some("Go to the previous page".to_string()),
+                }
             }
-        },
+        }
         form {
             class: "flex flex-col w-full gap-3",
             onsubmit: form_onsubmit,
             prevent_default: "onsubmit",
 
-            ImagePreview { page_state: page_state.clone() },
-            ImageInput { page_state: page_state.clone() },
-            DisplayNameInput { page_state: page_state.clone() },
-            EmailInput { page_state: page_state.clone() },
-            PasswordInput { state: page_state.clone() },
+            ImagePreview { page_state }
+            ImageInput { page_state }
+            DisplayNameInput { page_state }
+            EmailInput { page_state }
+            PasswordInput { state: page_state }
 
-            KeyedNotificationBox { notifications: page_state.clone().read().form_errors.clone() },
+            KeyedNotificationBox { notifications: form_errors }
 
             div {
                 class: "flex flex-row justify-end gap-3",
                 button {
                     class: "btn",
                     prevent_default: "onclick",
-                    onclick: move |_| router.pop_route(),
+                    onclick: move |_| { let _ = nav.go_back(); },
                     "Cancel"
-                },
+                }
                 button {
                     class: "btn {submit_btn_style}",
                     r#type: "submit",
                     disabled: disable_submit,
                     "Submit"
-                },
+                }
             }
         }
-    })
+    }
 }
