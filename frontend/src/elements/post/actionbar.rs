@@ -219,7 +219,7 @@ pub fn QuickRespondBox(opened: Signal<bool>) -> Element {
 #[component]
 pub fn Actionbar(post_id: PostId) -> Element {
     let post_manager = use_post_manager();
-    let mut quick_respond_opened = use_signal(|| false);
+    let quick_respond_opened = use_signal(|| false);
 
     let this_post = post_manager.read();
     let this_post = this_post.get(&post_id).unwrap();  // ✅ Add & to borrow post_id

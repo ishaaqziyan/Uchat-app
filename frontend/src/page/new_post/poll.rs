@@ -177,7 +177,7 @@ pub fn NewPoll() -> Element {
     let nav = use_navigator();
     let mut toaster = use_toaster();
 
-    let mut page_state = use_signal(PageState::default);
+    let page_state = use_signal(PageState::default);
 
     let form_onsubmit = move |evt: Event<FormData>| {
         evt.prevent_default();

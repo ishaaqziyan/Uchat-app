@@ -107,7 +107,7 @@ pub fn NewChat() -> Element {
     let api_client = ApiClient::global();
     let nav = use_navigator();
     let mut toaster = use_toaster();
-    let mut page_state = use_signal(PageState::default);
+    let page_state = use_signal(PageState::default);
 
     let form_onsubmit = move |ev: Event<FormData>| {  // ✅ Add event parameter
         ev.prevent_default();  // ✅ Call prevent_default
