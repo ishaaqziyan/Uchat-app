@@ -6,8 +6,9 @@ use chrono::{DateTime, Duration, Utc};
 use dioxus::prelude::*;
 
 pub fn use_toaster() -> Signal<Toaster> {
-    *crate::app::TOASTER
+    use_context()
 }
+
 
 pub enum ToastKind {
     Error,
@@ -90,10 +91,11 @@ impl Clone for Toast {
 
 #[component]
 pub fn ToastRoot() -> Element {
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();
 
     let toasts = toaster.read();
-    let total_toasts = toasts.toasts.len();
+    let _total_toasts = toasts.toasts.len();  // ✅ Prefix with underscore
+
 
     // Collect toast data for rendering
     let toast_data: Vec<_> = toasts

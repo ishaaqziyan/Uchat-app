@@ -6,9 +6,9 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn HomeLiked() -> Element {
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();
     let api_client = ApiClient::global();
-    let post_manager = use_post_manager();
+    let mut post_manager = use_post_manager();  // ✅ Add mut
     let nav = use_navigator();
 
     use_future(move || async move {
@@ -43,13 +43,13 @@ pub fn HomeLiked() -> Element {
                     append_class: Some(appbar::BUTTON_SELECTED.to_string()),
                 }
                 AppbarImgButton {
-                    click_handler: move |_| nav.push(page::HOME_BOOKMARKED),
+                    click_handler: move |_| { let _ = nav.push(page::HOME_BOOKMARKED); },  // ✅ Add braces, let _, and semicolon
                     img: "/static/icons/icon-bookmark.svg".to_string(),
                     label: "Bookmarked".to_string(),
                     title: Some("Show bookmarked posts".to_string()),
                 }
                 AppbarImgButton {
-                    click_handler: move |_| nav.push(page::HOME),
+                    click_handler: move |_| { let _ = nav.push(page::HOME); },  // ✅ Add braces, let _, and semicolon
                     img: "/static/icons/icon-home.svg".to_string(),
                     label: "Home".to_string(),
                     title: Some("Go to the home page".to_string()),
@@ -65,7 +65,7 @@ pub fn HomeLiked() -> Element {
                     "You haven't liked any posts yet. Check out what's "
                     a {
                         class: "link",
-                        onclick: move |_| nav.push(page::POSTS_TRENDING),
+                        onclick: move |_| { let _ = nav.push(page::POSTS_TRENDING); },  // ✅ Add braces, let _, and semicolon
                         "trending"
                     }
                     ", and follow some users to get started."

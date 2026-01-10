@@ -7,8 +7,8 @@ use dioxus::prelude::*;
 pub fn Trending() -> Element {
     let api_client = ApiClient::global();
     let nav = use_navigator();
-    let post_manager = use_post_manager();
-    let toaster = use_toaster();
+    let mut post_manager = use_post_manager();
+    let mut toaster = use_toaster();
 
     use_future(move || async move {
         use uchat_endpoint::post::endpoint::{TrendingPosts, TrendingPostsOk};

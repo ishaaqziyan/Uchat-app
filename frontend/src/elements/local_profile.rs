@@ -10,5 +10,5 @@ pub struct LocalProfile {
 }
 
 pub fn use_local_profile() -> Signal<LocalProfile> {
-    *crate::app::LOCAL_PROFILE
+    use_context()  
 }

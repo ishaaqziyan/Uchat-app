@@ -52,7 +52,7 @@ pub fn Image(content: ReadOnlySignal<EndpointImage>) -> Element {
 
 #[component]
 pub fn Poll(post_id: PostId, content: ReadOnlySignal<EndpointPoll>) -> Element {
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();  // ✅ Add mut
     let api_client = ApiClient::global();
 
     let vote_onclick = move |choice_id: PollChoiceId| {
@@ -148,16 +148,16 @@ pub fn Content(post: ReadOnlySignal<PublicPost>) -> Element {
         div {
             match &post_data.content {
                 EndpointContent::Chat(content) => {
-                    let chat_content = content.clone();
-                    rsx! { Chat { content: ReadOnlySignal::new(chat_content) } }
+                    let chat_signal = use_signal(|| content.clone());  // ✅ Fixed
+                    rsx! { Chat { content: chat_signal } }
                 }
                 EndpointContent::Image(content) => {
-                    let image_content = content.clone();
-                    rsx! { Image { content: ReadOnlySignal::new(image_content) } }
+                    let image_signal = use_signal(|| content.clone());  // ✅ Fixed
+                    rsx! { Image { content: image_signal } }
                 }
                 EndpointContent::Poll(content) => {
-                    let poll_content = content.clone();
-                    rsx! { Poll { post_id: post_data.id, content: ReadOnlySignal::new(poll_content) } }
+                    let poll_signal = use_signal(|| content.clone());  // ✅ Fixed
+                    rsx! { Poll { post_id: post_data.id, content: poll_signal } }
                 }
             }
         }

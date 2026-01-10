@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::prelude::*;
+use crate::app::Route;  // ✅ Add Route import
 use dioxus::prelude::*;
 
 #[component]
@@ -22,7 +23,7 @@ pub fn NewPostPopup(hide: Signal<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    nav.push(page::POST_NEW_POLL);
+                    nav.push(page::POST_NEW_POLL);  // ✅ Add semicolon
                     hide.set(true);
                 },
                 img {
@@ -34,7 +35,7 @@ pub fn NewPostPopup(hide: Signal<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    nav.push(page::POST_NEW_IMAGE);
+                    nav.push(page::POST_NEW_IMAGE);  // ✅ Add semicolon
                     hide.set(true);
                 },
 
@@ -47,7 +48,7 @@ pub fn NewPostPopup(hide: Signal<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    nav.push(page::POST_NEW_CHAT);
+                    nav.push(page::POST_NEW_CHAT);  // ✅ Add semicolon
                     hide.set(true);
                 },
                 img {
@@ -106,7 +107,7 @@ pub fn Navbar() -> Element {
     });
 
     if *hide_navbar.read() {
-        return None;
+        return rsx! {};  // ✅ Changed from None to rsx! {}
     }
 
     rsx! {
@@ -119,12 +120,12 @@ pub fn Navbar() -> Element {
                 NavButton {
                     img: "/static/icons/icon-home.svg".to_string(),
                     label: "Home".to_string(),
-                    onclick: move |_| nav.push(page::HOME),
+                    onclick: move |_| { nav.push(page::HOME); }  // ✅ Add semicolon and braces
                 }
                 NavButton {
                     img: "/static/icons/icon-trending.svg".to_string(),
                     label: "Trending".to_string(),
-                    onclick: move |_| nav.push(page::POSTS_TRENDING),
+                    onclick: move |_| { nav.push(page::POSTS_TRENDING); },  // ✅ Add semicolon and braces
                 }
                 NavButton {
                     img: "/static/icons/icon-new-post.svg".to_string(),

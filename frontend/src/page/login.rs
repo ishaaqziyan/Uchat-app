@@ -94,7 +94,7 @@ pub fn RegisterLink() -> Element {
     rsx! {
         a {
             class: "link text-center cursor-pointer",
-            onclick: move |_| nav.push(page::ACCOUNT_REGISTER),
+            onclick: move |_| { let _ = nav.push(page::ACCOUNT_REGISTER); },
             "Create Account"
         }
     }
@@ -103,11 +103,12 @@ pub fn RegisterLink() -> Element {
 #[component]
 pub fn Login() -> Element {
     let api_client = ApiClient::global();
-    let page_state = use_signal(|| PageState::new());
+    let mut page_state = use_signal(|| PageState::new());  // ✅ Added mut
     let nav = use_navigator();
-    let local_profile = use_local_profile();
+    let mut local_profile = use_local_profile();
 
-    let form_onsubmit = move |_| {
+    let form_onsubmit = move |ev: Event<FormData>| {
+        ev.prevent_default();
         spawn(async move {
             use uchat_endpoint::user::endpoint::{Login, LoginOk};
             
@@ -115,8 +116,8 @@ pub fn Login() -> Element {
             let request_data = {
                 use uchat_domain::{Password, Username};
                 Login {
-                    username: Username::new(&state.username.read()).unwrap(),
-                    password: Password::new(&state.password.read()).unwrap(),
+                    username: Username::new(&*state.username.read()).unwrap(),
+                    password: Password::new(&*state.password.read()).unwrap(),
                 }
             };
             drop(state);
@@ -131,10 +132,10 @@ pub fn Login() -> Element {
                     );
                     local_profile.write().image = res.profile_image;
                     local_profile.write().user_id = Some(res.user_id);
-                    nav.push(page::HOME)
+                    let _ = nav.push(page::HOME);
                 }
                 Err(e) => {
-                    page_state.read().server_messages.write().set("login-fail", e.to_string())
+                    page_state.write().server_messages.write().set("login-fail", e.to_string())
                 }
             }
         });
@@ -143,24 +144,24 @@ pub fn Login() -> Element {
     let username_oninput = move |ev: FormEvent| {
         let value = ev.value();
         if let Err(e) = uchat_domain::Username::new(&value) {
-            page_state.read().form_errors.write().set("bad-username", e.formatted_error());
+            page_state.write().form_errors.write().set("bad-username", e.formatted_error());
         } else {
-            page_state.read().form_errors.write().remove("bad-username");
+            page_state.write().form_errors.write().remove("bad-username");
         }
-        page_state.read().username.set(value);
+        page_state.write().username.set(value);
     };
 
     let password_oninput = move |ev: FormEvent| {
         let value = ev.value();
         if let Err(e) = uchat_domain::Password::new(&value) {
-            page_state.read().form_errors.write().set("bad-password", e.formatted_error());
+            page_state.write().form_errors.write().set("bad-password", e.formatted_error());
         } else {
-            page_state.read().form_errors.write().remove("bad-password");
+            page_state.write().form_errors.write().remove("bad-password");
         }
-        page_state.read().password.set(value);
+        page_state.write().password.set(value);
     };
 
-    let state = page_state.read();
+    let state = page_state.read();  // ✅ Removed mut
     let can_submit = state.can_submit();
     let submit_btn_style = maybe_class!("btn-disabled", !can_submit);
     let server_messages = state.server_messages.read().clone();
@@ -172,7 +173,6 @@ pub fn Login() -> Element {
     rsx! {
         form {
             class: "flex flex-col gap-5",
-            prevent_default: "onsubmit",
             onsubmit: form_onsubmit,
 
             KeyedNotificationBox {

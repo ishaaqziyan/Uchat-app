@@ -109,7 +109,7 @@ pub fn PollChoices(page_state: Signal<PageState>) -> Element {
         .iter()
         .map(|(&key, choice)| (key, choice.clone()))
         .collect();
-    drop(state); // Release lock
+    drop(state);
 
     rsx! {
         div {
@@ -144,8 +144,8 @@ pub fn PollChoices(page_state: Signal<PageState>) -> Element {
                                     }
                                     button {
                                         class: "btn p-0 h-full bg-red-700",
-                                        prevent_default: "onclick",
-                                        onclick: move |_| {
+                                        onclick: move |evt| {
+                                            evt.prevent_default();
                                             page_state.write().poll_choices.remove(&key);
                                         },
                                         "X"
@@ -160,8 +160,8 @@ pub fn PollChoices(page_state: Signal<PageState>) -> Element {
                 class: "flex flex-row justify-end",
                 button {
                     class: "btn w-12",
-                    prevent_default: "onclick",
-                    onclick: move |_| {
+                    onclick: move |evt| {
+                        evt.prevent_default();
                         page_state.write().push_choice("")
                     },
                     "+"
@@ -175,11 +175,12 @@ pub fn PollChoices(page_state: Signal<PageState>) -> Element {
 pub fn NewPoll() -> Element {
     let api_client = ApiClient::global();
     let nav = use_navigator();
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();
 
     let mut page_state = use_signal(PageState::default);
 
-    let form_onsubmit = move |_| {
+    let form_onsubmit = move |evt: Event<FormData>| {
+        evt.prevent_default();
         spawn(async move {
             use uchat_endpoint::post::endpoint::{NewPost, NewPostOk};
 
@@ -209,7 +210,7 @@ pub fn NewPoll() -> Element {
                 .into(),
                 options: NewPostOptions::default(),
             };
-            drop(state); // Release lock before async operation
+            drop(state);
 
             let response = fetch_json!(<NewPostOk>, api_client, request);
             match response {
@@ -229,24 +230,35 @@ pub fn NewPoll() -> Element {
     let can_submit = page_state.read().can_submit();
     let submit_btn_style = maybe_class!("btn-disabled", !can_submit);
 
+    let on_chat_click = move |_ev: MouseEvent| {
+        nav.replace(page::POST_NEW_CHAT);
+    };
+
+    let on_image_click = move |_ev: MouseEvent| {
+        nav.replace(page::POST_NEW_IMAGE);
+    };
+
+    let on_back_click = move |_ev: MouseEvent| {
+        let _ = nav.go_back();
+    };
+
     rsx! {
         Appbar {
             title: "New Poll".to_string(),
             children: rsx! {
                 AppbarImgButton {
-                    click_handler: move |_| nav.replace(page::POST_NEW_CHAT),
+                    click_handler: on_chat_click,
                     img: "/static/icons/icon-messages.svg".to_string(),
                     label: "Chat".to_string(),
                     title: Some("Post a new chat".to_string()),
                 }
                 AppbarImgButton {
-                    click_handler: move |_| nav.replace(page::POST_NEW_IMAGE),
+                    click_handler: on_image_click,
                     img: "/static/icons/icon-image.svg".to_string(),
                     label: "Image".to_string(),
                     title: Some("Post a new image".to_string()),
                 }
                 AppbarImgButton {
-                    click_handler: move |_| (),
                     img: "/static/icons/icon-poll.svg".to_string(),
                     label: "Poll".to_string(),
                     disabled: Some(true),
@@ -254,7 +266,7 @@ pub fn NewPoll() -> Element {
                     append_class: Some(appbar::BUTTON_SELECTED.to_string()),
                 }
                 AppbarImgButton {
-                    click_handler: move |_| { let _ = nav.go_back(); },
+                    click_handler: on_back_click,
                     img: "/static/icons/icon-back.svg".to_string(),
                     label: "Back".to_string(),
                     title: Some("Go to the previous page".to_string()),
@@ -265,7 +277,6 @@ pub fn NewPoll() -> Element {
         form {
             class: "flex flex-col gap-4",
             onsubmit: form_onsubmit,
-            prevent_default: "onsubmit",
             HeadlineInput { page_state }
             PollChoices { page_state }
             button {

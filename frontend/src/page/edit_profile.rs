@@ -28,7 +28,7 @@ pub struct PageState {
 
 #[component]
 pub fn ImageInput(page_state: Signal<PageState>) -> Element {
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();
 
     rsx! {
         div {
@@ -139,7 +139,7 @@ pub fn DisplayNameInput(page_state: Signal<PageState>) -> Element {
 pub fn PasswordInput(state: Signal<PageState>) -> Element {
     use uchat_domain::user::Password;
 
-    let check_password_mismatch = move || {
+    let mut check_password_mismatch = move || {
         let state_read = state.read();
         let password_matches = state_read.password == state_read.password_confirmation;
         drop(state_read);
@@ -263,7 +263,7 @@ pub fn EditProfile() -> Element {
     let api_client = ApiClient::global();
     let mut page_state = use_signal(PageState::default);
     let nav = use_navigator();
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();
 
     use_future(move || async move {
         use uchat_endpoint::user::endpoint::{GetMyProfile, GetMyProfileOk};
@@ -285,7 +285,8 @@ pub fn EditProfile() -> Element {
         }
     });
 
-    let form_onsubmit = move |_| {
+    let form_onsubmit = move |ev: Event<FormData>| {
+        ev.prevent_default();
         spawn(async move {
             use uchat_endpoint::user::endpoint::{UpdateProfile, UpdateProfileOk};
             use uchat_endpoint::Update;
@@ -334,7 +335,7 @@ pub fn EditProfile() -> Element {
             match response {
                 Ok(_res) => {
                     toaster.write().success("Profile updated", chrono::Duration::seconds(3));
-                    nav.push(crate::page::HOME)
+                    let _ = nav.push(crate::page::HOME);
                 }
                 Err(e) => {
                     toaster.write().error(format!("Failed to update profile: {}", e), chrono::Duration::seconds(3));
@@ -362,7 +363,6 @@ pub fn EditProfile() -> Element {
         form {
             class: "flex flex-col w-full gap-3",
             onsubmit: form_onsubmit,
-            prevent_default: "onsubmit",
 
             ImagePreview { page_state }
             ImageInput { page_state }
@@ -376,8 +376,10 @@ pub fn EditProfile() -> Element {
                 class: "flex flex-row justify-end gap-3",
                 button {
                     class: "btn",
-                    prevent_default: "onclick",
-                    onclick: move |_| { let _ = nav.go_back(); },
+                    onclick: move |ev| {
+                        ev.prevent_default();
+                        let _ = nav.go_back();
+                    },
                     "Cancel"
                 }
                 button {

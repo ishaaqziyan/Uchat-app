@@ -40,7 +40,7 @@ pub fn KeyedNotificationBox(
     let legend = legend.as_deref().unwrap_or("Errors");
 
     if !notifications.has_messages() {
-        return None;
+        return rsx! {};  // ✅ Changed from None to rsx! {}
     }
 
     rsx! {

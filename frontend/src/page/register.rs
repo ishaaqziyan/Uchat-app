@@ -92,7 +92,7 @@ pub fn LoginLink() -> Element {
     rsx! {
         a {
             class: "link text-center cursor-pointer",
-            onclick: move |_| nav.push(page::ACCOUNT_LOGIN),
+            onclick: move |_| { nav.push(page::ACCOUNT_LOGIN); },
             "Existing User Login"
         }
     }
@@ -103,9 +103,10 @@ pub fn Register() -> Element {
     let api_client = ApiClient::global();
     let page_state = use_signal(|| PageState::new());
     let nav = use_navigator();
-    let local_profile = use_local_profile();
+    let mut local_profile = use_local_profile();
 
-    let form_onsubmit = move |_| {
+    let form_onsubmit = move |evt: Event<FormData>| {
+        evt.prevent_default();
         spawn(async move {
             use uchat_endpoint::user::endpoint::{CreateUser, CreateUserOk};
             
@@ -113,8 +114,8 @@ pub fn Register() -> Element {
             let request_data = {
                 use uchat_domain::{Password, Username};
                 CreateUser {
-                    username: Username::new(&state.username.read()).unwrap(),
-                    password: Password::new(&state.password.read()).unwrap(),
+                    username: Username::new(&*state.username.read()).unwrap(),
+                    password: Password::new(&*state.password.read()).unwrap(),
                 }
             };
             drop(state);
@@ -128,7 +129,7 @@ pub fn Register() -> Element {
                         res.session_expires,
                     );
                     local_profile.write().user_id = Some(res.user_id);
-                    nav.push(page::HOME)
+                    nav.push(page::HOME);
                 }
                 Err(_e) => (),
             }
@@ -137,22 +138,28 @@ pub fn Register() -> Element {
 
     let username_oninput = move |ev: FormEvent| {
         let value = ev.value();
+        let mut username_sig = page_state.read().username;
+        let mut form_errors_sig = page_state.read().form_errors;
+        
         if let Err(e) = uchat_domain::Username::new(&value) {
-            page_state.read().form_errors.write().set("bad-username", e.formatted_error());
+            form_errors_sig.write().set("bad-username", e.formatted_error());
         } else {
-            page_state.read().form_errors.write().remove("bad-username");
+            form_errors_sig.write().remove("bad-username");
         }
-        page_state.read().username.set(value);
+        username_sig.set(value);
     };
 
     let password_oninput = move |ev: FormEvent| {
         let value = ev.value();
+        let mut password_sig = page_state.read().password;
+        let mut form_errors_sig = page_state.read().form_errors;
+        
         if let Err(e) = uchat_domain::Password::new(&value) {
-            page_state.read().form_errors.write().set("bad-password", e.formatted_error());
+            form_errors_sig.write().set("bad-password", e.formatted_error());
         } else {
-            page_state.read().form_errors.write().remove("bad-password");
+            form_errors_sig.write().remove("bad-password");
         }
-        page_state.read().password.set(value);
+        password_sig.set(value);
     };
 
     let state = page_state.read();
@@ -166,7 +173,6 @@ pub fn Register() -> Element {
     rsx! {
         form {
             class: "flex flex-col gap-5",
-            prevent_default: "onsubmit",
             onsubmit: form_onsubmit,
 
             img {

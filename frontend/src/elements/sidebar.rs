@@ -4,8 +4,9 @@ use crate::prelude::*;
 use dioxus::prelude::*;
 
 pub fn use_sidebar() -> Signal<SidebarManager> {
-    *crate::app::SIDEBAR
+    use_context()  // ✅ Get from context if provided
 }
+
 
 #[derive(Default, Clone)]
 pub struct SidebarManager {
@@ -28,17 +29,17 @@ impl SidebarManager {
 
 #[component]
 pub fn Sidebar() -> Element {
-    let sidebar = use_sidebar();
     let nav = use_navigator();
-    let local_profile = use_local_profile();
+    let mut local_profile = use_local_profile();
 
-    let sidebar_width = if sidebar.read().is_open() {
+    // ✅ Call use_sidebar() inside each closure to get fresh Signal
+    let sidebar_width = if use_sidebar().read().is_open() {
         "w-[var(--sidebar-width)]"
     } else {
         "w-0"
     };
 
-    let overlay_class = if sidebar.read().is_open() {
+    let overlay_class = if use_sidebar().read().is_open() {
         "w-full opacity-80"
     } else {
         "w-0 opacity-0"
@@ -54,7 +55,7 @@ pub fn Sidebar() -> Element {
     rsx! {
         div {
             class: "fixed top-0 left-0 h-full navbar-bg-color transition z-[99] {overlay_class}",
-            onclick: move |_| sidebar.write().close(),
+            onclick: move |_| use_sidebar().write().close(),  // ✅ Call use_sidebar() here
         }
         div {
             class: "{sidebar_width} z-[100] fixed top-0 left-0 h-full
@@ -64,10 +65,10 @@ pub fn Sidebar() -> Element {
             a {
                 class: "flex flex-row justify-center py-5 cursor-pointer",
                 onclick: move |_| {
-                    sidebar.write().close();
+                    use_sidebar().write().close();  // ✅ Call use_sidebar() here
                     if let Some(id) = local_profile.read().user_id {
                         let url = crate::page::profile_view(id);
-                        nav.push(url);
+                        let _ = nav.push(url);
                     }
                 },
                 img {
@@ -78,16 +79,16 @@ pub fn Sidebar() -> Element {
             a {
                 class: "sidebar-navlink border-t",
                 onclick: move |_| {
-                    sidebar.write().close();
-                    nav.push(page::PROFILE_EDIT);
+                    use_sidebar().write().close();  // ✅ Call use_sidebar() here
+                    let _ = nav.push(page::PROFILE_EDIT);
                 },
                 "Edit Profile"
             }
             a {
                 class: "sidebar-navlink mb-auto",
                 onclick: move |_| {
-                    sidebar.write().close();
-                    nav.push(page::HOME_BOOKMARKED);
+                    use_sidebar().write().close();  // ✅ Call use_sidebar() here
+                    let _ = nav.push(page::HOME_BOOKMARKED);
                 },
                 "Bookmarks"
             }
@@ -99,8 +100,8 @@ pub fn Sidebar() -> Element {
                     crate::util::cookie::set_session("".to_string(), SessionId::new(), Utc::now());
                     local_profile.write().user_id = None;
                     local_profile.write().image = None;
-                    sidebar.write().close();
-                    nav.push(page::ACCOUNT_LOGIN);
+                    use_sidebar().write().close();  // ✅ Call use_sidebar() here
+                    let _ = nav.push(page::ACCOUNT_LOGIN);
                 },
                 "Logout"
             }

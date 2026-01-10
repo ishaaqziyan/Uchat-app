@@ -106,10 +106,11 @@ pub fn HeadlineInput(page_state: Signal<PageState>) -> Element {
 pub fn NewChat() -> Element {
     let api_client = ApiClient::global();
     let nav = use_navigator();
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();
     let mut page_state = use_signal(PageState::default);
 
-    let form_onsubmit = move |_| {
+    let form_onsubmit = move |ev: Event<FormData>| {  // ✅ Add event parameter
+        ev.prevent_default();  // ✅ Call prevent_default
         spawn(async move {
             use uchat_domain::post::{Headline, Message};
             use uchat_endpoint::post::endpoint::{NewPost, NewPostOk};
@@ -131,13 +132,13 @@ pub fn NewChat() -> Element {
                 .into(),
                 options: NewPostOptions::default(),
             };
-            drop(state); // Release lock before async operation
+            drop(state);
 
             let response = fetch_json!(<NewPostOk>, api_client, request);
             match response {
                 Ok(_) => {
                     toaster.write().success("Posted!", Duration::seconds(3));
-                    nav.replace(page::HOME);
+                    let _ = nav.replace(page::HOME);  // ✅ Add let _
                 }
                 Err(e) => {
                     toaster
@@ -164,13 +165,13 @@ pub fn NewChat() -> Element {
                     append_class: Some(appbar::BUTTON_SELECTED.to_string()),
                 }
                 AppbarImgButton {
-                    click_handler: move |_| nav.replace(page::POST_NEW_IMAGE),
+                    click_handler: move |_| { let _ = nav.replace(page::POST_NEW_IMAGE); },  // ✅ Add braces, let _, and semicolon
                     img: "/static/icons/icon-image.svg".to_string(),
                     label: "Image".to_string(),
                     title: Some("Post a new image".to_string()),
                 }
                 AppbarImgButton {
-                    click_handler: move |_| nav.replace(page::POST_NEW_POLL),
+                    click_handler: move |_| { let _ = nav.replace(page::POST_NEW_POLL); },  // ✅ Add braces, let _, and semicolon
                     img: "/static/icons/icon-poll.svg".to_string(),
                     label: "Poll".to_string(),
                     title: Some("Post a new poll".to_string()),
@@ -186,7 +187,7 @@ pub fn NewChat() -> Element {
         form {
             class: "flex flex-col gap-4",
             onsubmit: form_onsubmit,
-            prevent_default: "onsubmit",
+            // ✅ Remove: prevent_default: "onsubmit",
             MessageInput { page_state }
             HeadlineInput { page_state }
             button {

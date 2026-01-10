@@ -39,11 +39,12 @@ pub fn MessageInput(
 #[component]
 pub fn QuickRespond(opened: Signal<bool>) -> Element {
     let api_client = ApiClient::global();
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();
 
     let mut message = use_signal(|| "".to_string());
 
-    let form_onsubmit = move |_| {
+    let form_onsubmit = move |ev: Event<FormData>| {  // ✅ Add event parameter
+        ev.prevent_default();  // ✅ Call prevent_default on the event
         spawn(async move {
             use uchat_domain::post::Message;
             use uchat_endpoint::post::endpoint::{NewPost, NewPostOk};
@@ -52,7 +53,7 @@ pub fn QuickRespond(opened: Signal<bool>) -> Element {
             let request = NewPost {
                 content: Chat {
                     headline: None,
-                    message: Message::new(&message.read()).unwrap(),
+                    message: Message::new(&*message.read()).unwrap(),  // ✅ Dereference with &*
                 }
                 .into(),
                 options: NewPostOptions::default(),
@@ -84,13 +85,14 @@ pub fn QuickRespond(opened: Signal<bool>) -> Element {
     rsx! {
         form {
             onsubmit: form_onsubmit,
-            prevent_default: "onsubmit",
+            // ✅ Remove prevent_default attribute
             MessageInput {
-                message: message_val.clone(),
-                on_input: move |ev: FormEvent| {
-                    message.set(ev.value.clone());
-                }
-            }
+            message: message_val.clone(),
+            on_input: move |ev: FormEvent| {
+            message.set(ev.value().clone());  // ✅ Add () to call the method
+        }
+   }
+
             div {
                 class: "w-full flex flex-row justify-end",
                 button {

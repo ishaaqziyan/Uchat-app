@@ -12,8 +12,8 @@ pub fn LikeDislike(
     likes: i64,
     dislikes: i64,
 ) -> Element {
-    let post_manager = use_post_manager();
-    let toaster = use_toaster();
+    let mut post_manager = use_post_manager();  // ✅ Add mut
+    let mut toaster = use_toaster();
     let api_client = ApiClient::global();
 
     let like_icon = match like_status {
@@ -88,8 +88,8 @@ pub fn LikeDislike(
 
 #[component]
 pub fn Boost(post_id: PostId, boosted: bool, boosts: i64) -> Element {
-    let post_manager = use_post_manager();
-    let toaster = use_toaster();
+    let mut post_manager = use_post_manager();  // ✅ Add mut
+    let mut toaster = use_toaster();
     let api_client = ApiClient::global();
 
     let icon = match boosted {
@@ -144,8 +144,8 @@ pub fn Boost(post_id: PostId, boosted: bool, boosts: i64) -> Element {
 
 #[component]
 pub fn Bookmark(post_id: PostId, bookmarked: bool) -> Element {
-    let post_manager = use_post_manager();
-    let toaster = use_toaster();
+    let mut post_manager = use_post_manager();  // ✅ Add mut
+    let mut toaster = use_toaster();
     let api_client = ApiClient::global();
 
     let icon = match bookmarked {
@@ -222,7 +222,7 @@ pub fn Actionbar(post_id: PostId) -> Element {
     let mut quick_respond_opened = use_signal(|| false);
 
     let this_post = post_manager.read();
-    let this_post = this_post.get(post_id).unwrap();
+    let this_post = this_post.get(&post_id).unwrap();  // ✅ Add & to borrow post_id
     let this_post_id = this_post.id;
 
     rsx! {

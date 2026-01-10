@@ -1,27 +1,24 @@
 #![allow(non_snake_case)]
 
-use std::str::FromStr;
-
-use crate::prelude::*;
+use crate::{prelude::*, elements::post::PublicPostEntry};
 use dioxus::prelude::*;
 use uchat_domain::ids::UserId;
 
+#[derive(Clone, Copy, PartialEq, Props)]
+pub struct ViewProfileProps {
+    pub user_id: UserId,
+}
+
 #[component]
-pub fn ViewProfile() -> Element {
+pub fn ViewProfile(props: ViewProfileProps) -> Element {
     let api_client = ApiClient::global();
-    let toaster = use_toaster();
+    let mut toaster = use_toaster();
     let nav = use_navigator();
-    let post_manager = use_post_manager();
+    let mut post_manager = use_post_manager();
     let local_profile = use_local_profile();
 
-    let mut profile = use_signal(|| None::<uchat_endpoint::user::types::Profile>);
-
-    let route = use_route::<Route>();
-    let user_id = route
-        .segments()
-        .last()
-        .and_then(|id| UserId::from_str(id).ok())
-        .unwrap_or_default();
+    let mut profile = use_signal(|| None::<uchat_endpoint::user::endpoint::ViewProfileOk>);
+    let user_id = props.user_id;
 
     use_effect(move || {
         spawn(async move {
@@ -31,8 +28,9 @@ pub fn ViewProfile() -> Element {
             let response = fetch_json!(<ViewProfileOk>, api_client, request);
             match response {
                 Ok(res) => {
-                    profile.set(Some(res.profile));
-                    post_manager.write().populate(res.posts.into_iter());
+                    let posts = res.posts.clone();
+                    profile.set(Some(res));
+                    post_manager.write().populate(posts.into_iter());
                 }
                 Err(e) => toaster.write().error(
                     format!("Failed to retrieve posts: {e}"),
@@ -48,7 +46,7 @@ pub fn ViewProfile() -> Element {
             use uchat_endpoint::user::types::FollowAction;
             
             let am_following = match profile.read().as_ref() {
-                Some(profile) => profile.am_following,
+                Some(prof) => prof.profile.am_following,
                 None => false,
             };
 
@@ -61,8 +59,8 @@ pub fn ViewProfile() -> Element {
             };
             match fetch_json!(<FollowUserOk>, api_client, request) {
                 Ok(res) => {
-                    if let Some(p) = profile.write().as_mut() {
-                        p.am_following = res.status.into();
+                    if let Some(view_profile_ok) = profile.write().as_mut() {
+                        view_profile_ok.profile.am_following = res.status.into();
                     }
                 }
                 Err(e) => toaster.write().error(
@@ -73,7 +71,7 @@ pub fn ViewProfile() -> Element {
         });
     };
 
-    let profile_data = profile.read().clone();
+    let profile_data = profile.read().as_ref().map(|vp| vp.profile.clone());
     let post_ids = post_manager.read().all_post_ids();
 
     rsx! {

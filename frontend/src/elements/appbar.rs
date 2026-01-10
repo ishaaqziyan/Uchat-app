@@ -46,7 +46,7 @@ pub fn Appbar(
     children: Element,
 ) -> Element {
     let local_profile = use_local_profile();
-    let sidebar = use_sidebar();
+    let mut sidebar = use_sidebar();  // ✅ Add mut here
 
     let local_profile = local_profile.read();
     let profile_img_src = local_profile

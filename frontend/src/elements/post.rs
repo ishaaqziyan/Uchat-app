@@ -2,7 +2,6 @@
 
 use crate::{
     elements::post::{actionbar::Actionbar, content::Content},
-    prelude::*,
 };
 use dioxus::prelude::*;
 use indexmap::IndexMap;
@@ -14,8 +13,11 @@ pub mod content;
 pub mod quick_respond;
 
 pub fn use_post_manager() -> Signal<PostManager> {
-    *crate::app::POSTMANAGER
+    crate::app::POSTMANAGER.signal()  // ✅ Get the Signal from GlobalSignal
 }
+
+
+
 
 #[derive(Default, Clone)]
 pub struct PostManager {
@@ -68,7 +70,7 @@ pub fn view_profile_onclick(
 ) -> impl Fn(MouseEvent) + 'static {
     move |_| {
         let route = crate::page::route::profile_view(user_id);
-        nav.push(route);
+        let _ = nav.push(route);
     }
 }
 
@@ -143,7 +145,7 @@ pub fn PublicPostEntry(post_id: PostId) -> Element {
     });
 
     let Some(post_data) = this_post() else {
-        return None;
+        return rsx! {};
     };
 
     let post_signal = use_signal(|| post_data.clone());
@@ -153,13 +155,13 @@ pub fn PublicPostEntry(post_id: PostId) -> Element {
             key: "{post_id.to_string()}",
             class: "grid grid-cols-[50px_1fr] gap-2 mb-4",
             ProfileImage {
-                post: post_signal.into(),
+                post: post_signal,  // ✅ Remove .into() - Signal auto-converts to ReadOnlySignal
             }
             div {
                 class: "flex flex-col gap-3",
-                Header { post: post_signal.into() }
+                Header { post: post_signal }  // ✅ Remove .into()
                 // reply to
-                Content { post: post_signal.into() }
+                Content { post: post_signal }  // ✅ Remove .into()
                 Actionbar { post_id: post_data.id }
                 hr {}
             }

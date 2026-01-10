@@ -1,15 +1,19 @@
+[package]
+name = "uchat-frontend"
+version = "0.1.0"
+edition = "2021"
+
 [dependencies]
 cfg-if = "1"
 chrono = { version = "0.4.24", features = ["serde"] }
 console_log = { version = "1.0", optional = true, features = ["color"] }
 
-# Just use the main dioxus crate with "web" feature
-dioxus = { version = "0.6", features = ["web"] }
-dioxus-router = "0.6"
-# Remove dioxus-web (bundled in 0.6+ via "web" feature)
+# Dioxus 0.6 - unified package with router included
+dioxus = { version = "0.6", features = ["web", "router"] }
 
-# DELETE fermi - use Signal::global instead
-# fermi = "0.4.0"
+# Remove separate dioxus-router (bundled in main dioxus with "router" feature)
+# Remove dioxus-web (bundled with "web" feature)
+# Remove fermi (use Signal::global instead)
 
 futures = "0.3.27"
 gloo-file = { version = "0.2.3", features = ["futures"] }
@@ -37,3 +41,7 @@ interprocess = { version = "1.2.1", features = ["tokio"], optional = true }
 uchat_cookie = { path = "../shared/cookie" }
 uchat_domain = { path = "../shared/domain" }
 uchat_endpoint = { path = "../shared/endpoint" }
+
+[features]
+default = []
+console_log = ["dep:console_log"]

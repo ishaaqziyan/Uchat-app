@@ -33,6 +33,6 @@ pub mod route {
     pub const PROFILE_VIEW: &str = "/profile/:user";
 
     pub fn profile_view(user_id: UserId) -> String {
-        format!("/profile/{}", user_id)
+        format!("/profile/{}", user_id.to_string())
     }
 }
