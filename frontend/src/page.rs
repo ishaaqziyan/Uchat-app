@@ -1,23 +1,28 @@
-pub mod edit_profile;
-pub mod home;
-pub mod login;
-pub mod new_post;
-pub mod register;
-pub mod trending;
-pub mod view_profile;
+pub mod edit_profile; // Page for editing the current user's profile
+pub mod home;         // Home feed and its sub-pages (bookmarked, liked)
+pub mod login;        // Login page
+pub mod new_post;     // New post creation pages (chat, image, poll)
+pub mod register;     // Account registration page
+pub mod trending;     // Trending posts feed page
+pub mod view_profile; // Page for viewing another user's profile
 
 pub use edit_profile::EditProfile;
-pub use home::{bookmarked::HomeBookmarked, liked::HomeLiked, Home};
+pub use home::{bookmarked::HomeBookmarked, liked::HomeLiked, Home}; // Re-export Home and its sub-pages
 pub use login::Login;
-pub use new_post::*;
+pub use new_post::*; // Re-export all new post page components (NewChat, NewImage, NewPoll)
 pub use register::Register;
 pub use trending::Trending;
 pub use view_profile::ViewProfile;
 
-pub use route::*;
+pub use route::*; // Re-export all route constants and helpers at the top level
 
+/// Route constants and URL builder helpers.
+/// Centralizing all routes here prevents hardcoded URL strings scattered across the codebase.
 pub mod route {
     use uchat_domain::ids::UserId;
+
+    // Static Routes
+    // These are fixed URL paths used with the router for navigation
 
     pub const ACCOUNT_LOGIN: &str = "/account/login";
     pub const ACCOUNT_REGISTER: &str = "/account/register";
@@ -29,8 +34,9 @@ pub mod route {
     pub const POST_NEW_POLL: &str = "/post/new_poll";
     pub const POSTS_TRENDING: &str = "/posts/trending";
     pub const PROFILE_EDIT: &str = "/profile/edit";
-    pub const PROFILE_VIEW: &str = "/profile/view/:user";
+    pub const PROFILE_VIEW: &str = "/profile/view/:user"; 
 
+    /// Builds a concrete profile view URL by replacing the `:user` placeholder with an actual UserId.
     pub fn profile_view(user_id: UserId) -> String {
         PROFILE_VIEW.replace(":user", &user_id.to_string())
     }
