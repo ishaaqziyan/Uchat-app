@@ -8,7 +8,7 @@ use itertools::Itertools;
 use uchat_domain::ids::{PollChoiceId, PostId};
 
 use uchat_endpoint::post::types::{
-    Chat as EndpointChat, Image as EndpointImage, ImageKind, Poll as EndpointPoll, PublicPost, VoteCast,
+    Chat as EndpointChat, Image as EndpointImage, ImageKind, Poll as EndpointPoll, VoteCast,
 };
 
 #[component]
@@ -16,10 +16,7 @@ pub
 fn Chat(content: EndpointChat) -> Element {
     let Headline = content.headline.as_ref().map(|headline| {
         rsx! {
-            div {
-                class: "font-bold",
-                "{headline.as_ref()}"
-            }
+            div { class: "font-bold", "{headline.as_ref()}" }
         }
     });
 
@@ -43,16 +40,16 @@ fn Image(content: EndpointImage) -> Element {
     let Caption = content
         .caption
         .as_ref()
-        .map(|caption| rsx! { figcaption { em { "{caption.as_ref()}" } } });
+        .map(|caption| rsx! {
+            figcaption {
+                em { "{caption.as_ref()}" }
+            }
+        });
 
     rsx! {
-        figure {
-            class: "flex flex-col gap-2",
+        figure { class: "flex flex-col gap-2",
             {Caption}
-            img {
-                class: "w-full object-contain max-h-[80vh]",
-                src: "{url}"
-            }
+            img { class: "w-full object-contain max-h-[80vh]", src: "{url}" }
         }
     }
 }
@@ -116,7 +113,7 @@ fn Poll(post_id: PostId, content: EndpointPoll) -> Element {
 
         let foreground_styles = maybe_class!("font-bold", leader_ids.contains(&choice_id));
 
-        rsx! { 
+        rsx! {
             li {
                 key: "{choice_id.to_string()}",
                 class: "relative p-2 m-2 cursor-pointer grid grid-cols-[3rem_1fr] border rounded border-slate-400",
@@ -124,27 +121,22 @@ fn Poll(post_id: PostId, content: EndpointPoll) -> Element {
                 div {
                     class: "absolute left-0 {background_color} h-full rounded z-[-1]",
                     style: "width: {percent}",
-                },
-                div {
-                    class: "{foreground_styles}",
-                    "{percent}",
-                },
-                div {
-                    class: "{foreground_styles}",
-                    "{choice.description.as_ref()}",
                 }
+                div { class: "{foreground_styles}", "{percent}" }
+                div { class: "{foreground_styles}", "{choice.description.as_ref()}" }
             }
         }
     }).collect();
 
-    let Headline = rsx! { figcaption { "{content.headline.as_ref()}"}};
+    let Headline = rsx! {
+        figcaption { "{content.headline.as_ref()}" }
+
+    };
 
     rsx! {
         div {
             {Headline}
-            ul {
-                {Choices.into_iter()}
-            }
+            ul { {Choices.into_iter()} }
         }
     }
 }
@@ -160,9 +152,15 @@ fn Content(post_id: PostId) -> Element {
     rsx! {
         div {
             match &post.content {
-                EndpointContent::Chat(c) => rsx! { Chat { content: c.clone() } },
-                EndpointContent::Image(c) => rsx! { Image { content: c.clone() } },
-                EndpointContent::Poll(c) => rsx! { Poll { post_id: post.id, content: c.clone() } },
+                EndpointContent::Chat(c) => rsx! {
+                    Chat { content: c.clone() }
+                },
+                EndpointContent::Image(c) => rsx! {
+                    Image { content: c.clone() }
+                },
+                EndpointContent::Poll(c) => rsx! {
+                    Poll { post_id: post.id, content: c.clone() }
+                },
             }
         }
     }
