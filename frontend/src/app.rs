@@ -50,7 +50,7 @@ fn Init() -> Element {
                         "Please log in or create an account to continue.",
                         chrono::Duration::seconds(5),
                     );
-                    { router.push(page::ACCOUNT_LOGIN); }
+                    { router.push(Route::Login {}); }
                 }
             }
             }
@@ -63,11 +63,13 @@ fn Init() -> Element {
 #[derive(Routable, Clone, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
-    #[layout(AppLayout)]
+    #[layout(AuthLayout)]
         #[route("/account/register")]
         Register {},
         #[route("/account/login")]
         Login {},
+        
+    #[layout(AppLayout)]
         #[route("/home")]
         Home {},
         #[route("/home/bookmarked")]
@@ -90,11 +92,14 @@ pub enum Route {
 
 #[component]
 pub fn AppLayout() -> Element {
-    let toaster = use_toaster();
+    let local_profile = crate::elements::local_profile::use_local_profile();
+    let is_logged_in = local_profile.read().user_id.is_some();
 
     rsx! {
         Init {}
-        Sidebar {}
+        if is_logged_in {
+            Sidebar {}
+        }
         main {
             class: "max-w-[var(--content-max-width)]
             min-w-[var(--content-min-width)]
@@ -104,13 +109,28 @@ pub fn AppLayout() -> Element {
             p-4",
             Outlet::<Route> {}
         }
-        ToastRoot { toaster: toaster }
-        Navbar {}
+        if is_logged_in {
+            Navbar {}
+        }
+    }
+}
+
+#[component]
+pub fn AuthLayout() -> Element {
+    rsx! {
+        main {
+            class: "max-w-[var(--content-max-width)]
+            min-w-[var(--content-min-width)]
+            mx-auto
+            p-4",
+            Outlet::<Route> {}
+        }
     }
 }
 
 pub fn App() -> Element {
-    use_context_provider(|| Signal::new(Toaster::default()));
+    let toaster = Signal::new(Toaster::default());
+    use_context_provider(|| toaster.clone());
     use_context_provider(|| Signal::new(PostManager::default()));
     use_context_provider(|| Signal::new(LocalProfile::default()));
     use_context_provider(|| Signal::new(SidebarManager::default()));
@@ -119,5 +139,6 @@ pub fn App() -> Element {
 
     rsx! {
         Router::<Route> {}
+        ToastRoot { toaster: toaster }
     }
 }

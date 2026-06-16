@@ -106,7 +106,7 @@ fn Sidebar() -> Element {
                     local_profile.write().user_id = None;
                     local_profile.write().image = None;
                     sidebar.write().close();
-                    let _ = router.push(page::ACCOUNT_LOGIN);
+                    let _ = router.push(crate::app::Route::Login {});
                 },
                 "Logout"
             }

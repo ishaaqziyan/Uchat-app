@@ -99,23 +99,24 @@ pub fn ToastRoot(toaster: Signal<Toaster>) -> Element {
     let _remove_expired = use_future(move || {
         let mut toaster = toaster.clone();
         async move {
-            while !toaster.read().toasts.is_empty() {
-                let expired_ids = toaster
-                    .read()
-                    .iter()
-                    .filter_map(|(&id, toast)| {
-                        if Utc::now() > toast.expires {
-                            Some(id)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<usize>>();
+            loop {
+                if !toaster.read().toasts.is_empty() {
+                    let expired_ids = toaster
+                        .read()
+                        .iter()
+                        .filter_map(|(&id, toast)| {
+                            if Utc::now() > toast.expires {
+                                Some(id)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect::<Vec<usize>>();
 
-                expired_ids
-                    .iter()
-                    .for_each(|&id| toaster.write().remove(id));
-
+                    expired_ids
+                        .iter()
+                        .for_each(|&id| toaster.write().remove(id));
+                }
                 gloo_timers::future::TimeoutFuture::new(200_u32).await;
             }
         }

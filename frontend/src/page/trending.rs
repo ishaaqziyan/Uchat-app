@@ -15,8 +15,8 @@ fn Trending() -> Element {
     // Async task that runs once on mount to fetch trending posts from the backend
     let _fetch_trending_posts = {
         let api_client = api_client.clone();
-        let mut toaster = toaster.clone();
-        let mut post_manager = post_manager.clone();
+        let toaster = toaster.clone();
+        let post_manager = post_manager.clone();
         use_future(move || {
             let api_client = api_client.clone();
             let mut toaster = toaster.clone();

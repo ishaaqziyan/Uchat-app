@@ -108,17 +108,22 @@ fn Login() -> Element {
         [api_client, page_state, router, local_profile],
         move |_| async move {
             use uchat_endpoint::user::endpoint::{Login, LoginOk};
+            let raw_username = page_state.with(|state| state.username.read().to_string());
+            let raw_password = page_state.with(|state| state.password.read().to_string());
+            
             let request_data = {
                 use uchat_domain::{Password, Username};
+                let un = match Username::new(raw_username) {
+                    Ok(u) => u,
+                    Err(_) => return,
+                };
+                let pw = match Password::new(raw_password) {
+                    Ok(p) => p,
+                    Err(_) => return,
+                };
                 Login {
-                    username: Username::new(
-                        page_state.with(|state| state.username.read().to_string()),
-                    )
-                    .unwrap(),
-                    password: Password::new(
-                        page_state.with(|state| state.password.read().to_string()),
-                    )
-                    .unwrap(),
+                    username: un,
+                    password: pw,
                 }
             };
             let response = fetch_json!(<LoginOk>, api_client, request_data);
@@ -163,11 +168,6 @@ fn Login() -> Element {
     rsx! {
         form {
             class: "flex flex-col gap-5",
-            onsubmit: move |ev| {
-                web_sys::window().unwrap().alert_with_message("Submit clicked!").unwrap();
-                ev.prevent_default();
-                form_onsubmit(ev);
-            },
 
             KeyedNotificationBox {
                 legend: "Login Errors",
@@ -199,7 +199,12 @@ fn Login() -> Element {
 
             button {
                 class: "btn {submit_btn_style}",
-                r#type: "submit",
+                r#type: "button",
+                disabled: !page_state.read().can_submit(),
+                onclick: move |ev| {
+                    ev.prevent_default();
+                    form_onsubmit(ev);
+                },
                 "Login"
             }
         }
