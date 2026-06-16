@@ -175,7 +175,7 @@ fn Login() -> Element {
             },
 
             img {
-                src: "/static/icons/uchat.jpg", 
+                src: "/static/icons/uchat.png", 
                 alt: "Logo",
                 class: "mx-auto mb-4", 
             },

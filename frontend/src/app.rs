@@ -128,12 +128,22 @@ pub fn AuthLayout() -> Element {
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct DarkMode(pub bool);
+
+impl Default for DarkMode {
+    fn default() -> Self {
+        Self(false)
+    }
+}
+
 pub fn App() -> Element {
     let toaster = Signal::new(Toaster::default());
     use_context_provider(|| toaster.clone());
     use_context_provider(|| Signal::new(PostManager::default()));
     use_context_provider(|| Signal::new(LocalProfile::default()));
     use_context_provider(|| Signal::new(SidebarManager::default()));
+    use_context_provider(|| Signal::new(DarkMode::default()));
 
     let _api_client = ApiClient::global();
 

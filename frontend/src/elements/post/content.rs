@@ -151,15 +151,18 @@ fn Poll(post_id: PostId, content: EndpointPoll) -> Element {
 
 #[component]
 pub
-fn Content(post: Signal<PublicPost>) -> Element {
+fn Content(post_id: PostId) -> Element {
     use uchat_endpoint::post::types::Content as EndpointContent;
-    let post_read = post.read();
+    let post_manager = crate::elements::post::use_post_manager();
+    let post_read = post_manager.read();
+    let post = post_read.get(&post_id).unwrap();
+
     rsx! {
         div {
-            match &post_read.content {
+            match &post.content {
                 EndpointContent::Chat(c) => rsx! { Chat { content: c.clone() } },
                 EndpointContent::Image(c) => rsx! { Image { content: c.clone() } },
-                EndpointContent::Poll(c) => rsx! { Poll { post_id: post_read.id, content: c.clone() } },
+                EndpointContent::Poll(c) => rsx! { Poll { post_id: post.id, content: c.clone() } },
             }
         }
     }

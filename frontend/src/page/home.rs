@@ -44,7 +44,7 @@ fn Home() -> Element {
                 a {
                     class: "link",
                     onclick: move |_| {
-                        let _ = router.push(page::POSTS_TRENDING);
+                        let _ = router.push(crate::app::Route::Trending {});
                     },
                     "trending"
                 },
@@ -67,13 +67,13 @@ fn Home() -> Element {
         Appbar {
             title: "Home",
             AppbarImgButton {
-                click_handler: move |_| { let _ = router.push(page::HOME_LIKED); },
+                click_handler: move |_| { let _ = router.push(crate::app::Route::HomeLiked {}); },
                 img: "/static/icons/icon-like.svg",
                 label: "Liked",
                 title: "Show liked posts",
             },
             AppbarImgButton {
-                click_handler: move |_| { let _ = router.push(page::HOME_BOOKMARKED); },
+                click_handler: move |_| { let _ = router.push(crate::app::Route::HomeBookmarked {}); },
                 img: "/static/icons/icon-bookmark.svg",
                 label: "Bookmarked",
                 title: "Show bookmarked posts",

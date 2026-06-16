@@ -58,7 +58,7 @@ fn Sidebar() -> Element {
         .image
         .as_ref()
         .map(|url| url.as_str())
-        .unwrap_or_else(|| "");
+        .unwrap_or_else(|| "/static/icons/uchat.png");
 
     rsx! {
         {Overlay}
@@ -72,8 +72,8 @@ fn Sidebar() -> Element {
                 onclick: move |_| {
                     sidebar.write().close();
                     if let Some(id) = local_profile.read().user_id {
-                        let url = crate::page::profile_view(id);
-                        let _ = router.push(url);
+                        let route = crate::app::Route::ViewProfile { user_id: id };
+                        let _ = router.push(route);
                     }
                 },
                 img {
@@ -85,7 +85,7 @@ fn Sidebar() -> Element {
                 class: "sidebar-navlink border-t",
                 onclick: move |_| {
                     sidebar.write().close();
-                    let _ = router.push(page::PROFILE_EDIT);
+                    let _ = router.push(crate::app::Route::EditProfile {});
                 },
                 "Edit Profile"
             }
@@ -93,7 +93,7 @@ fn Sidebar() -> Element {
                 class: "sidebar-navlink mb-auto",
                 onclick: move |_| {
                     sidebar.write().close();
-                    let _ = router.push(page::HOME_BOOKMARKED);
+                    let _ = router.push(crate::app::Route::HomeBookmarked {});
                 },
                 "Bookmarks"
             },

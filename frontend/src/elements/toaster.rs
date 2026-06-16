@@ -80,14 +80,14 @@ pub fn ToastRoot(toaster: Signal<Toaster>) -> Element {
 
     let ToastElements = toasts.iter().map(|(&id, toast)| {
         let toast_style = match toast.kind {
-            ToastKind::Info => "bg-slate-200 border-slate-300",
-            ToastKind::Error => "bg-rose-300 border-rose-400",
-            ToastKind::Success => "bg-emerald-200 border-emerald-300",
+            ToastKind::Info => "bg-slate-200 border-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white",
+            ToastKind::Error => "bg-rose-300 border-rose-400 dark:bg-rose-900 dark:border-rose-700 dark:text-rose-100",
+            ToastKind::Success => "bg-emerald-200 border-emerald-300 dark:bg-emerald-900 dark:border-emerald-700 dark:text-emerald-100",
         };
         rsx! {
             div {
                 key: "{id}",
-                class: "{toast_style} p-3 cursor-pointer border-solid border rounded",
+                class: "{toast_style} p-3 cursor-pointer border-solid border rounded transition-colors duration-300",
                 onclick: move |_| {
                     toaster.write().remove(id);
                 },

@@ -167,7 +167,7 @@ fn Register() -> Element {
             class: "flex flex-col gap-5",
 
             img {
-                src: "/static/icons/uchat.jpg", 
+                src: "/static/icons/uchat.png", 
                 alt: "Logo",
                 class: "mx-auto mb-4", 
             },

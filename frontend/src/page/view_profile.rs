@@ -8,7 +8,7 @@ use uchat_domain::ids::UserId;
 
 #[component]
 pub
-fn ViewProfile(user_id: UserId) -> Element {
+fn ViewProfile(user_id: ReadOnlySignal<UserId>) -> Element {
     let api_client = ApiClient::global();
     let toaster = use_toaster();
     let router = use_navigator();
@@ -19,14 +19,15 @@ fn ViewProfile(user_id: UserId) -> Element {
 
 
 
-    use_effect(move || {
+    let _profile_task = use_resource(move || {
+        let current_user_id = user_id(); // Reactive read
         let api_client = api_client.clone();
         let mut post_manager = post_manager.clone();
         let mut profile = profile.clone();
         let mut toaster = toaster.clone();
-        spawn(async move {
+        async move {
             use uchat_endpoint::user::endpoint::{ViewProfile, ViewProfileOk};
-            let request = ViewProfile { for_user: user_id };
+            let request = ViewProfile { for_user: current_user_id };
             post_manager.write().clear();
             let response = fetch_json!(<ViewProfileOk>, api_client, request);
             match response {
@@ -39,7 +40,7 @@ fn ViewProfile(user_id: UserId) -> Element {
                     chrono::Duration::seconds(3),
                 ),
             }
-        });
+        }
     });
 
     let follow_onclick = async_handler!(&cx, [api_client, toaster, profile], move |_| async move {
@@ -51,7 +52,7 @@ fn ViewProfile(user_id: UserId) -> Element {
         };
 
         let request = FollowUser {
-            user_id,
+            user_id: user_id(),
             action: match am_following {
                 true => FollowAction::Unfollow,
                 false => FollowAction::Follow,
@@ -80,7 +81,7 @@ fn ViewProfile(user_id: UserId) -> Element {
                 let profile_image = profile
                     .profile_image
                     .map(|url| url.to_string())
-                    .unwrap_or_else(|| "".to_string());
+                    .unwrap_or_else(|| "/static/icons/uchat.png".to_string());
 
                 let follow_button_text = match profile.am_following {
                     true => "Unfollow",

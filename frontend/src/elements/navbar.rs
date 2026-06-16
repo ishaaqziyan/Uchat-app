@@ -22,7 +22,7 @@ pub fn NewPostPopup(hide: Signal<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    let _ = router.push(page::POST_NEW_POLL);
+                    let _ = router.push(crate::app::Route::NewPoll {});
                     hide.set(true);
                 },
                 img {
@@ -34,7 +34,7 @@ pub fn NewPostPopup(hide: Signal<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    let _ = router.push(page::POST_NEW_IMAGE);
+                    let _ = router.push(crate::app::Route::NewImage {});
                     hide.set(true);
                 },
 
@@ -47,7 +47,7 @@ pub fn NewPostPopup(hide: Signal<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    let _ = router.push(page::POST_NEW_CHAT);
+                    let _ = router.push(crate::app::Route::NewChat {});
                     hide.set(true);
                 },
                 img {
@@ -124,12 +124,12 @@ pub fn Navbar() -> Element {
                     img: "/static/icons/icon-home.svg",
                     label: "Home",
                     // onclick: |_| (),
-                    onclick: move |_| { let _ = router.push(page::HOME); },
+                    onclick: move |_| { let _ = router.push(crate::app::Route::Home {}); },
                 },
                 NavButton {
                     img: "/static/icons/icon-trending.svg",
                     label: "Trending",
-                    onclick: move |_| { let _ = router.push(page::POSTS_TRENDING); },
+                    onclick: move |_| { let _ = router.push(crate::app::Route::Trending {}); },
                 }
                 NavButton {
                     img: "/static/icons/icon-new-post.svg",

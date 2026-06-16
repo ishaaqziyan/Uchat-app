@@ -73,3 +73,8 @@ serve-pro-frontend:
 # run production API server
 serve-pro-api:
     cd target/release && ./api
+
+# run prod all
+serve-pro-all:
+    just serve-pro-frontend &
+    just serve-pro-api

@@ -65,6 +65,7 @@ impl PostManager {
             .map(|(&id, _)| {
                 rsx! {
                     div {
+                        key: "{id.to_string()}",
                         PublicPostEntry {
                             post_id: id
                         }
@@ -80,30 +81,37 @@ pub fn view_profile_onclick(
     user_id: UserId,
 ) -> impl FnMut(MouseEvent) + 'static {
     sync_handler!([router], move |_| {
-        let route = crate::page::route::profile_view(user_id);
+        let route = crate::app::Route::ViewProfile { user_id };
         { router.push(route); }
     })
 }
 
 #[component]
 pub
-fn ProfileImage(post: Signal<PublicPost>) -> Element {
+fn ProfileImage(post_id: PostId) -> Element {
+    let post_manager = use_post_manager();
     let router = use_navigator();
-    let post_read = post.read();
+    
+    let post_read = post_manager.read();
+    let post = match post_read.get(&post_id) {
+        Some(p) => p,
+        None => return rsx! {},
+    };
 
-    let poster_info = &post_read.by_user;
+    let poster_info = &post.by_user;
 
     let profile_img_src = poster_info
         .profile_image
         .as_ref()
         .map(|url| url.as_str())
-        .unwrap_or_else(|| "");
+        .filter(|url| !url.is_empty())
+        .unwrap_or_else(|| "/static/icons/uchat.png");
 
     rsx! {
         div {
             img {
                 class: "profile-portrait cursor-pointer",
-                onclick: view_profile_onclick(router.clone(), post_read.by_user.id),
+                onclick: view_profile_onclick(router.clone(), post.by_user.id),
                 src: "{profile_img_src}",
             }
         }
@@ -112,27 +120,35 @@ fn ProfileImage(post: Signal<PublicPost>) -> Element {
 
 #[component]
 pub
-fn Header(post: Signal<PublicPost>) -> Element {
-    let post_read = post.read();
+fn Header(post_id: PostId) -> Element {
+    let post_manager = use_post_manager();
+    let router = use_navigator();
+    
+    let post_read = post_manager.read();
+    let post = match post_read.get(&post_id) {
+        Some(p) => p,
+        None => return rsx! {},
+    };
+    
     let (post_date, post_time) = {
-        let date = post_read.time_posted.format("%Y-%m-%d");
-        let time = post_read.time_posted.format("%H:%M:%S");
+        let date = post.time_posted.format("%Y-%m-%d");
+        let time = post.time_posted.format("%H:%M:%S");
         (date, time)
     };
 
-    let display_name = match &post_read.by_user.display_name {
+    let display_name = match &post.by_user.display_name {
         Some(name) => name.as_ref(),
         None => "",
     };
 
-    let handle = &post_read.by_user.handle;
+    let handle = &post.by_user.handle;
 
     rsx! {
         div {
             class: "flex flex-row justify-between",
             div {
                 class: "cursor-pointer",
-                onclick: move |_| (),
+                onclick: view_profile_onclick(router.clone(), post.by_user.id),
                 div { "{display_name} "},
                 div {
                     class: "font-light",
@@ -154,26 +170,28 @@ fn PublicPostEntry(post_id: PostId) -> Element {
     let post_manager = use_post_manager();
     let _router = use_navigator();
 
-    let this_post = {
-        let post = post_manager.read().get(&post_id).unwrap().clone();
-        use_signal(|| post)
-    };
+    let post_exists = post_manager.read().get(&post_id).is_some();
+
+    if !post_exists {
+        return rsx! {};
+    }
 
     rsx! {
         div {
-            key: "{this_post.read().id.to_string()}",
             class: "grid grid-cols-[50px_1fr] gap-2 mb-4",
             ProfileImage {
-                post: this_post,
+                post_id: post_id,
             }
             div {
                 class: "flex flex-col gap-3",
-                Header { post: this_post },
+                Header { post_id: post_id },
                 // reply to
-                Content { post: this_post },
-                Actionbar { post_id: this_post.read().id },
+                Content { post_id: post_id },
+                Actionbar { post_id: post_id },
                 hr {},
             }
         }
     }
 }
+
+

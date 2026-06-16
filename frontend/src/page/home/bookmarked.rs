@@ -42,7 +42,7 @@ fn HomeBookmarked() -> Element {
                 a {
                     class: "link",
                     onclick: move |_| {
-                        { router.push(page::POSTS_TRENDING); };
+                        { router.push(crate::app::Route::Trending {}); };
                     },
                     "trending"
                 },
@@ -65,7 +65,7 @@ fn HomeBookmarked() -> Element {
         Appbar {
             title: "Bookmarked",
             AppbarImgButton {
-                click_handler: move |_| { router.push(page::HOME_LIKED); },
+                click_handler: move |_| { router.push(crate::app::Route::HomeLiked {}); },
                 img: "/static/icons/icon-like.svg",
                 label: "Liked",
                 title: "Show liked posts",
@@ -79,7 +79,7 @@ fn HomeBookmarked() -> Element {
                 append_class: appbar::BUTTON_SELECTED,
             },
             AppbarImgButton {
-                click_handler: move |_| { router.push(page::HOME); },
+                click_handler: move |_| { router.push(crate::app::Route::Home {}); },
                 img: "/static/icons/icon-home.svg",
                 label: "Home",
                 title: "Go to the home page",

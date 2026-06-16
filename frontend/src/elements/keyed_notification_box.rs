@@ -44,13 +44,13 @@ fn KeyedNotificationBox(legend: Option<String>, notifications: KeyedNotification
     if notifications.has_messages() {
         rsx! {
             fieldset {
-                class: "fieldset border-red-300 rounded",
+                class: "fieldset border-red-300 dark:border-red-800 rounded transition-colors duration-300",
                 legend {
-                    class: "bg-red-300 px-4",
+                    class: "bg-red-300 dark:bg-red-800 dark:text-white px-4 transition-colors duration-300",
                     "{legend_str}"
                 }
                 ul {
-                    class: "list-disc ml-4",
+                    class: "list-disc ml-4 dark:text-red-200",
                     {notifications_elements}
                 }
             }

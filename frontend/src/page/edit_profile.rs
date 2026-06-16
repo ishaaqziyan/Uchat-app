@@ -70,7 +70,7 @@ pub
 fn ImagePreview(page_state: Signal<PageState>) -> Element {
     let image_data = page_state.read().profile_image.clone();
 
-    let img_el = |img_src| {
+    let img_el = |img_src: &str| {
         rsx! {
             img {
                 class: "profile-portrait-lg",
@@ -289,8 +289,10 @@ fn EditProfile() -> Element {
 
 
 
+    let local_profile = crate::elements::local_profile::use_local_profile();
+    
     let form_onsubmit =
-        async_handler!(&cx, [api_client, page_state, router, toaster], move |_| async move {
+        async_handler!(&cx, [api_client, page_state, router, toaster, local_profile], move |_| async move {
             use uchat_endpoint::user::endpoint::{UpdateProfile, UpdateProfileOk};
             use uchat_endpoint::Update;
 
@@ -334,9 +336,10 @@ fn EditProfile() -> Element {
 
             let response = fetch_json!(<UpdateProfileOk>, api_client, request_data);
             match response {
-                Ok(_res) => {
+                Ok(res) => {
+                    local_profile.write().image = res.profile_image;
                     toaster.write().success("Profile updated", chrono::Duration::seconds(3));
-                    { router.push(crate::page::HOME); }
+                    { let _ = router.push(crate::app::Route::Home {}); }
                 }
                 Err(e) => {
                     toaster.write().error(format!("Failed to update profile: {}", e), chrono::Duration::seconds(3));
