@@ -4,16 +4,24 @@ use crate::{elements::post::PublicPostEntry, prelude::*};
 use dioxus::prelude::*;
 
 /// Trending page component — fetches and displays trending posts from the API.
-pub fn Trending(cx: Scope) -> Element {
+#[component]
+pub
+fn Trending() -> Element {
     let api_client = ApiClient::global();       // Shared API client for making HTTP requests
-    let router = use_router(cx);               // Router for navigating back to home
-    let post_manager = use_post_manager(cx);   // Global post state manager
-    let toaster = use_toaster(cx);             // Global toast notification system
+    let router = use_navigator();               // Router for navigating back to home
+    let post_manager = use_post_manager();   // Global post state manager
+    let toaster = use_toaster();             // Global toast notification system
 
     // Async task that runs once on mount to fetch trending posts from the backend
     let _fetch_trending_posts = {
-        to_owned![api_client, toaster, post_manager]; // Clone into the async closure for ownership
-        use_future(cx, (), |_| async move {
+        let api_client = api_client.clone();
+        let mut toaster = toaster.clone();
+        let mut post_manager = post_manager.clone();
+        use_future(move || {
+            let api_client = api_client.clone();
+            let mut toaster = toaster.clone();
+            let mut post_manager = post_manager.clone();
+            async move {
             use uchat_endpoint::post::endpoint::{TrendingPosts, TrendingPostsOk};
 
             // Notify the user that the fetch has started
@@ -35,16 +43,14 @@ pub fn Trending(cx: Scope) -> Element {
                     chrono::Duration::seconds(3),
                 ),
             }
+            }
         })
     };
 
     // Build a list of rendered post elements from the current post manager state.
     // Each post is wrapped in a `div` and rendered as a `PublicPostEntry` component.
-    let TrendingPosts = post_manager
-        .read()
-        .posts
-        .iter()
-        .map(|(&id, _)| {
+    let post_ids: Vec<_> = post_manager.read().posts.keys().copied().collect();
+    let TrendingPosts = post_ids.into_iter().map(|id| {
             rsx! {
                 div {
                     PublicPostEntry {
@@ -52,21 +58,20 @@ pub fn Trending(cx: Scope) -> Element {
                     }
                 }
             }
-        })
-        .collect::<Vec<LazyNodes>>(); // Collect into a vec of lazy RSX nodes for rendering
+        });
 
-    cx.render(rsx! {
+    rsx! {
         // Top app bar with a back button that navigates to the home page
         Appbar {
             title: "Trending Posts",
             AppbarImgButton {
-                click_handler: move |_| router.navigate_to(page::HOME),
+                click_handler: move |_| { let _ = router.push(page::HOME); },
                 img: "/static/icons/icon-back.svg",
                 label: "Back",
                 title: "Go to the previous page",
             }
         },
         // Render each trending post entry collected above
-        TrendingPosts.into_iter(),
-    })
+        {TrendingPosts}
+    }
 }

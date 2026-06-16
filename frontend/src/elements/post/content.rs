@@ -11,8 +11,9 @@ use uchat_endpoint::post::types::{
     Chat as EndpointChat, Image as EndpointImage, ImageKind, Poll as EndpointPoll, PublicPost, VoteCast,
 };
 
-#[inline_props]
-pub fn Chat<'a>(cx: Scope<'a>, content: &'a EndpointChat) -> Element {
+#[component]
+pub
+fn Chat(content: EndpointChat) -> Element {
     let Headline = content.headline.as_ref().map(|headline| {
         rsx! {
             div {
@@ -22,20 +23,21 @@ pub fn Chat<'a>(cx: Scope<'a>, content: &'a EndpointChat) -> Element {
         }
     });
 
-    cx.render(rsx! {
+    rsx! {
         div {
-            Headline,
+            {Headline}
             p { "{content.message.as_ref()}" }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn Image<'a>(cx: Scope<'a>, content: &'a EndpointImage) -> Element {
+#[component]
+pub
+fn Image(content: EndpointImage) -> Element {
     let url = if let ImageKind::Url(url) = &content.kind {
         url
     } else {
-        return cx.render(rsx! { "image not found" });
+        return rsx! { "image not found" };
     };
 
     let Caption = content
@@ -43,21 +45,22 @@ pub fn Image<'a>(cx: Scope<'a>, content: &'a EndpointImage) -> Element {
         .as_ref()
         .map(|caption| rsx! { figcaption { em { "{caption.as_ref()}" } } });
 
-    cx.render(rsx! {
+    rsx! {
         figure {
             class: "flex flex-col gap-2",
-            Caption,
+            {Caption}
             img {
                 class: "w-full object-contain max-h-[80vh]",
                 src: "{url}"
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn Poll<'a>(cx: Scope<'a>, post_id: PostId, content: &'a EndpointPoll) -> Element {
-    let toaster = use_toaster(cx);
+#[component]
+pub
+fn Poll(post_id: PostId, content: EndpointPoll) -> Element {
+    let toaster = use_toaster();
     let api_client = ApiClient::global();
 
     let vote_onclick = async_handler!(
@@ -96,7 +99,8 @@ pub fn Poll<'a>(cx: Scope<'a>, post_id: PostId, content: &'a EndpointPoll) -> El
         ids
     };
 
-    let Choices = content.choices.iter().map(|choice| {
+    let Choices: Vec<_> = content.choices.iter().map(|choice| {
+        let choice_id = choice.id;
         let percent = if total_votes > 0 {
             let percent = (choice.num_votes as f64 / total_votes as f64) * 100.0;
             format!("{percent:.0}%")
@@ -104,19 +108,19 @@ pub fn Poll<'a>(cx: Scope<'a>, post_id: PostId, content: &'a EndpointPoll) -> El
             "0%".to_string()
         };
 
-        let background_color = if leader_ids.contains(&choice.id) {
+        let background_color = if leader_ids.contains(&choice_id) {
             "bg-blue-300"
         } else {
             "bg-neutral-300"
         };
 
-        let foreground_styles = maybe_class!("font-bold", leader_ids.contains(&choice.id));
+        let foreground_styles = maybe_class!("font-bold", leader_ids.contains(&choice_id));
 
         rsx! { 
             li {
-                key: "{choice.id.to_string()}",
+                key: "{choice_id.to_string()}",
                 class: "relative p-2 m-2 cursor-pointer grid grid-cols-[3rem_1fr] border rounded border-slate-400",
-                onclick: move |_| vote_onclick(*post_id, choice.id),
+                onclick: move |_| vote_onclick(post_id, choice_id),
                 div {
                     class: "absolute left-0 {background_color} h-full rounded z-[-1]",
                     style: "width: {percent}",
@@ -131,30 +135,32 @@ pub fn Poll<'a>(cx: Scope<'a>, post_id: PostId, content: &'a EndpointPoll) -> El
                 }
             }
         }
-    });
+    }).collect();
 
     let Headline = rsx! { figcaption { "{content.headline.as_ref()}"}};
 
-    cx.render(rsx! {
+    rsx! {
         div {
-            Headline,
+            {Headline}
             ul {
-                Choices.into_iter()
+                {Choices.into_iter()}
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn Content<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
+#[component]
+pub
+fn Content(post: Signal<PublicPost>) -> Element {
     use uchat_endpoint::post::types::Content as EndpointContent;
-    cx.render(rsx! {
+    let post_read = post.read();
+    rsx! {
         div {
-            match &post.content {
-                EndpointContent::Chat(content) => rsx! { Chat { content: content} },
-                EndpointContent::Image(content) => rsx! { Image { content: content} },
-                EndpointContent::Poll(content) => rsx! { Poll { post_id: post.id, content: content} },
+            match &post_read.content {
+                EndpointContent::Chat(c) => rsx! { Chat { content: c.clone() } },
+                EndpointContent::Image(c) => rsx! { Image { content: c.clone() } },
+                EndpointContent::Poll(c) => rsx! { Poll { post_id: post_read.id, content: c.clone() } },
             }
         }
-    })
+    }
 }

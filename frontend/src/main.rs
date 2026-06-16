@@ -28,7 +28,7 @@ cfg_if! {
 fn main() {
     init_log();
     ApiClient::init();
-    dioxus_web::launch(app::App)
+    dioxus::launch(app::App)
 }
 
 mod prelude {
@@ -39,11 +39,11 @@ mod prelude {
     pub use crate::util::{async_handler, maybe_class, sync_handler};
 
     pub use crate::elements::appbar::{self, Appbar, AppbarImgButton};
-    pub use crate::elements::local_profile::{use_local_profile, LocalProfile};
+    pub use crate::elements::local_profile::use_local_profile;
     pub use crate::elements::post::use_post_manager;
     pub use crate::elements::post::PublicPostEntry;
-    pub use crate::elements::sidebar::{use_sidebar, Sidebar, SidebarManager};
+    pub use crate::elements::sidebar::use_sidebar;
     pub use crate::elements::toaster::use_toaster;
 
-    pub use dioxus_router::{use_route, use_router};
+    pub use dioxus::prelude::{use_route, use_navigator};
 }

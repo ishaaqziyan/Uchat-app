@@ -27,8 +27,9 @@ impl PageState {
     }
 }
 
-#[inline_props]
-pub fn MessageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
+#[component]
+pub
+fn MessageInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::post::Message;
 
     let max_chars = Message::MAX_CHARS;
@@ -38,7 +39,7 @@ pub fn MessageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
         page_state.read().message.len() > max_chars || page_state.read().message.is_empty()
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "message",
@@ -57,15 +58,16 @@ pub fn MessageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                 rows: 5,
                 value: "{page_state.read().message}",
                 oninput: move |ev| {
-                    page_state.with_mut(|state| state.message = ev.data.value.clone());
+                    page_state.with_mut(|state| state.message = ev.data.value().clone());
                 }
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
+#[component]
+pub
+fn HeadlineInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::post::Headline;
 
     let max_chars = Headline::MAX_CHARS;
@@ -75,7 +77,7 @@ pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
         page_state.read().headline.len() > max_chars
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "headline",
@@ -93,18 +95,20 @@ pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                 id: "headline",
                 value: "{page_state.read().headline}",
                 oninput: move |ev| {
-                    page_state.with_mut(|state| state.headline = ev.data.value.clone());
+                    page_state.with_mut(|state| state.headline = ev.data.value().clone());
                 }
             }
         }
-    })
+    }
 }
 
-pub fn NewChat(cx: Scope) -> Element {
+#[component]
+pub
+fn NewChat() -> Element {
     let api_client = ApiClient::global();
-    let router = use_router(cx);
-    let toaster = use_toaster(cx);
-    let page_state = use_ref(cx, PageState::default);
+    let router = use_navigator();
+    let toaster = use_toaster();
+    let page_state = use_signal( PageState::default);
 
     let form_onsubmit = async_handler!(
         &cx,
@@ -133,7 +137,7 @@ pub fn NewChat(cx: Scope) -> Element {
             match response {
                 Ok(_) => {
                     toaster.write().success("Posted!", Duration::seconds(3));
-                    router.replace_route(page::HOME, None, None);
+                    let _ = router.replace(page::HOME);
                 }
                 Err(e) => {
                     toaster
@@ -146,7 +150,7 @@ pub fn NewChat(cx: Scope) -> Element {
 
     let submit_btn_style = maybe_class!("btn-disabled", !page_state.read().can_submit());
 
-    cx.render(rsx! {
+    rsx! {
         Appbar {
             title: "New Chat",
             AppbarImgButton {
@@ -158,19 +162,19 @@ pub fn NewChat(cx: Scope) -> Element {
                 append_class: appbar::BUTTON_SELECTED,
             },
             AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_IMAGE, None, None),
+                click_handler: move |_| { let _ = router.replace(page::POST_NEW_IMAGE); },
                 img: "/static/icons/icon-image.svg",
                 label: "Image",
                 title: "Post a new image",
             },
             AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_POLL, None, None),
+                click_handler: move |_| { let _ = router.replace(page::POST_NEW_POLL); },
                 img: "/static/icons/icon-poll.svg",
                 label: "Poll",
                 title: "Post a new poll",
             },
             AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
+                click_handler: move |_| { router.go_back(); },
                 img: "/static/icons/icon-back.svg",
                 label: "Back",
                 title: "Go to the previous page",
@@ -178,8 +182,10 @@ pub fn NewChat(cx: Scope) -> Element {
         },
         form {
             class: "flex flex-col gap-4",
-            onsubmit: form_onsubmit,
-            prevent_default: "onsubmit",
+            onsubmit: move |ev| {
+                ev.prevent_default();
+                form_onsubmit(ev);
+            },
             MessageInput { page_state: page_state.clone() },
             HeadlineInput { page_state: page_state.clone() },
             button {
@@ -189,5 +195,5 @@ pub fn NewChat(cx: Scope) -> Element {
                 "Post"
             }
         }
-    })
+    }
 }

@@ -6,30 +6,32 @@ use crate::prelude::*;
 use dioxus::prelude::*;
 use uchat_domain::ids::UserId;
 
-pub fn ViewProfile(cx: Scope) -> Element {
+#[component]
+pub
+fn ViewProfile(user_id: UserId) -> Element {
     let api_client = ApiClient::global();
-    let toaster = use_toaster(cx);
-    let router = use_router(cx);
-    let post_manager = use_post_manager(cx);
-    let local_profile = use_local_profile(cx);
+    let toaster = use_toaster();
+    let router = use_navigator();
+    let post_manager = use_post_manager();
+    let local_profile = use_local_profile();
 
-    let profile = use_ref(cx, || None);
+    let profile = use_signal( || None);
 
-    let user_id = dioxus_router::use_route(cx)
-        .last_segment()
-        .and_then(|id| UserId::from_str(id).ok())
-        .unwrap_or_default();
 
-    use_effect(cx, (&user_id,), |(user_id,)| {
-        to_owned![api_client, post_manager, profile, toaster];
-        async move {
+
+    use_effect(move || {
+        let api_client = api_client.clone();
+        let mut post_manager = post_manager.clone();
+        let mut profile = profile.clone();
+        let mut toaster = toaster.clone();
+        spawn(async move {
             use uchat_endpoint::user::endpoint::{ViewProfile, ViewProfileOk};
             let request = ViewProfile { for_user: user_id };
             post_manager.write().clear();
             let response = fetch_json!(<ViewProfileOk>, api_client, request);
             match response {
                 Ok(res) => {
-                    profile.with_mut(|profile| *profile = Some(res.profile));
+                    profile.write().replace(res.profile);
                     post_manager.write().populate(res.posts.into_iter());
                 }
                 Err(e) => toaster.write().error(
@@ -37,7 +39,7 @@ pub fn ViewProfile(cx: Scope) -> Element {
                     chrono::Duration::seconds(3),
                 ),
             }
-        }
+        });
     });
 
     let follow_onclick = async_handler!(&cx, [api_client, toaster, profile], move |_| async move {
@@ -85,11 +87,11 @@ pub fn ViewProfile(cx: Scope) -> Element {
                     false => "Follow",
                 };
 
-                let FollowButton = local_profile.read().user_id.map(|id| {
+                let FollowButton = local_profile.read().user_id.and_then(|id| {
                     if id == profile.id {
                         None
                     } else {
-                        cx.render(rsx! {
+                        Some(rsx! {
                             button {
                                 class: "btn",
                                 onclick: follow_onclick,
@@ -111,7 +113,7 @@ pub fn ViewProfile(cx: Scope) -> Element {
                         },
                         div { "Handle: {profile.handle}" },
                         div { "Name: {display_name} "},
-                        FollowButton
+                        {FollowButton}
                     }
                 }
             }
@@ -121,17 +123,17 @@ pub fn ViewProfile(cx: Scope) -> Element {
 
     let Posts = post_manager.read().all_to_public();
 
-    cx.render(rsx! {
+    rsx! {
         Appbar {
             title: "View Profile",
             AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
+                click_handler: move |_| { router.go_back(); },
                 img: "/static/icons/icon-back.svg",
                 label: "Back",
                 title: "Go to the previous page",
             }
         },
-        ProfileSection,
+        {ProfileSection}
         div {
             class: "font-bold text-center my-6",
             "Posts"
@@ -139,6 +141,6 @@ pub fn ViewProfile(cx: Scope) -> Element {
         hr {
             class: "h-px my-6 bg-gray-200 border-0",
         },
-        Posts.into_iter()
-    })
+        {Posts.into_iter()}
+    }
 }

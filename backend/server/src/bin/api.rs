@@ -1,4 +1,4 @@
-use clap::{command, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use color_eyre::{eyre::Context, Help, Result};
 use std::net::SocketAddr;
 use tracing::{debug, error, info};

@@ -7,15 +7,20 @@ use crate::prelude::*;
 
 use dioxus::prelude::*;
 
-pub fn Home(cx: Scope) -> Element {
-    let toaster = use_toaster(cx);
+#[component]
+pub
+fn Home() -> Element {
+    let toaster = use_toaster();
     let api_client = ApiClient::global();
-    let post_manager = use_post_manager(cx);
-    let router = use_router(cx);
+    let post_manager = use_post_manager();
+    let router = use_navigator();
 
     let _fetch_posts = {
-        to_owned![api_client, toaster, post_manager];
-        use_future(cx, (), |_| async move {
+        use_future(move || {
+            let api_client = api_client.clone();
+            let mut toaster = toaster.clone();
+            let mut post_manager = post_manager.clone();
+            async move {
             use uchat_endpoint::post::endpoint::{HomePosts, HomePostsOk};
             toaster
                 .write()
@@ -28,6 +33,7 @@ pub fn Home(cx: Scope) -> Element {
                     chrono::Duration::seconds(3),
                 ),
             }
+            }
         })
     };
 
@@ -38,7 +44,7 @@ pub fn Home(cx: Scope) -> Element {
                 a {
                     class: "link",
                     onclick: move |_| {
-                        router.navigate_to(page::POSTS_TRENDING);
+                        let _ = router.push(page::POSTS_TRENDING);
                     },
                     "trending"
                 },
@@ -48,26 +54,26 @@ pub fn Home(cx: Scope) -> Element {
                     class: "flex flex-col text-center justify-center
                     h-[calc(100vh_-_var(--navbar-height)_-_var(--appbar-height))]",
                     span {
-                        "Check out what's ", TrendingLink ", and follow some users to get started."
+                        "Check out what's ", {TrendingLink}, ", and follow some users to get started."
                     }
                 }
             }
         } else {
-            rsx! { posts.into_iter() }
+            rsx! { {posts.into_iter()} }
         }
     };
 
-    cx.render(rsx! {
+    rsx! {
         Appbar {
             title: "Home",
             AppbarImgButton {
-                click_handler: move |_| router.navigate_to(page::HOME_LIKED),
+                click_handler: move |_| { let _ = router.push(page::HOME_LIKED); },
                 img: "/static/icons/icon-like.svg",
                 label: "Liked",
                 title: "Show liked posts",
             },
             AppbarImgButton {
-                click_handler: move |_| router.navigate_to(page::HOME_BOOKMARKED),
+                click_handler: move |_| { let _ = router.push(page::HOME_BOOKMARKED); },
                 img: "/static/icons/icon-bookmark.svg",
                 label: "Bookmarked",
                 title: "Show bookmarked posts",
@@ -83,6 +89,6 @@ pub fn Home(cx: Scope) -> Element {
 
         },
 
-        Posts
-    })
+        {Posts}
+    }
 }

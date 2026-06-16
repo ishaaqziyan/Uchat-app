@@ -44,7 +44,7 @@ macro_rules! async_handler {
                 #[allow(unused_mut)]
                 let mut $cap = $cap.to_owned();
             )*
-            $cx.spawn($body);
+            dioxus::prelude::spawn($body);
         }
     };
     (&$cx:ident, [$($cap:ident),*],  move |$($args:tt),*| $body:expr) => {
@@ -53,12 +53,12 @@ macro_rules! async_handler {
                 #[allow(unused_mut)]
                 let mut $cap = $cap.to_owned();
             )*
-            $cx.spawn($body);
+            dioxus::prelude::spawn($body);
         }
     };
     (&$cx:ident, move |$($args:tt),*| $body:expr) => {
         move |$($args),*| {
-            $cx.spawn($body);
+            dioxus::prelude::spawn($body);
         }
     };
 }

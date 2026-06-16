@@ -4,10 +4,10 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Duration, Utc};
 use dioxus::prelude::*;
-use fermi::{use_atom_ref, UseAtomRef};
 
-pub fn use_toaster(cx: &ScopeState) -> &UseAtomRef<Toaster> {
-    use_atom_ref(cx, crate::app::TOASTER)
+
+pub fn use_toaster() -> Signal<Toaster> {
+    use_context::<Signal<Toaster>>()
 }
 
 pub enum ToastKind {
@@ -74,15 +74,9 @@ impl Toaster {
     }
 }
 
-#[derive(Props)]
-pub struct ToastRootProps<'a> {
-    toaster: &'a UseAtomRef<Toaster>,
-}
-
-pub fn ToastRoot<'a>(cx: Scope<'a, ToastRootProps<'a>>) -> Element {
-    let toaster = cx.props.toaster;
-
-    let toasts = &toaster.read();
+#[component]
+pub fn ToastRoot(toaster: Signal<Toaster>) -> Element {
+    let toasts = toaster.read();
 
     let ToastElements = toasts.iter().map(|(&id, toast)| {
         let toast_style = match toast.kind {
@@ -102,10 +96,8 @@ pub fn ToastRoot<'a>(cx: Scope<'a, ToastRootProps<'a>>) -> Element {
         }
     });
 
-    let total_toasts = &toaster.read().toasts.len();
-
-    let _remove_expired = use_future(cx, (total_toasts,), |_| {
-        let toaster = toaster.clone();
+    let _remove_expired = use_future(move || {
+        let mut toaster = toaster.clone();
         async move {
             while !toaster.read().toasts.is_empty() {
                 let expired_ids = toaster
@@ -129,15 +121,15 @@ pub fn ToastRoot<'a>(cx: Scope<'a, ToastRootProps<'a>>) -> Element {
         }
     });
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "fixed bottom-[var(--navbar-height)]
                     w-screen
                     max-w-[var(--content-max-width)]",
             div {
                 class: "flex flex-col gap-5 px-5 mb-5",
-                ToastElements,
+                {ToastElements}
             }
         }
-    })
+    }
 }

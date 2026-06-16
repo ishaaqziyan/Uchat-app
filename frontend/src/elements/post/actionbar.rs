@@ -5,16 +5,16 @@ use dioxus::prelude::*;
 use uchat_domain::ids::PostId;
 use uchat_endpoint::post::types::LikeStatus;
 
-#[inline_props]
-pub fn LikeDislike(
-    cx: Scope,
+#[component]
+pub
+fn LikeDislike(
     post_id: PostId,
     like_status: LikeStatus,
     likes: i64,
     dislikes: i64,
 ) -> Element {
-    let post_manager = use_post_manager(cx);
-    let toaster = use_toaster(cx);
+    let post_manager = use_post_manager();
+    let toaster = use_toaster();
     let api_client = ApiClient::global();
 
     let like_icon = match like_status {
@@ -61,7 +61,7 @@ pub fn LikeDislike(
         }
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "cursor-pointer",
             onclick: move |_| like_onclick(LikeStatus::Like),
@@ -86,13 +86,14 @@ pub fn LikeDislike(
                 "{dislikes}"
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn Boost(cx: Scope, post_id: PostId, boosted: bool, boosts: i64) -> Element {
-    let post_manager = use_post_manager(cx);
-    let toaster = use_toaster(cx);
+#[component]
+pub
+fn Boost(post_id: PostId, boosted: bool, boosts: i64) -> Element {
+    let post_manager = use_post_manager();
+    let toaster = use_toaster();
     let api_client = ApiClient::global();
 
     let icon = match boosted {
@@ -131,7 +132,7 @@ pub fn Boost(cx: Scope, post_id: PostId, boosted: bool, boosts: i64) -> Element 
         }
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "cursor-pointer",
             onclick: boost_onclick,
@@ -144,13 +145,14 @@ pub fn Boost(cx: Scope, post_id: PostId, boosted: bool, boosts: i64) -> Element 
                 "{boosts}",
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn Bookmark(cx: Scope, post_id: PostId, bookmarked: bool) -> Element {
-    let post_manager = use_post_manager(cx);
-    let toaster = use_toaster(cx);
+#[component]
+pub
+fn Bookmark(post_id: PostId, bookmarked: bool) -> Element {
+    let post_manager = use_post_manager();
+    let toaster = use_toaster();
     let api_client = ApiClient::global();
 
     let icon = match bookmarked {
@@ -184,7 +186,7 @@ pub fn Bookmark(cx: Scope, post_id: PostId, bookmarked: bool) -> Element {
         }
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "cursor-pointer",
             onclick: bookmark_onclick,
@@ -193,17 +195,18 @@ pub fn Bookmark(cx: Scope, post_id: PostId, bookmarked: bool) -> Element {
                 src: "{icon}",
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn Comment(cx: Scope, opened: UseState<bool>) -> Element {
+#[component]
+pub
+fn Comment(opened: Signal<bool>) -> Element {
     let comment_onclick = sync_handler!([opened], move |_| {
-        let current = *opened.get();
+        let current = opened();
         opened.set(!current);
     });
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "cursor-pointer",
             onclick: comment_onclick,
@@ -212,12 +215,13 @@ pub fn Comment(cx: Scope, opened: UseState<bool>) -> Element {
                 src: "/static/icons/icon-messages.svg",
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn QuickRespondBox(cx: Scope, opened: UseState<bool>) -> Element {
-    let element = match *opened.get() {
+#[component]
+pub
+fn QuickRespondBox(opened: Signal<bool>) -> Element {
+    let element = match opened() {
         true => {
             to_owned![opened];
             Some(rsx! { QuickRespond { opened: opened } })
@@ -225,19 +229,20 @@ pub fn QuickRespondBox(cx: Scope, opened: UseState<bool>) -> Element {
         false => None,
     };
 
-    cx.render(rsx! {element})
+    element.unwrap_or_else(|| rsx! {})
 }
 
-#[inline_props]
-pub fn Actionbar(cx: Scope, post_id: PostId) -> Element {
-    let post_manager = use_post_manager(cx);
-    let quick_respond_opened = use_state(cx, || false).clone();
+#[component]
+pub
+fn Actionbar(post_id: PostId) -> Element {
+    let post_manager = use_post_manager();
+    let quick_respond_opened = use_signal(|| false).clone();
 
     let this_post = post_manager.read().get(&post_id).cloned();
 
     match this_post {
         Some(post) => {
-            cx.render(rsx! {
+            rsx! {
                 div {
                     class: "flex flex-row justify-between w-full opacity-70 mt-4",
                     Boost {
@@ -263,15 +268,15 @@ pub fn Actionbar(cx: Scope, post_id: PostId) -> Element {
                 QuickRespondBox {
                     opened: quick_respond_opened,
                 }
-            })
+            }
         },
         None => {
             // Handle the case where the post does not exist
-            cx.render(rsx! {
+            rsx! {
                 div {
                     "Post not found"
                 }
-            })
+            }
         }
     }
 }

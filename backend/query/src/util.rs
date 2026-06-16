@@ -28,7 +28,7 @@ impl AsyncConnectionPool {
         Ok(pool)
     }
 
-    pub async fn get(&self) -> Result<AsyncConnection, QueryError> {
+    pub async fn get(&self) -> Result<AsyncConnection<'_>, QueryError> {
         self.0
             .get()
             .await

@@ -5,8 +5,8 @@ use crate::{
     prelude::*,
 };
 use dioxus::prelude::*;
-use dioxus_router::RouterContext;
-use fermi::{use_atom_ref, UseAtomRef};
+
+
 use indexmap::IndexMap;
 use uchat_domain::ids::{PostId, UserId};
 use uchat_endpoint::post::types::PublicPost;
@@ -15,8 +15,8 @@ pub mod actionbar;
 pub mod content;
 pub mod quick_respond;
 
-pub fn use_post_manager(cx: &ScopeState) -> &UseAtomRef<PostManager> {
-    use_atom_ref(cx, crate::app::POSTMANAGER)
+pub fn use_post_manager() -> Signal<PostManager> {
+    use_context::<Signal<PostManager>>()
 }
 
 #[derive(Default)]
@@ -59,7 +59,7 @@ impl PostManager {
         self.posts.remove(post_id);
     }
 
-    pub fn all_to_public<'a, 'b>(&self) -> Vec<LazyNodes<'a, 'b>> {
+    pub fn all_to_public(&self) -> Vec<Element> {
         self.posts
             .iter()
             .map(|(&id, _)| {
@@ -76,54 +76,58 @@ impl PostManager {
 }
 
 pub fn view_profile_onclick(
-    router: &RouterContext,
+    router: Navigator,
     user_id: UserId,
-) -> impl FnMut(MouseEvent) + '_ {
+) -> impl FnMut(MouseEvent) + 'static {
     sync_handler!([router], move |_| {
         let route = crate::page::route::profile_view(user_id);
-        router.navigate_to(&route)
+        { router.push(route); }
     })
 }
 
-#[inline_props]
-pub fn ProfileImage<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
-    let router = use_router(cx);
+#[component]
+pub
+fn ProfileImage(post: Signal<PublicPost>) -> Element {
+    let router = use_navigator();
+    let post_read = post.read();
 
-    let poster_info = &post.by_user;
+    let poster_info = &post_read.by_user;
 
-    let profile_img_src = &poster_info
+    let profile_img_src = poster_info
         .profile_image
         .as_ref()
         .map(|url| url.as_str())
         .unwrap_or_else(|| "");
 
-    cx.render(rsx! {
+    rsx! {
         div {
             img {
                 class: "profile-portrait cursor-pointer",
-                onclick: view_profile_onclick(router, post.by_user.id),
+                onclick: view_profile_onclick(router.clone(), post_read.by_user.id),
                 src: "{profile_img_src}",
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
+#[component]
+pub
+fn Header(post: Signal<PublicPost>) -> Element {
+    let post_read = post.read();
     let (post_date, post_time) = {
-        let date = post.time_posted.format("%Y-%m-%d");
-        let time = post.time_posted.format("%H:%M:%S");
+        let date = post_read.time_posted.format("%Y-%m-%d");
+        let time = post_read.time_posted.format("%H:%M:%S");
         (date, time)
     };
 
-    let display_name = match &post.by_user.display_name {
+    let display_name = match &post_read.by_user.display_name {
         Some(name) => name.as_ref(),
         None => "",
     };
 
-    let handle = &post.by_user.handle;
+    let handle = &post_read.by_user.handle;
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "flex flex-row justify-between",
             div {
@@ -141,22 +145,23 @@ pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
                 div { "{post_time}" },
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn PublicPostEntry(cx: Scope, post_id: PostId) -> Element {
-    let post_manager = use_post_manager(cx);
-    let _router = use_router(cx);
+#[component]
+pub
+fn PublicPostEntry(post_id: PostId) -> Element {
+    let post_manager = use_post_manager();
+    let _router = use_navigator();
 
     let this_post = {
-        let post = post_manager.read().get(post_id).unwrap().clone();
-        use_state(cx, || post)
+        let post = post_manager.read().get(&post_id).unwrap().clone();
+        use_signal(|| post)
     };
 
-    cx.render(rsx! {
+    rsx! {
         div {
-            key: "{this_post.id.to_string()}",
+            key: "{this_post.read().id.to_string()}",
             class: "grid grid-cols-[50px_1fr] gap-2 mb-4",
             ProfileImage {
                 post: this_post,
@@ -166,9 +171,9 @@ pub fn PublicPostEntry(cx: Scope, post_id: PostId) -> Element {
                 Header { post: this_post },
                 // reply to
                 Content { post: this_post },
-                Actionbar { post_id: this_post.id },
+                Actionbar { post_id: this_post.read().id },
                 hr {},
             }
         }
-    })
+    }
 }

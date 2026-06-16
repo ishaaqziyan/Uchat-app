@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use dioxus::prelude::*;
-use dioxus_router::Link;
+
 use uchat_domain::UserFacingError;
 
 use crate::{
@@ -12,33 +12,32 @@ use crate::{
 };
 
 pub struct PageState {
-    username: UseState<String>,
-    password: UseState<String>,
+    username: Signal<String>,
+    password: Signal<String>,
     form_errors: KeyedNotifications,
 }
 
 impl PageState {
-    pub fn new(cx: Scope) -> Self {
+    pub fn new() -> Self {
         Self {
-            username: use_state(cx, String::new).clone(),
-            password: use_state(cx, String::new).clone(),
+            username: use_signal(String::new).clone(),
+            password: use_signal(String::new).clone(),
             form_errors: KeyedNotifications::default(),
         }
     }
     pub fn can_submit(&self) -> bool {
         !(self.form_errors.has_messages()
-            || self.username.current().is_empty()
-            || self.password.current().is_empty())
+            || self.username.read().is_empty()
+            || self.password.read().is_empty())
     }
 }
 
-#[inline_props]
-pub fn PasswordInput<'a>(
-    cx: Scope<'a>,
-    state: UseState<String>,
-    oninput: EventHandler<'a, FormEvent>,
-) -> Element<'a> {
-    cx.render(rsx! {
+#[component]
+pub
+fn PasswordInput(state: Signal<String>,
+    oninput: EventHandler<FormEvent>,
+) -> Element {
+    rsx! {
         div {
             class: "flex flex-col",
             label {
@@ -51,20 +50,19 @@ pub fn PasswordInput<'a>(
                 name: "password",
                 class: "input-field",
                 placeholder: "Password",
-                value: "{state.current()}",
+                value: "{state.read()}",
                 oninput: move |ev| oninput.call(ev),
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn UsernameInput<'a>(
-    cx: Scope<'a>,
-    state: UseState<String>,
-    oninput: EventHandler<'a, FormEvent>,
-) -> Element<'a> {
-    cx.render(rsx! {
+#[component]
+pub
+fn UsernameInput(state: Signal<String>,
+    oninput: EventHandler<FormEvent>,
+) -> Element {
+    rsx! {
         div {
             class: "flex flex-col",
             label {
@@ -76,29 +74,33 @@ pub fn UsernameInput<'a>(
                 name: "username",
                 class: "input-field",
                 placeholder: "User Name",
-                value: "{state.current()}",
+                value: "{state.read()}",
                 oninput: move |ev| oninput.call(ev),
             }
         }
-    })
+    }
 }
 
-pub fn LoginLink(cx: Scope) -> Element {
-    cx.render(rsx! {
+#[component]
+pub
+fn LoginLink() -> Element {
+    rsx! {
         Link {
             class: "link text-center",
             to: page::ACCOUNT_LOGIN,
             "Existing User Login"
         }
-    })
+    }
 }
 
-pub fn Register(cx: Scope) -> Element {
+#[component]
+pub
+fn Register() -> Element {
     let api_client = ApiClient::global();
-    let page_state = PageState::new(cx);
-    let page_state = use_ref(cx, || page_state);
-    let router = use_router(cx);
-    let local_profile = use_local_profile(cx);
+    let page_state = PageState::new();
+    let page_state = use_signal( || page_state);
+    let router = use_navigator();
+    let local_profile = use_local_profile();
 
     let form_onsubmit = async_handler!(
         &cx,
@@ -109,11 +111,11 @@ pub fn Register(cx: Scope) -> Element {
                 use uchat_domain::{Password, Username};
                 CreateUser {
                     username: Username::new(
-                        page_state.with(|state| state.username.current().to_string()),
+                        page_state.with(|state| state.username.read().to_string()),
                     )
                     .unwrap(),
                     password: Password::new(
-                        page_state.with(|state| state.password.current().to_string()),
+                        page_state.with(|state| state.password.read().to_string()),
                     )
                     .unwrap(),
                 }
@@ -127,7 +129,7 @@ pub fn Register(cx: Scope) -> Element {
                         res.session_expires,
                     );
                     local_profile.write().user_id = Some(res.user_id);
-                    router.navigate_to(page::HOME)
+                    { router.push(page::HOME); }
                 }
                 Err(_e) => (),
             }
@@ -135,31 +137,33 @@ pub fn Register(cx: Scope) -> Element {
     );
 
     let username_oninput = sync_handler!([page_state], move |ev: FormEvent| {
-        if let Err(e) = uchat_domain::Username::new(&ev.value) {
+        if let Err(e) = uchat_domain::Username::new(&ev.value()) {
             page_state.with_mut(|state| state.form_errors.set("bad-username", e.formatted_error()));
         } else {
             page_state.with_mut(|state| state.form_errors.remove("bad-username"));
         }
-        page_state.with_mut(|state| state.username.set(ev.value.clone()));
+        page_state.with_mut(|state| state.username.set(ev.value().clone()));
     });
 
     let password_oninput = sync_handler!([page_state], move |ev: FormEvent| {
-        if let Err(e) = uchat_domain::Password::new(&ev.value) {
+        if let Err(e) = uchat_domain::Password::new(&ev.value()) {
             page_state.with_mut(|state| state.form_errors.set("bad-password", e.formatted_error()));
         } else {
             page_state.with_mut(|state| state.form_errors.remove("bad-password"));
         }
-        page_state.with_mut(|state| state.password.set(ev.value.clone()));
+        page_state.with_mut(|state| state.password.set(ev.value().clone()));
     });
 
     let submit_btn_style =
-        maybe_class!("btn-disabled", !page_state.with(|state| state.can_submit()));
+        maybe_class!("btn-disabled", !page_state.read().can_submit());
 
-    cx.render(rsx! {
+    rsx! {
         form {
             class: "flex flex-col gap-5",
-            prevent_default: "onsubmit",
-            onsubmit: form_onsubmit,
+            onsubmit: move |ev| {
+                ev.prevent_default();
+                form_onsubmit(ev);
+            },
 
             img {
                 src: "/static/icons/uchat.jpg", 
@@ -168,26 +172,25 @@ pub fn Register(cx: Scope) -> Element {
             },
 
             UsernameInput {
-                state: page_state.with(|state| state.username.clone()),
+                state: page_state.read().username.clone(),
                 oninput: username_oninput,
             },
 
             PasswordInput {
-                state: page_state.with(|state| state.password.clone()),
+                state: page_state.read().password.clone(),
                 oninput: password_oninput,
             },
             LoginLink {},
             KeyedNotificationBox {
                 legend: "Form Errors",
-                notifications: page_state.clone().with(|state| state.form_errors.clone()),
+                notifications: page_state.read().form_errors.clone(),
             }
 
             button {
                 class: "btn {submit_btn_style}",
                 r#type: "submit",
-                disabled: !page_state.with(|state| state.can_submit()),
                 "Signup"
             }
         }
-    })
+    }
 }

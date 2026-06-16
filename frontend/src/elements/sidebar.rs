@@ -2,10 +2,10 @@
 
 use crate::prelude::*;
 use dioxus::prelude::*;
-use fermi::{use_atom_ref, UseAtomRef};
 
-pub fn use_sidebar(cx: &ScopeState) -> &UseAtomRef<SidebarManager> {
-    use_atom_ref(cx, crate::app::SIDEBAR)
+
+pub fn use_sidebar() -> Signal<SidebarManager> {
+    use_context::<Signal<SidebarManager>>()
 }
 
 #[derive(Default)]
@@ -27,10 +27,12 @@ impl SidebarManager {
     }
 }
 
-pub fn Sidebar(cx: Scope) -> Element {
-    let sidebar = use_sidebar(cx);
-    let router = use_router(cx);
-    let local_profile = use_local_profile(cx);
+#[component]
+pub
+fn Sidebar() -> Element {
+    let mut sidebar = use_sidebar();
+    let router = use_navigator();
+    let mut local_profile = use_local_profile();
 
     let sidebar_width = if sidebar.read().is_open() {
         "w-[var(--sidebar-width)]"
@@ -58,8 +60,8 @@ pub fn Sidebar(cx: Scope) -> Element {
         .map(|url| url.as_str())
         .unwrap_or_else(|| "");
 
-    cx.render(rsx! {
-        Overlay,
+    rsx! {
+        {Overlay}
         div {
             class: "{sidebar_width} z-[100] fixed top-0 left-0 h-full
             overflow-x-hidden
@@ -71,7 +73,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                     sidebar.write().close();
                     if let Some(id) = local_profile.read().user_id {
                         let url = crate::page::profile_view(id);
-                        router.navigate_to(&url);
+                        let _ = router.push(url);
                     }
                 },
                 img {
@@ -83,7 +85,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                 class: "sidebar-navlink border-t",
                 onclick: move |_| {
                     sidebar.write().close();
-                    router.navigate_to(page::PROFILE_EDIT);
+                    let _ = router.push(page::PROFILE_EDIT);
                 },
                 "Edit Profile"
             }
@@ -91,7 +93,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                 class: "sidebar-navlink mb-auto",
                 onclick: move |_| {
                     sidebar.write().close();
-                    router.navigate_to(page::HOME_BOOKMARKED);
+                    let _ = router.push(page::HOME_BOOKMARKED);
                 },
                 "Bookmarks"
             },
@@ -104,10 +106,10 @@ pub fn Sidebar(cx: Scope) -> Element {
                     local_profile.write().user_id = None;
                     local_profile.write().image = None;
                     sidebar.write().close();
-                    router.navigate_to(page::ACCOUNT_LOGIN);
+                    let _ = router.push(page::ACCOUNT_LOGIN);
                 },
                 "Logout"
             }
         }
-    })
+    }
 }

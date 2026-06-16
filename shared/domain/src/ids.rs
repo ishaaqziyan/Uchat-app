@@ -52,6 +52,12 @@ macro_rules! new_id {
                     .map_err(|_| IdError::Parse)
             }
         }
+
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
     };
 }
 

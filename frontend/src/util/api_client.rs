@@ -116,13 +116,17 @@ macro_rules! fetch_json {
         use uchat_endpoint::Endpoint;
         use $crate::util::RequestError;
         let duration = std::time::Duration::from_millis(6000);
-        let response = $client.post_json($request.url(), &$request, duration).await;
+        let url = $request.url();
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!("Fetching URL: {}", url)));
+        let response = $client.post_json(url, &$request, duration).await;
         match response {
             Ok(res) => {
                 if res.status().is_success() {
+                    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str("API request successful!"));
                     Ok(res.json::<$target>().await.unwrap())
                 } else {
                     let status = res.status();
+                    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!("API request failed with status: {}", status)));
                     match res.json::<uchat_endpoint::RequestFailed>().await {
                         Ok(payload) => Err(RequestError::BadRequest(payload)),
                         Err(_) => Err(RequestError::BadRequest(uchat_endpoint::RequestFailed {
@@ -136,7 +140,10 @@ macro_rules! fetch_json {
                     }
                 }
             }
-            Err(e) => Err(e),
+            Err(e) => {
+                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!("API request error: {:?}", e)));
+                Err(e)
+            }
         }
     }};
 }
