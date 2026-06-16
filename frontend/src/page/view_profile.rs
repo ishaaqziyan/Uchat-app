@@ -6,7 +6,7 @@ use uchat_domain::ids::UserId;
 
 #[component]
 pub
-fn ViewProfile(user_id: ReadOnlySignal<UserId>) -> Element {
+fn ViewProfile(user_id: ReadSignal<UserId>) -> Element {
     let api_client = ApiClient::global();
     let toaster = use_toaster();
     let router = use_navigator();

@@ -77,7 +77,7 @@ impl PostManager {
 }
 
 pub fn view_profile_onclick(
-    router: Navigator,
+    router: dioxus::router::Navigator,
     user_id: UserId,
 ) -> impl FnMut(MouseEvent) + 'static {
     sync_handler!([router], move |_| {
