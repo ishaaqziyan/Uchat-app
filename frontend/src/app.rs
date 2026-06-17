@@ -161,6 +161,15 @@ pub fn App() -> Element {
 
     let _api_client = ApiClient::global();
 
+    use_hook(|| {
+        if let Ok(Some(storage)) = crate::util::window().session_storage() {
+            if storage.get_item("session_active").unwrap_or(None).is_none() {
+                crate::util::cookie::remove_session();
+                let _ = storage.set_item("session_active", "1");
+            }
+        }
+    });
+
     rsx! {
         Router::<Route> {}
         ToastRoot { toaster: toaster }
