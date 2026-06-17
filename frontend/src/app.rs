@@ -88,6 +88,20 @@ pub enum Route {
         EditProfile {},
         #[route("/profile/view/:user_id")]
         ViewProfile { user_id: uchat_domain::ids::UserId },
+
+    #[redirect("/", || Route::Home {})]
+    #[route("/:..route")]
+    PageNotFound { route: Vec<String> },
+}
+
+#[component]
+pub fn PageNotFound(route: Vec<String>) -> Element {
+    rsx! {
+        div {
+            class: "flex items-center justify-center h-full",
+            h1 { class: "text-2xl font-bold", "404 - Page Not Found" }
+        }
+    }
 }
 
 #[component]
