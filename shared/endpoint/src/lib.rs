@@ -63,6 +63,8 @@ route!("/posts/bookmarked" => post::endpoint::BookmarkedPosts);
 route!("/profile/me" => user::endpoint::GetMyProfile);
 route!("/profile/update" => user::endpoint::UpdateProfile);
 route!("/profile/view" => user::endpoint::ViewProfile);
+route!("/notifications" => user::endpoint::GetNotifications);
+route!("/notifications/mark_read" => user::endpoint::MarkNotificationsAsRead);
 route!("/user/follow" => user::endpoint::FollowUser);
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

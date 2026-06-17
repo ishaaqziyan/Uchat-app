@@ -9,6 +9,7 @@ use uchat_domain::ids::UserId;
 pub struct LocalProfile {
     pub image: Option<url::Url>,
     pub user_id: Option<UserId>,
+    pub unread_notifications: i64,
 }
 
 pub fn use_local_profile() -> Signal<LocalProfile> {

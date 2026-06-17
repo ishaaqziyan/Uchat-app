@@ -113,9 +113,11 @@ pub fn follow(conn: &mut PgConnection, user_id: UserId, follow: UserId) -> Resul
             .values((user_id.eq(uid), follows.eq(fid)))
             .on_conflict((user_id, follows))
             .do_nothing()
-            .execute(conn)
-            .map(|_| ())
+            .execute(conn)?;
     }
+
+    let _ = crate::notification::create_notification(conn, fid, uid, 1, None);
+    Ok(())
 }
 
 pub fn unfollow(
@@ -127,7 +129,7 @@ pub fn unfollow(
     let fid = stop_following;
     {
         use crate::schema::followers::dsl::*;
-        diesel::delete(followers)
+        let res = diesel::delete(followers)
             .filter(user_id.eq(uid))
             .filter(follows.eq(fid))
             .execute(conn)
@@ -137,7 +139,12 @@ pub fn unfollow(
                 } else {
                     DeleteStatus::NotFound
                 }
-            })
+            });
+        
+        if let Ok(DeleteStatus::Deleted) = res {
+            let _ = crate::notification::create_notification(conn, fid, uid, 2, None);
+        }
+        res
     }
 }
 

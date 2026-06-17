@@ -136,6 +136,7 @@ fn Login() -> Element {
                     );
                     local_profile.write().image = res.profile_image;
                     local_profile.write().user_id = Some(res.user_id);
+                    local_profile.write().unread_notifications = res.unread_notifications;
                     { router.push(page::HOME); }
                 }
                 Err(e) => page_state

@@ -13,6 +13,8 @@ pub use new_post::*; // Re-export all new post page components (NewChat, NewImag
 pub use register::Register;
 pub use trending::Trending;
 pub use view_profile::ViewProfile;
+pub mod notifications;
+pub use notifications::Notifications;
 
 pub use route::*; // Re-export all route constants and helpers at the top level
 

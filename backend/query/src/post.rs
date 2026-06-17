@@ -54,7 +54,7 @@ pub fn new(conn: &mut PgConnection, post: Post) -> Result<PostId, DieselError> {
         diesel::insert_into(schema::posts::table)
             .values(&post)
             .execute(conn)?;
-        match serde_json::from_value::<EndpointContent>(post.content.0) {
+        let result = match serde_json::from_value::<EndpointContent>(post.content.0) {
             Ok(EndpointContent::Poll(poll)) => {
                 for choice in &poll.choices {
                     use schema::poll_choices::{self, columns as col};
@@ -67,10 +67,24 @@ pub fn new(conn: &mut PgConnection, post: Post) -> Result<PostId, DieselError> {
                         ))
                         .execute(conn)?;
                 }
-                Ok(post.id)
+                post.id
             }
-            _ => Ok(post.id),
+            _ => post.id,
+        };
+
+        if let Some(reply_to_id) = post.reply_to {
+            if let Ok(parent_post) = get(conn, reply_to_id) {
+                let _ = crate::notification::create_notification(
+                    conn, 
+                    parent_post.user_id, 
+                    post.user_id, 
+                    3, 
+                    Some(post.id)
+                );
+            }
         }
+
+        Ok(result)
     })
 }
 
@@ -183,8 +197,21 @@ pub fn react(conn: &mut PgConnection, reaction: Reaction) -> Result<(), DieselEr
             reactions::like_status.eq(&reaction.like_status),
             reactions::reaction.eq(&reaction.reaction),
         ))
-        .execute(conn)
-        .map(|_| ())
+        .execute(conn)?;
+        
+    if reaction.like_status == 1 {
+        if let Ok(post) = get(conn, reaction.post_id) {
+            let _ = crate::notification::create_notification(
+                conn,
+                post.user_id,
+                reaction.user_id,
+                4,
+                Some(reaction.post_id),
+            );
+        }
+    }
+    
+    Ok(())
 }
 
 pub fn get_reaction(

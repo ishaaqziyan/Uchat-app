@@ -25,6 +25,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    notifications (id) {
+        id -> Uuid,
+        user_id -> Uuid,
+        actor_id -> Uuid,
+        kind -> Int2,
+        post_id -> Nullable<Uuid>,
+        is_read -> Bool,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
     poll_choices (id) {
         id -> Uuid,
         choice -> Text,
@@ -86,15 +98,24 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(followers -> users (follows));
-diesel::joinable!(poll_votes -> poll_choices (choice_id));
 diesel::joinable!(bookmarks -> posts (post_id));
+diesel::joinable!(bookmarks -> users (user_id));
+diesel::joinable!(boosts -> posts (post_id));
+diesel::joinable!(boosts -> users (user_id));
+diesel::joinable!(notifications -> posts (post_id));
+diesel::joinable!(poll_choices -> posts (post_id));
+diesel::joinable!(poll_votes -> poll_choices (choice_id));
+diesel::joinable!(poll_votes -> posts (post_id));
+diesel::joinable!(poll_votes -> users (user_id));
 diesel::joinable!(reactions -> posts (post_id));
+diesel::joinable!(reactions -> users (user_id));
+diesel::joinable!(web -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     bookmarks,
     boosts,
     followers,
+    notifications,
     poll_choices,
     poll_votes,
     posts,

@@ -39,6 +39,7 @@ pub struct LoginOk {
     pub email: Option<String>,
     pub profile_image: Option<Url>,
     pub user_id: UserId,
+    pub unread_notifications: i64,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -50,6 +51,7 @@ pub struct GetMyProfileOk {
     pub email: Option<String>,
     pub profile_image: Option<Url>,
     pub user_id: UserId,
+    pub unread_notifications: i64,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -86,3 +88,17 @@ pub struct FollowUser {
 pub struct FollowUserOk {
     pub status: FollowAction,
 }
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetNotifications;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetNotificationsOk {
+    pub notifications: Vec<super::types::Notification>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct MarkNotificationsAsRead;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct MarkNotificationsAsReadOk;

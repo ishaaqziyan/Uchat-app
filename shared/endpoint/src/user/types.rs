@@ -27,3 +27,24 @@ impl From<FollowAction> for bool {
         }
     }
 }
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct Notification {
+    pub id: uuid::Uuid,
+    pub user_id: UserId,
+    pub actor_id: UserId,
+    pub actor_handle: String,
+    pub actor_name: Option<String>,
+    pub kind: NotificationKind,
+    pub post_id: Option<uchat_domain::ids::PostId>,
+    pub is_read: bool,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub enum NotificationKind {
+    Follow,
+    Unfollow,
+    Comment,
+    Reaction,
+}

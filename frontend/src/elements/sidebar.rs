@@ -33,6 +33,24 @@ fn Sidebar() -> Element {
     let mut sidebar = use_sidebar();
     let router = use_navigator();
     let mut local_profile = use_local_profile();
+    let api_client = ApiClient::global();
+
+    use_future(move || {
+        let mut local_profile = local_profile.clone();
+        let api_client = api_client.clone();
+        async move {
+            loop {
+                gloo_timers::future::sleep(std::time::Duration::from_secs(5)).await;
+                if local_profile.read().user_id.is_some() {
+                    if let Ok(res) = fetch_json!(<uchat_endpoint::user::endpoint::GetMyProfileOk>, api_client, uchat_endpoint::user::endpoint::GetMyProfile) {
+                        if local_profile.read().unread_notifications != res.unread_notifications {
+                            local_profile.write().unread_notifications = res.unread_notifications;
+                        }
+                    }
+                }
+            }
+        }
+    });
 
     let sidebar_width = if sidebar.read().is_open() {
         "w-[var(--sidebar-width)]"
@@ -96,6 +114,20 @@ fn Sidebar() -> Element {
                     let _ = router.push(crate::app::Route::HomeBookmarked {});
                 },
                 "Bookmarks"
+            },
+            a {
+                class: "sidebar-navlink mb-auto flex flex-row items-center gap-2",
+                onclick: move |_| {
+                    sidebar.write().close();
+                    let _ = router.push(crate::app::Route::Notifications {});
+                },
+                "Notifications"
+                if local_profile.read().unread_notifications > 0 {
+                    span {
+                        class: "bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full",
+                        "{local_profile.read().unread_notifications}"
+                    }
+                }
             },
             a {
                 class: "sidebar-navlink",

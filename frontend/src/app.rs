@@ -10,7 +10,7 @@ use crate::elements::{
 };
 pub use crate::prelude::*;
 use crate::page::{Register, Login, Home, HomeBookmarked, HomeLiked, NewChat};
-use crate::page::{NewImage, NewPoll, Trending, EditProfile, ViewProfile};
+use crate::page::{NewImage, NewPoll, Trending, EditProfile, ViewProfile, Notifications};
 use crate::elements::sidebar::{Sidebar, SidebarManager};
 use crate::elements::local_profile::LocalProfile;
 // Global state is now managed via Dioxus use_context_provider
@@ -43,6 +43,7 @@ fn Init() -> Element {
                     // On success, update global profile state with fetched data
                     local_profile.write().image = res.profile_image;
                     local_profile.write().user_id = Some(res.user_id);
+                    local_profile.write().unread_notifications = res.unread_notifications;
                 }
                 Err(_e) => {
                     // On failure, show an error toast and redirect to the login page
@@ -88,6 +89,8 @@ pub enum Route {
         EditProfile {},
         #[route("/profile/view/:user_id")]
         ViewProfile { user_id: uchat_domain::ids::UserId },
+        #[route("/notifications")]
+        Notifications {},
 
     #[redirect("/", || Route::Home {})]
     #[route("/:..route")]
