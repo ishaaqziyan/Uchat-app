@@ -74,6 +74,40 @@ impl PostManager {
             })
             .collect()
     }
+
+    pub fn bookmarked_to_public(&self) -> Vec<Element> {
+        self.posts
+            .iter()
+            .filter(|(_, post)| post.bookmarked)
+            .map(|(&id, _)| {
+                rsx! {
+                    div {
+                        key: "{id.to_string()}",
+                        PublicPostEntry {
+                            post_id: id
+                        }
+                    }
+                }
+            })
+            .collect()
+    }
+
+    pub fn liked_to_public(&self) -> Vec<Element> {
+        self.posts
+            .iter()
+            .filter(|(_, post)| post.like_status == uchat_endpoint::post::types::LikeStatus::Like)
+            .map(|(&id, _)| {
+                rsx! {
+                    div {
+                        key: "{id.to_string()}",
+                        PublicPostEntry {
+                            post_id: id
+                        }
+                    }
+                }
+            })
+            .collect()
+    }
 }
 
 pub fn view_profile_onclick(

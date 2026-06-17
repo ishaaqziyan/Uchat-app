@@ -36,7 +36,7 @@ fn HomeBookmarked() -> Element {
     };
 
     let Posts = {
-        let posts = post_manager.read().all_to_public();
+        let posts = post_manager.read().bookmarked_to_public();
         if posts.is_empty() {
             let TrendingLink = rsx! {
                 a {
