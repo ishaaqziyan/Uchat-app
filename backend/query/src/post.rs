@@ -393,6 +393,10 @@ pub fn get_home_posts(conn: &mut PgConnection, user_id: UserId) -> Result<Vec<Po
     let order = posts::time_posted.desc();
     let limit = 30;
 
+    let on_schedule2 = posts::time_posted.lt(Utc::now());
+    let public_only2 = posts::direct_message_to.is_null();
+    let order2 = posts::time_posted.desc();
+
     followers::table
         .filter(followers::user_id.eq(uid))
         .inner_join(posts::table.on(followers::follows.eq(posts::user_id)))
@@ -410,6 +414,15 @@ pub fn get_home_posts(conn: &mut PgConnection, user_id: UserId) -> Result<Vec<Po
                 .filter(public_only)
                 .select(Post::as_select())
                 .order(order)
+                .limit(limit),
+        )
+        .union(
+            posts::table
+                .filter(posts::user_id.eq(uid))
+                .filter(on_schedule2)
+                .filter(public_only2)
+                .select(Post::as_select())
+                .order(order2)
                 .limit(limit),
         )
         .get_results(conn)

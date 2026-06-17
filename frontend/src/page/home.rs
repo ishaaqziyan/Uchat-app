@@ -25,6 +25,7 @@ fn Home() -> Element {
             toaster
                 .write()
                 .info("Retrieving posts...", chrono::Duration::seconds(3));
+            post_manager.write().clear();
             let response = fetch_json!(<HomePostsOk>, api_client, HomePosts);
             match response {
                 Ok(res) => post_manager.write().populate(res.posts.into_iter()),
