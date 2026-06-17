@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(unused_mut)]
 
 use crate::prelude::*;
 use dioxus::prelude::*;
@@ -15,6 +16,7 @@ pub fn Conversations() -> Element {
     let mut convs = use_signal(Vec::new);
 
     use_future(move || {
+        let mut convs = convs;
         let api_client = api_client.clone();
         let mut toaster = toaster.clone();
         async move {
@@ -116,8 +118,7 @@ pub fn Chat(user_id: UserId) -> Element {
     let mut toaster = use_toaster();
     let mut messages = use_signal(Vec::new);
     let mut current_msg = use_signal(String::new);
-    let mut other_user_profile =
-        use_signal(|| None::<uchat_endpoint::user::types::PublicUserProfile>);
+    let mut other_user_profile = use_signal(|| None::<uchat_endpoint::user::types::PublicUserProfile>);
     let local_profile = use_local_profile();
     let router = use_navigator();
 
