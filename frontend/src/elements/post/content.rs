@@ -12,8 +12,7 @@ use uchat_endpoint::post::types::{
 };
 
 #[component]
-pub
-fn Chat(content: EndpointChat) -> Element {
+pub fn Chat(content: EndpointChat) -> Element {
     let Headline = content.headline.as_ref().map(|headline| {
         rsx! {
             div { class: "font-bold", "{headline.as_ref()}" }
@@ -29,22 +28,20 @@ fn Chat(content: EndpointChat) -> Element {
 }
 
 #[component]
-pub
-fn Image(content: EndpointImage) -> Element {
+pub fn Image(content: EndpointImage) -> Element {
     let url = if let ImageKind::Url(url) = &content.kind {
         url
     } else {
         return rsx! { "image not found" };
     };
 
-    let Caption = content
-        .caption
-        .as_ref()
-        .map(|caption| rsx! {
+    let Caption = content.caption.as_ref().map(|caption| {
+        rsx! {
             figcaption {
                 em { "{caption.as_ref()}" }
             }
-        });
+        }
+    });
 
     rsx! {
         figure { class: "flex flex-col gap-2",
@@ -55,8 +52,7 @@ fn Image(content: EndpointImage) -> Element {
 }
 
 #[component]
-pub
-fn Poll(post_id: PostId, content: EndpointPoll) -> Element {
+pub fn Poll(post_id: PostId, content: EndpointPoll) -> Element {
     let toaster = use_toaster();
     let api_client = ApiClient::global();
 
@@ -67,12 +63,14 @@ fn Poll(post_id: PostId, content: EndpointPoll) -> Element {
             use uchat_endpoint::post::endpoint::{Vote, VoteOk};
             let request = Vote { post_id, choice_id };
             match fetch_json!(<VoteOk>, api_client, request) {
-                Ok(res) => {
-                    match res.cast {
-                        VoteCast::Yes => toaster.write().success("Vote cast!", chrono::Duration::seconds(3)),
-                        VoteCast::AlreadyVoted => toaster.write().info("Already voted", chrono::Duration::seconds(5)),
-                    }
-                }
+                Ok(res) => match res.cast {
+                    VoteCast::Yes => toaster
+                        .write()
+                        .success("Vote cast!", chrono::Duration::seconds(3)),
+                    VoteCast::AlreadyVoted => toaster
+                        .write()
+                        .info("Already voted", chrono::Duration::seconds(5)),
+                },
                 Err(e) => toaster.write().error(
                     format!("Failed to cast vote: {}", e),
                     chrono::Duration::seconds(3),
@@ -142,8 +140,7 @@ fn Poll(post_id: PostId, content: EndpointPoll) -> Element {
 }
 
 #[component]
-pub
-fn Content(post_id: PostId) -> Element {
+pub fn Content(post_id: PostId) -> Element {
     use uchat_endpoint::post::types::Content as EndpointContent;
     let post_manager = crate::elements::post::use_post_manager();
     let post_read = post_manager.read();

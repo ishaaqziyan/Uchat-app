@@ -27,7 +27,7 @@ use crate::{
 
 use super::{save_image, AuthorizedApiRequest, PublicApiRequest};
 
-fn profile_id_to_url(id: &str) -> Url {
+pub fn profile_id_to_url(id: &str) -> Url {
     use uchat_endpoint::app_url::{self, user_content};
     app_url::domain_and(user_content::ROOT)
         .join(user_content::IMAGES)
@@ -44,6 +44,10 @@ pub fn to_public(
     session: Option<&UserSession>,
     user: User,
 ) -> ApiResult<PublicUserProfile> {
+    let am_following = match session {
+        Some(session) => uchat_query::user::is_following(conn, session.user_id, user.id)?,
+        None => false,
+    };
     Ok(PublicUserProfile {
         id: user.id,
         display_name: user
@@ -52,12 +56,8 @@ pub fn to_public(
         handle: user.handle,
         profile_image: user.profile_image.as_ref().map(|id| profile_id_to_url(id)),
         created_at: user.created_at,
-        am_following: {
-            match session {
-                Some(session) => uchat_query::user::is_following(conn, session.user_id, user.id)?,
-                None => false,
-            }
-        },
+        am_following,
+        last_seen: user.last_seen,
     })
 }
 
@@ -162,10 +162,12 @@ impl AuthorizedApiRequest for GetMyProfile {
         session: UserSession,
         _state: AppState,
     ) -> ApiResult<Self::Response> {
+        let _ = uchat_query::user::update_last_seen(&mut conn, session.user_id);
+        
         let user = uchat_query::user::get(&mut conn, session.user_id)?;
+        let unread_notifications = uchat_query::notification::get_unread_count(&mut conn, session.user_id).unwrap_or(0);
 
         let profile_image_url = user.profile_image.as_ref().map(|id| profile_id_to_url(id));
-        let unread_notifications = uchat_query::notification::get_unread_count(&mut conn, session.user_id).unwrap_or(0);
 
         Ok((
             StatusCode::OK,
@@ -307,7 +309,8 @@ impl AuthorizedApiRequest for uchat_endpoint::user::endpoint::GetNotifications {
                     1 => uchat_endpoint::user::types::NotificationKind::Follow,
                     2 => uchat_endpoint::user::types::NotificationKind::Unfollow,
                     3 => uchat_endpoint::user::types::NotificationKind::Comment,
-                    _ => uchat_endpoint::user::types::NotificationKind::Reaction,
+                    4 => uchat_endpoint::user::types::NotificationKind::Reaction,
+                    _ => uchat_endpoint::user::types::NotificationKind::DirectMessage,
                 };
                 uchat_endpoint::user::types::Notification {
                     id: n.id,

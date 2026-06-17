@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use chrono::{DateTime, Duration, Utc};
 use dioxus::prelude::*;
 
-
 pub fn use_toaster() -> Signal<Toaster> {
     use_context::<Signal<Toaster>>()
 }

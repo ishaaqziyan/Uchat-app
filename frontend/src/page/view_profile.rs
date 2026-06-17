@@ -5,17 +5,14 @@ use dioxus::prelude::*;
 use uchat_domain::ids::UserId;
 
 #[component]
-pub
-fn ViewProfile(user_id: ReadSignal<UserId>) -> Element {
+pub fn ViewProfile(user_id: ReadSignal<UserId>) -> Element {
     let api_client = ApiClient::global();
     let toaster = use_toaster();
     let router = use_navigator();
     let post_manager = use_post_manager();
     let local_profile = use_local_profile();
 
-    let profile = use_signal( || None);
-
-
+    let profile = use_signal(|| None);
 
     let _profile_task = use_resource(move || {
         let current_user_id = user_id(); // Reactive read
@@ -25,7 +22,9 @@ fn ViewProfile(user_id: ReadSignal<UserId>) -> Element {
         let mut toaster = toaster.clone();
         async move {
             use uchat_endpoint::user::endpoint::{ViewProfile, ViewProfileOk};
-            let request = ViewProfile { for_user: current_user_id };
+            let request = ViewProfile {
+                for_user: current_user_id,
+            };
             post_manager.write().clear();
             let response = fetch_json!(<ViewProfileOk>, api_client, request);
             match response {
@@ -90,8 +89,20 @@ fn ViewProfile(user_id: ReadSignal<UserId>) -> Element {
                     if id == profile.id {
                         None
                     } else {
+                        let msg_router = router.clone();
+                        let target_user_id = profile.id;
                         Some(rsx! {
-                            button { class: "btn", onclick: follow_onclick, "{follow_button_text}" }
+                            div {
+                                class: "flex flex-row gap-2 justify-center",
+                                button { class: "btn flex-1", onclick: follow_onclick, "{follow_button_text}" }
+                                button {
+                                    class: "btn flex-1 bg-blue-500",
+                                    onclick: move |_| {
+                                        let _ = msg_router.push(crate::app::Route::Chat { user_id: target_user_id });
+                                    },
+                                    "Message"
+                                }
+                            }
                         })
                     }
                 });

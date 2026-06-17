@@ -66,6 +66,9 @@ route!("/profile/view" => user::endpoint::ViewProfile);
 route!("/notifications" => user::endpoint::GetNotifications);
 route!("/notifications/mark_read" => user::endpoint::MarkNotificationsAsRead);
 route!("/user/follow" => user::endpoint::FollowUser);
+route!("/dm/send" => user::endpoint::SendDirectMessage);
+route!("/dm/conversations" => user::endpoint::GetConversations);
+route!("/dm/messages" => user::endpoint::GetDirectMessages);
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum Update<T> {

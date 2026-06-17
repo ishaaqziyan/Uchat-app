@@ -102,3 +102,32 @@ pub struct MarkNotificationsAsRead;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct MarkNotificationsAsReadOk;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SendDirectMessage {
+    pub receiver_id: UserId,
+    pub content: String,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SendDirectMessageOk {
+    pub message_id: uchat_domain::ids::DirectMessageId,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetConversations;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetConversationsOk {
+    pub conversations: Vec<super::types::Conversation>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetDirectMessages {
+    pub other_user_id: UserId,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetDirectMessagesOk {
+    pub messages: Vec<super::types::DirectMessage>,
+}

@@ -35,10 +35,7 @@ impl PageState {
 }
 
 #[component]
-pub
-fn PasswordInput(state: Signal<String>,
-    oninput: EventHandler<FormEvent>,
-) -> Element {
+pub fn PasswordInput(state: Signal<String>, oninput: EventHandler<FormEvent>) -> Element {
     rsx! {
         div {
             class: "flex flex-col",
@@ -60,10 +57,7 @@ fn PasswordInput(state: Signal<String>,
 }
 
 #[component]
-pub
-fn UsernameInput(state: Signal<String>,
-    oninput: EventHandler<FormEvent>,
-) -> Element {
+pub fn UsernameInput(state: Signal<String>, oninput: EventHandler<FormEvent>) -> Element {
     rsx! {
         div {
             class: "flex flex-col",
@@ -84,8 +78,7 @@ fn UsernameInput(state: Signal<String>,
 }
 
 #[component]
-pub
-fn RegisterLink() -> Element {
+pub fn RegisterLink() -> Element {
     rsx! {
         Link {
             class: "link text-center",
@@ -95,11 +88,10 @@ fn RegisterLink() -> Element {
     }
 }
 #[component]
-pub
-fn Login() -> Element {
+pub fn Login() -> Element {
     let api_client = ApiClient::global();
     let page_state = PageState::new();
-    let page_state = use_signal( || page_state);
+    let page_state = use_signal(|| page_state);
     let router = use_navigator();
     let local_profile = use_local_profile();
 
@@ -110,7 +102,7 @@ fn Login() -> Element {
             use uchat_endpoint::user::endpoint::{Login, LoginOk};
             let raw_username = page_state.with(|state| state.username.read().to_string());
             let raw_password = page_state.with(|state| state.password.read().to_string());
-            
+
             let request_data = {
                 use uchat_domain::{Password, Username};
                 let un = match Username::new(raw_username) {
@@ -137,7 +129,9 @@ fn Login() -> Element {
                     local_profile.write().image = res.profile_image;
                     local_profile.write().user_id = Some(res.user_id);
                     local_profile.write().unread_notifications = res.unread_notifications;
-                    { router.push(page::HOME); }
+                    {
+                        router.push(page::HOME);
+                    }
                 }
                 Err(e) => page_state
                     .with_mut(|state| state.server_messages.set("login-fail", e.to_string())),
@@ -163,8 +157,7 @@ fn Login() -> Element {
         page_state.with_mut(|state| state.password.set(ev.value().clone()));
     });
 
-    let submit_btn_style =
-        maybe_class!("btn-disabled", !page_state.read().can_submit());
+    let submit_btn_style = maybe_class!("btn-disabled", !page_state.read().can_submit());
 
     rsx! {
         form {
@@ -176,9 +169,9 @@ fn Login() -> Element {
             },
 
             img {
-                src: "/static/icons/uchat.png", 
+                src: "/static/icons/uchat.png",
                 alt: "Logo",
-                class: "mx-auto mb-4", 
+                class: "mx-auto mb-4",
             },
 
             UsernameInput {

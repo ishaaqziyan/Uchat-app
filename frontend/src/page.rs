@@ -1,9 +1,9 @@
 pub mod edit_profile; // Page for editing the current user's profile
-pub mod home;         // Home feed and its sub-pages (bookmarked, liked)
-pub mod login;        // Login page
-pub mod new_post;     // New post creation pages (chat, image, poll)
-pub mod register;     // Account registration page
-pub mod trending;     // Trending posts feed page
+pub mod home; // Home feed and its sub-pages (bookmarked, liked)
+pub mod login; // Login page
+pub mod new_post; // New post creation pages (chat, image, poll)
+pub mod register; // Account registration page
+pub mod trending; // Trending posts feed page
 pub mod view_profile; // Page for viewing another user's profile
 
 pub use edit_profile::EditProfile;
@@ -15,6 +15,8 @@ pub use trending::Trending;
 pub use view_profile::ViewProfile;
 pub mod notifications;
 pub use notifications::Notifications;
+pub mod chat;
+pub use chat::{Chat, Conversations};
 
 pub use route::*; // Re-export all route constants and helpers at the top level
 
@@ -36,7 +38,7 @@ pub mod route {
     pub const POST_NEW_POLL: &str = "/post/new_poll";
     pub const POSTS_TRENDING: &str = "/posts/trending";
     pub const PROFILE_EDIT: &str = "/profile/edit";
-    pub const PROFILE_VIEW: &str = "/profile/view/:user"; 
+    pub const PROFILE_VIEW: &str = "/profile/view/:user";
 
     /// Builds a concrete profile view URL by replacing the `:user` placeholder with an actual UserId.
     pub fn profile_view(user_id: UserId) -> String {

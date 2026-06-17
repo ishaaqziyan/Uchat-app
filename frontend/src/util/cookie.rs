@@ -18,7 +18,7 @@ pub fn remove_session() {
         Some(Utc::now() - Duration::days(1)),
     );
     document().set_cookie(&cookie).unwrap();
-    
+
     let cookie = format_cookie(
         format_kv(uchat_cookie::SESSION_SIGNATURE, ""),
         Some(Utc::now() - Duration::days(1)),
@@ -31,10 +31,7 @@ pub fn set_session(signature: String, id: SessionId, _expires: DateTime<Utc>) {
 
     document().set_cookie(&cookie).unwrap();
 
-    let cookie = format_cookie(
-        format_kv(uchat_cookie::SESSION_SIGNATURE, signature),
-        None,
-    );
+    let cookie = format_cookie(format_kv(uchat_cookie::SESSION_SIGNATURE, signature), None);
 
     document().set_cookie(&cookie).unwrap();
 }

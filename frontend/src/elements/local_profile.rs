@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-
 use dioxus::prelude::*;
 
 use uchat_domain::ids::UserId;

@@ -18,3 +18,4 @@ pub mod post;
 pub mod session;
 pub mod user;
 pub mod notification;
+pub mod chat;

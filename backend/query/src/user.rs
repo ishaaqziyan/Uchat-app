@@ -51,6 +51,18 @@ pub struct User {
     pub handle: String,
     pub created_at: DateTime<Utc>,
     pub profile_image: Option<String>,
+    pub last_seen: Option<DateTime<Utc>>,
+}
+
+pub fn update_last_seen(conn: &mut PgConnection, uid: UserId) -> Result<(), DieselError> {
+    use crate::schema::users::dsl::*;
+    
+    diesel::update(users)
+        .filter(id.eq(uid.into_inner()))
+        .set(last_seen.eq(chrono::Utc::now()))
+        .execute(conn)?;
+        
+    Ok(())
 }
 
 pub fn get(conn: &mut PgConnection, user_id: UserId) -> Result<User, DieselError> {

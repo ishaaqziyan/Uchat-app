@@ -6,13 +6,7 @@ use uchat_domain::ids::PostId;
 use uchat_endpoint::post::types::LikeStatus;
 
 #[component]
-pub
-fn LikeDislike(
-    post_id: PostId,
-    like_status: LikeStatus,
-    likes: i64,
-    dislikes: i64,
-) -> Element {
+pub fn LikeDislike(post_id: PostId, like_status: LikeStatus, likes: i64, dislikes: i64) -> Element {
     let post_manager = use_post_manager();
     let toaster = use_toaster();
     let api_client = ApiClient::global();
@@ -90,8 +84,7 @@ fn LikeDislike(
 }
 
 #[component]
-pub
-fn Boost(post_id: PostId, boosted: bool, boosts: i64) -> Element {
+pub fn Boost(post_id: PostId, boosted: bool, boosts: i64) -> Element {
     let post_manager = use_post_manager();
     let toaster = use_toaster();
     let api_client = ApiClient::global();
@@ -149,8 +142,7 @@ fn Boost(post_id: PostId, boosted: bool, boosts: i64) -> Element {
 }
 
 #[component]
-pub
-fn Bookmark(post_id: PostId, bookmarked: bool) -> Element {
+pub fn Bookmark(post_id: PostId, bookmarked: bool) -> Element {
     let post_manager = use_post_manager();
     let toaster = use_toaster();
     let api_client = ApiClient::global();
@@ -199,8 +191,7 @@ fn Bookmark(post_id: PostId, bookmarked: bool) -> Element {
 }
 
 #[component]
-pub
-fn Comment(opened: Signal<bool>) -> Element {
+pub fn Comment(opened: Signal<bool>) -> Element {
     let comment_onclick = sync_handler!([opened], move |_| {
         let current = opened();
         opened.set(!current);
@@ -219,8 +210,7 @@ fn Comment(opened: Signal<bool>) -> Element {
 }
 
 #[component]
-pub
-fn QuickRespondBox(opened: Signal<bool>) -> Element {
+pub fn QuickRespondBox(opened: Signal<bool>) -> Element {
     let element = match opened() {
         true => {
             to_owned![opened];
@@ -233,8 +223,7 @@ fn QuickRespondBox(opened: Signal<bool>) -> Element {
 }
 
 #[component]
-pub
-fn Actionbar(post_id: PostId) -> Element {
+pub fn Actionbar(post_id: PostId) -> Element {
     let post_manager = use_post_manager();
     let quick_respond_opened = use_signal(|| false).clone();
 
@@ -269,7 +258,7 @@ fn Actionbar(post_id: PostId) -> Element {
                     opened: quick_respond_opened,
                 }
             }
-        },
+        }
         None => {
             // Handle the case where the post does not exist
             rsx! {

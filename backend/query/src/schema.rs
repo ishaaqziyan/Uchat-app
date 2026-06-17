@@ -17,6 +17,16 @@ diesel::table! {
 }
 
 diesel::table! {
+    direct_messages (id) {
+        id -> Uuid,
+        sender_id -> Uuid,
+        receiver_id -> Uuid,
+        content -> Text,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
     followers (user_id, follows) {
         user_id -> Uuid,
         follows -> Uuid,
@@ -85,6 +95,7 @@ diesel::table! {
         handle -> Text,
         created_at -> Timestamptz,
         profile_image -> Nullable<Text>,
+        last_seen -> Nullable<Timestamptz>,
     }
 }
 
@@ -114,6 +125,7 @@ diesel::joinable!(web -> users (user_id));
 diesel::allow_tables_to_appear_in_same_query!(
     bookmarks,
     boosts,
+    direct_messages,
     followers,
     notifications,
     poll_choices,

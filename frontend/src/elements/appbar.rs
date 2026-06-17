@@ -47,7 +47,8 @@ pub fn Appbar(title: String, children: Element) -> Element {
     let mut sidebar = use_sidebar();
     let mut dark_mode = use_context::<Signal<crate::app::DarkMode>>();
 
-    let profile_img_src = local_profile.read()
+    let profile_img_src = local_profile
+        .read()
         .image
         .as_ref()
         .map(|url| url.to_string())

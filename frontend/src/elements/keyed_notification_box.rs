@@ -33,8 +33,7 @@ impl KeyedNotifications {
 }
 
 #[component]
-pub
-fn KeyedNotificationBox(legend: Option<String>, notifications: KeyedNotifications) -> Element {
+pub fn KeyedNotificationBox(legend: Option<String>, notifications: KeyedNotifications) -> Element {
     let notifications_elements = notifications.messages().map(|msg| {
         rsx! { li { "{msg}" } }
     });

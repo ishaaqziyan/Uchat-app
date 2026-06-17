@@ -3,17 +3,14 @@
 use crate::prelude::*;
 use chrono::Duration;
 use dioxus::prelude::*;
-use uchat_domain::{post::Message};
+use uchat_domain::post::Message;
 
 fn can_submit(message: &str) -> bool {
     message.len() <= Message::MAX_CHARS && !message.is_empty()
 }
 
 #[component]
-pub
-fn MessageInput(message: String,
-    on_input: EventHandler<FormEvent>,
-) -> Element {
+pub fn MessageInput(message: String, on_input: EventHandler<FormEvent>) -> Element {
     let max_chars = Message::MAX_CHARS;
 
     let wrong_len = maybe_class!("err-text-color", !can_submit(&message));
@@ -37,8 +34,7 @@ fn MessageInput(message: String,
 }
 
 #[component]
-pub
-fn QuickRespond(opened: Signal<bool>) -> Element {
+pub fn QuickRespond(opened: Signal<bool>) -> Element {
     let api_client = ApiClient::global();
     let toaster = use_toaster();
 

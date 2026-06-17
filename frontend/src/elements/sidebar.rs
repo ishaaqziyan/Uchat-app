@@ -3,7 +3,6 @@
 use crate::prelude::*;
 use dioxus::prelude::*;
 
-
 pub fn use_sidebar() -> Signal<SidebarManager> {
     use_context::<Signal<SidebarManager>>()
 }
@@ -28,8 +27,7 @@ impl SidebarManager {
 }
 
 #[component]
-pub
-fn Sidebar() -> Element {
+pub fn Sidebar() -> Element {
     let mut sidebar = use_sidebar();
     let router = use_navigator();
     let mut local_profile = use_local_profile();
@@ -42,7 +40,8 @@ fn Sidebar() -> Element {
             loop {
                 gloo_timers::future::sleep(std::time::Duration::from_secs(5)).await;
                 if local_profile.read().user_id.is_some() {
-                    if let Ok(res) = fetch_json!(<uchat_endpoint::user::endpoint::GetMyProfileOk>, api_client, uchat_endpoint::user::endpoint::GetMyProfile) {
+                    if let Ok(res) = fetch_json!(<uchat_endpoint::user::endpoint::GetMyProfileOk>, api_client, uchat_endpoint::user::endpoint::GetMyProfile)
+                    {
                         if local_profile.read().unread_notifications != res.unread_notifications {
                             local_profile.write().unread_notifications = res.unread_notifications;
                         }
@@ -108,7 +107,7 @@ fn Sidebar() -> Element {
                 "Edit Profile"
             }
             a {
-                class: "sidebar-navlink mb-auto",
+                class: "sidebar-navlink",
                 onclick: move |_| {
                     sidebar.write().close();
                     let _ = router.push(crate::app::Route::HomeBookmarked {});
@@ -116,7 +115,7 @@ fn Sidebar() -> Element {
                 "Bookmarks"
             },
             a {
-                class: "sidebar-navlink mb-auto flex flex-row items-center gap-2",
+                class: "sidebar-navlink flex flex-row items-center gap-2",
                 onclick: move |_| {
                     sidebar.write().close();
                     let _ = router.push(crate::app::Route::Notifications {});
@@ -128,6 +127,14 @@ fn Sidebar() -> Element {
                         "{local_profile.read().unread_notifications}"
                     }
                 }
+            },
+            a {
+                class: "sidebar-navlink mb-auto",
+                onclick: move |_| {
+                    sidebar.write().close();
+                    let _ = router.push(crate::app::Route::Conversations {});
+                },
+                "Messages"
             },
             a {
                 class: "sidebar-navlink",

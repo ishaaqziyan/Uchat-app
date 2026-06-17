@@ -45,5 +45,5 @@ mod prelude {
     pub use crate::elements::sidebar::use_sidebar;
     pub use crate::elements::toaster::use_toaster;
 
-    pub use dioxus::prelude::{use_route, use_navigator};
+    pub use dioxus::prelude::{use_navigator, use_route};
 }

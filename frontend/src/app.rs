@@ -2,27 +2,27 @@
 
 use dioxus::prelude::*;
 
-
+use crate::elements::local_profile::LocalProfile;
+use crate::elements::sidebar::{Sidebar, SidebarManager};
 use crate::elements::{
     post::PostManager,
     toaster::{ToastRoot, Toaster},
     Navbar,
 };
+use crate::page::{
+    Chat, Conversations, EditProfile, NewImage, NewPoll, Notifications, Trending, ViewProfile,
+};
+use crate::page::{Home, HomeBookmarked, HomeLiked, Login, NewChat, Register};
 pub use crate::prelude::*;
-use crate::page::{Register, Login, Home, HomeBookmarked, HomeLiked, NewChat};
-use crate::page::{NewImage, NewPoll, Trending, EditProfile, ViewProfile, Notifications};
-use crate::elements::sidebar::{Sidebar, SidebarManager};
-use crate::elements::local_profile::LocalProfile;
 // Global state is now managed via Dioxus use_context_provider
 
 /// Init component — runs on app startup to fetch the current user's profile.
 /// If the profile fetch fails (e.g. not logged in), it redirects to the login page.
 #[component]
-pub
-fn Init() -> Element {
-    let api_client = ApiClient::global();       // Get the shared API client instance
-    let router = use_navigator();               // Access the router for navigation
-    let toaster = use_toaster();             // Access the global toast notification system
+pub fn Init() -> Element {
+    let api_client = ApiClient::global(); // Get the shared API client instance
+    let router = use_navigator(); // Access the router for navigation
+    let toaster = use_toaster(); // Access the global toast notification system
     let local_profile = use_local_profile(); // Access the global local profile state
 
     // Async task that runs once on component mount to fetch the user's profile
@@ -33,27 +33,29 @@ fn Init() -> Element {
             let router = router.clone();
             let mut local_profile = local_profile.clone();
             async move {
-            use uchat_endpoint::user::endpoint::{GetMyProfile, GetMyProfileOk};
+                use uchat_endpoint::user::endpoint::{GetMyProfile, GetMyProfileOk};
 
-            // Make an API call to fetch the current user's profile
-            let response = fetch_json!(<GetMyProfileOk>, api_client, GetMyProfile);
+                // Make an API call to fetch the current user's profile
+                let response = fetch_json!(<GetMyProfileOk>, api_client, GetMyProfile);
 
-            match response {
-                Ok(res) => {
-                    // On success, update global profile state with fetched data
-                    local_profile.write().image = res.profile_image;
-                    local_profile.write().user_id = Some(res.user_id);
-                    local_profile.write().unread_notifications = res.unread_notifications;
+                match response {
+                    Ok(res) => {
+                        // On success, update global profile state with fetched data
+                        local_profile.write().image = res.profile_image;
+                        local_profile.write().user_id = Some(res.user_id);
+                        local_profile.write().unread_notifications = res.unread_notifications;
+                    }
+                    Err(_e) => {
+                        // On failure, show an error toast and redirect to the login page
+                        toaster.write().error(
+                            "Please log in or create an account to continue.",
+                            chrono::Duration::seconds(5),
+                        );
+                        {
+                            router.push(Route::Login {});
+                        }
+                    }
                 }
-                Err(_e) => {
-                    // On failure, show an error toast and redirect to the login page
-                    toaster.write().error(
-                        "Please log in or create an account to continue.",
-                        chrono::Duration::seconds(5),
-                    );
-                    { router.push(Route::Login {}); }
-                }
-            }
             }
         })
     };
@@ -91,6 +93,10 @@ pub enum Route {
         ViewProfile { user_id: uchat_domain::ids::UserId },
         #[route("/notifications")]
         Notifications {},
+        #[route("/chat")]
+        Conversations {},
+        #[route("/chat/:user_id")]
+        Chat { user_id: uchat_domain::ids::UserId },
 
     #[redirect("/", || Route::Home {})]
     #[route("/:..route")]

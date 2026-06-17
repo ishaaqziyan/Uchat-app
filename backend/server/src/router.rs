@@ -18,7 +18,7 @@ use uchat_endpoint::{
         Bookmark, BookmarkedPosts, Boost, HomePosts, LikedPosts, NewPost, React, TrendingPosts,
         Vote,
     },
-    user::endpoint::{CreateUser, FollowUser, GetMyProfile, Login, UpdateProfile, ViewProfile, GetNotifications, MarkNotificationsAsRead},
+    user::endpoint::{CreateUser, FollowUser, GetMyProfile, Login, UpdateProfile, ViewProfile, GetNotifications, MarkNotificationsAsRead, SendDirectMessage, GetConversations, GetDirectMessages},
     Endpoint,
 };
 
@@ -55,6 +55,9 @@ pub fn new_router(state: AppState) -> axum::Router {
         .route(BookmarkedPosts::URL, post(with_handler::<BookmarkedPosts>))
         .route(GetNotifications::URL, post(with_handler::<GetNotifications>))
         .route(MarkNotificationsAsRead::URL, post(with_handler::<MarkNotificationsAsRead>))
+        .route(SendDirectMessage::URL, post(with_handler::<SendDirectMessage>))
+        .route(GetConversations::URL, post(with_handler::<GetConversations>))
+        .route(GetDirectMessages::URL, post(with_handler::<GetDirectMessages>))
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(8 * 1024 * 1024));
 

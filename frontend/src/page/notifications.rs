@@ -2,7 +2,9 @@
 
 use crate::prelude::*;
 use dioxus::prelude::*;
-use uchat_endpoint::user::endpoint::{GetNotifications, GetNotificationsOk, MarkNotificationsAsRead, MarkNotificationsAsReadOk};
+use uchat_endpoint::user::endpoint::{
+    GetNotifications, GetNotificationsOk, MarkNotificationsAsRead, MarkNotificationsAsReadOk,
+};
 use uchat_endpoint::user::types::{Notification, NotificationKind};
 
 #[component]
@@ -55,6 +57,7 @@ fn NotificationItem(notification: Notification) -> Element {
         NotificationKind::Unfollow => "stopped following you",
         NotificationKind::Comment => "commented on your post",
         NotificationKind::Reaction => "reacted to your post",
+        NotificationKind::DirectMessage => "sent you a direct message",
     };
 
     let time_ago = {
@@ -69,7 +72,9 @@ fn NotificationItem(notification: Notification) -> Element {
         }
     };
 
-    let display_name = notification.actor_name.unwrap_or_else(|| notification.actor_handle.clone());
+    let display_name = notification
+        .actor_name
+        .unwrap_or_else(|| notification.actor_handle.clone());
     let handle = notification.actor_handle;
     let actor_id = notification.actor_id;
 
@@ -77,7 +82,9 @@ fn NotificationItem(notification: Notification) -> Element {
         div {
             class: "flex flex-row items-center gap-3 p-4 border rounded-md cursor-pointer hover:bg-slate-50 transition-colors",
             onclick: move |_| {
-                if let Some(_post_id) = notification.post_id {
+                if notification.kind == NotificationKind::DirectMessage {
+                    let _ = router.push(crate::app::Route::Chat { user_id: actor_id });
+                } else if let Some(_post_id) = notification.post_id {
                     // Navigate to post? We don't have a view post page right now.
                     // Instead, let's navigate to the user's profile.
                     let _ = router

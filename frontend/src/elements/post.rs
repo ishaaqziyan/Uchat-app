@@ -6,7 +6,6 @@ use crate::{
 };
 use dioxus::prelude::*;
 
-
 use indexmap::IndexMap;
 use uchat_domain::ids::{PostId, UserId};
 use uchat_endpoint::post::types::PublicPost;
@@ -116,16 +115,17 @@ pub fn view_profile_onclick(
 ) -> impl FnMut(MouseEvent) + 'static {
     sync_handler!([router], move |_| {
         let route = crate::app::Route::ViewProfile { user_id };
-        { router.push(route); }
+        {
+            router.push(route);
+        }
     })
 }
 
 #[component]
-pub
-fn ProfileImage(post_id: PostId) -> Element {
+pub fn ProfileImage(post_id: PostId) -> Element {
     let post_manager = use_post_manager();
     let router = use_navigator();
-    
+
     let post_read = post_manager.read();
     let post = match post_read.get(&post_id) {
         Some(p) => p,
@@ -153,17 +153,16 @@ fn ProfileImage(post_id: PostId) -> Element {
 }
 
 #[component]
-pub
-fn Header(post_id: PostId) -> Element {
+pub fn Header(post_id: PostId) -> Element {
     let post_manager = use_post_manager();
     let router = use_navigator();
-    
+
     let post_read = post_manager.read();
     let post = match post_read.get(&post_id) {
         Some(p) => p,
         None => return rsx! {},
     };
-    
+
     let (post_date, post_time) = {
         let date = post.time_posted.format("%Y-%m-%d");
         let time = post.time_posted.format("%H:%M:%S");
@@ -199,8 +198,7 @@ fn Header(post_id: PostId) -> Element {
 }
 
 #[component]
-pub
-fn PublicPostEntry(post_id: PostId) -> Element {
+pub fn PublicPostEntry(post_id: PostId) -> Element {
     let post_manager = use_post_manager();
     let _router = use_navigator();
 
@@ -227,5 +225,3 @@ fn PublicPostEntry(post_id: PostId) -> Element {
         }
     }
 }
-
-

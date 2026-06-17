@@ -67,8 +67,7 @@ impl PageState {
 }
 
 #[component]
-pub
-fn HeadlineInput(page_state: Signal<PageState>) -> Element {
+pub fn HeadlineInput(page_state: Signal<PageState>) -> Element {
     let max_chars = PollHeadline::MAX_CHARS;
 
     let wrong_len = maybe_class!(
@@ -102,8 +101,7 @@ fn HeadlineInput(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn PollChoices(page_state: Signal<PageState>) -> Element {
+pub fn PollChoices(page_state: Signal<PageState>) -> Element {
     let choices = page_state
         .read()
         .poll_choices
@@ -169,13 +167,12 @@ fn PollChoices(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn NewPoll() -> Element {
+pub fn NewPoll() -> Element {
     let api_client = ApiClient::global();
     let router = use_navigator();
     let toaster = use_toaster();
 
-    let page_state = use_signal( PageState::default);
+    let page_state = use_signal(PageState::default);
 
     let form_onsubmit = async_handler!(
         &cx,

@@ -27,8 +27,7 @@ pub struct PageState {
 }
 
 #[component]
-pub
-fn ImageInput(page_state: Signal<PageState>) -> Element {
+pub fn ImageInput(page_state: Signal<PageState>) -> Element {
     let toaster = use_toaster();
 
     rsx! {
@@ -66,8 +65,7 @@ fn ImageInput(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn ImagePreview(page_state: Signal<PageState>) -> Element {
+pub fn ImagePreview(page_state: Signal<PageState>) -> Element {
     let image_data = page_state.read().profile_image.clone();
 
     let img_el = |img_src: &str| {
@@ -94,8 +92,7 @@ fn ImagePreview(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn DisplayNameInput(page_state: Signal<PageState>) -> Element {
+pub fn DisplayNameInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::user::DisplayName;
 
     let max_chars = DisplayName::MAX_CHARS;
@@ -104,7 +101,6 @@ fn DisplayNameInput(page_state: Signal<PageState>) -> Element {
         "err-text-color",
         page_state.read().display_name.len() > max_chars
     );
-
 
     rsx! {
         div {
@@ -117,7 +113,7 @@ fn DisplayNameInput(page_state: Signal<PageState>) -> Element {
                         class: "text-right {wrong_len}",
                         "{page_state.read().display_name.len()}/{max_chars}",
                     }
- 
+
                 }
             },
             input {
@@ -141,19 +137,22 @@ fn DisplayNameInput(page_state: Signal<PageState>) -> Element {
     }
 }
 #[component]
-pub
-fn PasswordInput(state: Signal<PageState>) -> Element {
+pub fn PasswordInput(state: Signal<PageState>) -> Element {
     use uchat_domain::user::Password;
 
     let mut check_password_mismatch = move || {
         let password_matches = state.read().password == state.read().password_confirmation;
         match password_matches {
             true => state.with_mut(|state| state.form_errors.remove("password-mismatch")),
-            false => state.with_mut(|state| state.form_errors.set("password-mismatch", "Passwords must match")),
+            false => state.with_mut(|state| {
+                state
+                    .form_errors
+                    .set("password-mismatch", "Passwords must match")
+            }),
         }
     };
 
-    rsx!{
+    rsx! {
         fieldset {
             class: "fieldset",
             legend { "Set new password" },
@@ -202,19 +201,16 @@ fn PasswordInput(state: Signal<PageState>) -> Element {
                             state.with_mut(|state| state.password_confirmation = ev.value().clone());
                             check_password_mismatch();
                         }
- 
+
                 }
             }
         }
     }
     }
 }
- 
-
 
 #[component]
-pub
-fn EmailInput(page_state: Signal<PageState>) -> Element {
+pub fn EmailInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::user::Email;
 
     rsx! {
@@ -252,10 +248,9 @@ fn EmailInput(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn EditProfile() -> Element {
+pub fn EditProfile() -> Element {
     let api_client = ApiClient::global();
-    let page_state = use_signal( PageState::default);
+    let page_state = use_signal(PageState::default);
     let router = use_navigator();
     let toaster = use_toaster();
 
@@ -265,39 +260,41 @@ fn EditProfile() -> Element {
             let mut toaster = toaster.clone();
             let mut page_state = page_state.clone();
             async move {
-            use uchat_endpoint::user::endpoint::{GetMyProfile, GetMyProfileOk};
-            toaster
-                .write()
-                .info("Retrieving profile ...", chrono::Duration::seconds(3));
-            let response = fetch_json!(<GetMyProfileOk>, api_client, GetMyProfile);
-            match response {
-                Ok(res) => {
-                    page_state.with_mut(|state| {
-                        state.display_name = res.display_name.unwrap_or_default();
-                        state.email = res.email.unwrap_or_default();
-                        state.profile_image = res.profile_image.map(|img| PreviewImageData::Remote(img.to_string()));
-                    });
+                use uchat_endpoint::user::endpoint::{GetMyProfile, GetMyProfileOk};
+                toaster
+                    .write()
+                    .info("Retrieving profile ...", chrono::Duration::seconds(3));
+                let response = fetch_json!(<GetMyProfileOk>, api_client, GetMyProfile);
+                match response {
+                    Ok(res) => {
+                        page_state.with_mut(|state| {
+                            state.display_name = res.display_name.unwrap_or_default();
+                            state.email = res.email.unwrap_or_default();
+                            state.profile_image = res
+                                .profile_image
+                                .map(|img| PreviewImageData::Remote(img.to_string()));
+                        });
+                    }
+                    Err(e) => toaster.write().error(
+                        format!("Failed to retrieve profile: {e}"),
+                        chrono::Duration::seconds(3),
+                    ),
                 }
-                Err(e) => toaster.write().error(
-                    format!("Failed to retrieve profile: {e}"),
-                    chrono::Duration::seconds(3),
-                ),
-            }
             }
         })
     };
 
-
-
     let local_profile = crate::elements::local_profile::use_local_profile();
-    
-    let form_onsubmit =
-        async_handler!(&cx, [api_client, page_state, router, toaster, local_profile], move |_| async move {
+
+    let form_onsubmit = async_handler!(
+        &cx,
+        [api_client, page_state, router, toaster, local_profile],
+        move |_| async move {
             use uchat_endpoint::user::endpoint::{UpdateProfile, UpdateProfileOk};
             use uchat_endpoint::Update;
 
             let request_data = {
-                use uchat_domain::{Password};
+                use uchat_domain::Password;
                 UpdateProfile {
                     display_name: {
                         let name = page_state.read().display_name.clone();
@@ -338,16 +335,22 @@ fn EditProfile() -> Element {
             match response {
                 Ok(res) => {
                     local_profile.write().image = res.profile_image;
-                    toaster.write().success("Profile updated", chrono::Duration::seconds(3));
-                    { let _ = router.push(crate::app::Route::Home {}); }
+                    toaster
+                        .write()
+                        .success("Profile updated", chrono::Duration::seconds(3));
+                    {
+                        let _ = router.push(crate::app::Route::Home {});
+                    }
                 }
                 Err(e) => {
-                    toaster.write().error(format!("Failed to update profile: {}", e), chrono::Duration::seconds(3));
+                    toaster.write().error(
+                        format!("Failed to update profile: {}", e),
+                        chrono::Duration::seconds(3),
+                    );
                 }
             }
-        });
-
-
+        }
+    );
 
     let disable_submit = page_state.read().form_errors.has_messages();
     let submit_btn_style = maybe_class!("btn-disabled", disable_submit);

@@ -5,8 +5,7 @@ use crate::prelude::*;
 use dioxus::prelude::*;
 
 #[component]
-pub
-fn HomeLiked() -> Element {
+pub fn HomeLiked() -> Element {
     let toaster = use_toaster();
     let api_client = ApiClient::global();
     let post_manager = use_post_manager();
@@ -18,19 +17,19 @@ fn HomeLiked() -> Element {
             let mut toaster = toaster.clone();
             let mut post_manager = post_manager.clone();
             async move {
-            use uchat_endpoint::post::endpoint::{LikedPosts, LikedPostsOk};
-            toaster
-                .write()
-                .info("Retrieving posts...", chrono::Duration::seconds(3));
-            post_manager.write().clear();
-            let response = fetch_json!(<LikedPostsOk>, api_client, LikedPosts);
-            match response {
-                Ok(res) => post_manager.write().populate(res.posts.into_iter()),
-                Err(e) => toaster.write().error(
-                    format!("Failed to retrieve posts: {e}"),
-                    chrono::Duration::seconds(3),
-                ),
-            }
+                use uchat_endpoint::post::endpoint::{LikedPosts, LikedPostsOk};
+                toaster
+                    .write()
+                    .info("Retrieving posts...", chrono::Duration::seconds(3));
+                post_manager.write().clear();
+                let response = fetch_json!(<LikedPostsOk>, api_client, LikedPosts);
+                match response {
+                    Ok(res) => post_manager.write().populate(res.posts.into_iter()),
+                    Err(e) => toaster.write().error(
+                        format!("Failed to retrieve posts: {e}"),
+                        chrono::Duration::seconds(3),
+                    ),
+                }
             }
         })
     };

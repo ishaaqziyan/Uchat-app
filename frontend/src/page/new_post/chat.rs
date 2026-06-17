@@ -28,8 +28,7 @@ impl PageState {
 }
 
 #[component]
-pub
-fn MessageInput(page_state: Signal<PageState>) -> Element {
+pub fn MessageInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::post::Message;
 
     let max_chars = Message::MAX_CHARS;
@@ -66,8 +65,7 @@ fn MessageInput(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn HeadlineInput(page_state: Signal<PageState>) -> Element {
+pub fn HeadlineInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::post::Headline;
 
     let max_chars = Headline::MAX_CHARS;
@@ -103,12 +101,11 @@ fn HeadlineInput(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn NewChat() -> Element {
+pub fn NewChat() -> Element {
     let api_client = ApiClient::global();
     let router = use_navigator();
     let toaster = use_toaster();
-    let page_state = use_signal( PageState::default);
+    let page_state = use_signal(PageState::default);
 
     let form_onsubmit = async_handler!(
         &cx,

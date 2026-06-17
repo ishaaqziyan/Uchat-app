@@ -30,8 +30,7 @@ impl PageState {
 }
 
 #[component]
-pub
-fn ImageInput(page_state: Signal<PageState>) -> Element {
+pub fn ImageInput(page_state: Signal<PageState>) -> Element {
     let toaster = use_toaster();
 
     rsx! {
@@ -69,8 +68,7 @@ fn ImageInput(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn ImagePreview(page_state: Signal<PageState>) -> Element {
+pub fn ImagePreview(page_state: Signal<PageState>) -> Element {
     let image_data = page_state.read().clone().image;
     let Preview = if let Some(ref image) = image_data {
         rsx! {
@@ -95,8 +93,7 @@ fn ImagePreview(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn CaptionInput(page_state: Signal<PageState>) -> Element {
+pub fn CaptionInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::post::Caption;
 
     let max_chars = Caption::MAX_CHARS;
@@ -132,13 +129,12 @@ fn CaptionInput(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
-pub
-fn NewImage() -> Element {
+pub fn NewImage() -> Element {
     let api_client = ApiClient::global();
     let router = use_navigator();
     let toaster = use_toaster();
 
-    let page_state = use_signal( PageState::default);
+    let page_state = use_signal(PageState::default);
 
     let form_onsubmit = async_handler!(
         &cx,
