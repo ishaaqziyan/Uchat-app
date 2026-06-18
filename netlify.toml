@@ -8,6 +8,13 @@
 [build.environment]
   NODE_ENV = "production"
 
+# Proxy API requests to Render backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://uchat-app.onrender.com/:splat"
+  status = 200
+  force = true
+
 # Single Page Application (SPA) routing
 # This redirects all requests to index.html so the Rust frontend router can handle the URL
 [[redirects]]
