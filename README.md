@@ -202,37 +202,44 @@ psql -d postgres -c 'DROP DATABASE IF EXISTS uchat_test;'
 
 ## Deployment
 
-### Deploying the Database to Supabase
+This project's architecture is fully decoupled, making it perfectly suited for modern "best-of-breed" free-tier hosting platforms. 
 
-[Supabase](https://supabase.com/) is an excellent open-source Firebase alternative that provides a managed PostgreSQL database.
+### 1. Deploying the Database to Neon.tech
 
-1. Create a new project on [Supabase](https://supabase.com/).
-2. Navigate to your Project Settings -> Database.
-3. Under **Connection string**, select **URI**.
-4. Copy the connection string. It should look something like:
-   `postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres`
-5. Replace `[YOUR_PASSWORD]` with your actual database password.
-6. Use this connection string for your `API_DATABASE_URL` and `DATABASE_URL` in your production environment variables.
-7. Run your migrations against the Supabase database:
+We recommend using [Neon.tech](https://neon.tech/) for a Serverless PostgreSQL database.
+
+1. Create a new free tier project on Neon.
+2. Retrieve your **Connection String** (it will look like `postgres://username:password@.../neondb`).
+3. Run your migrations against this database locally:
    ```bash
-   DATABASE_URL="<your-supabase-connection-string>" diesel migration run
+   DATABASE_URL="<your-neon-connection-string>" diesel migration run
    ```
 
-### Deploying the Frontend to Netlify
+*(Alternatively, you can also use [Supabase](https://supabase.com/) following a similar process).*
 
-[Netlify](https://www.netlify.com/) is a popular platform for hosting static sites and frontend frameworks. Since the frontend is compiled to WebAssembly via Trunk, it can be hosted as a static site.
+### 2. Deploying the Backend to Render
 
-1. Push your repository to GitHub, GitLab, or Bitbucket.
-2. Log into [Netlify](https://app.netlify.com/) and click **Add new site** -> **Import an existing project**.
-3. Connect your Git provider and select the `Uchat-app` repository.
-4. Configure the build settings:
-   - **Base directory:** Leave blank or set to the root directory where `Trunk-release.toml` is located.
-   - **Build command:** Netlify needs to install the Rust toolchain, the `wasm32` target, and Trunk before building. Use the following build command:
-     ```bash
-     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env" && rustup target add wasm32-unknown-unknown && cargo install --locked trunk && trunk --config Trunk-release.toml build --release
-     ```
-   - **Publish directory:** `dist` (or the output directory configured in your `Trunk-release.toml`).
-5. Set your environment variables in Netlify (e.g., `FRONTEND_URL`, `API_URL` pointing to your deployed backend).
-6. Click **Deploy site**.
+[Render.com](https://render.com) provides native Rust build environments without needing a Dockerfile.
 
-*(Note: The backend (`uchat_server` or `api`) needs to be hosted on a platform that supports Rust binaries or Docker containers, such as Render, Railway, Fly.io, or AWS EC2, as Netlify only hosts the frontend static files.)*
+1. Create a new **Web Service** on Render and connect your GitHub repository.
+2. Configure the build settings:
+   - **Language/Environment**: Rust
+   - **Build Command**: `cargo build --release -p uchat_server`
+   - **Start Command**: `./target/release/api`
+3. Under **Environment Variables**, add the following:
+   - `API_DATABASE_URL`: *(Your Neon Connection String)*
+   - `API_BIND`: `0.0.0.0:10000`
+   - `PORT`: `10000`
+   - `FRONTEND_URL`: `https://your-frontend-app.netlify.app` *(Must match your Netlify domain exactly, without a trailing slash)*
+4. Click **Deploy**.
+
+### 3. Deploying the Frontend to Netlify
+
+[Netlify](https://www.netlify.com/) will automatically build the Trunk WebAssembly frontend and serve it over a global CDN.
+
+1. Connect your repository to Netlify. Netlify will automatically detect the `netlify.toml` file and its build configuration.
+2. Go to **Site Settings > Environment Variables** and add:
+   - `API_URL`: `https://your-backend-app.onrender.com/` *(Make sure to include the trailing slash if required by your API client)*
+3. Trigger a manual deploy in the **Deploys** tab to ensure the environment variable is injected during the build process.
+
+*(Note: The `netlify.toml` file is configured to create an empty `.env` file during the build process to satisfy the `load_dotenv!()` macro requirements without needing to commit your secrets).*
