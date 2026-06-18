@@ -35,8 +35,15 @@ pub mod app_url {
     pub const API_URL: &str = std::env!("API_URL");
 
     pub fn domain_and(fragment: &str) -> Url {
-        Url::from_str(API_URL)
-            .and_then(|url| url.join(fragment))
+        let mut root = API_URL.to_string();
+        if !root.ends_with('/') {
+            root.push('/');
+        }
+        Url::from_str(&root)
+            .and_then(|url| {
+                let fragment = fragment.trim_start_matches('/');
+                url.join(fragment)
+            })
             .unwrap()
     }
 
