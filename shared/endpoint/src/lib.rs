@@ -39,12 +39,14 @@ pub mod app_url {
         if !root.ends_with('/') {
             root.push('/');
         }
-        Url::from_str(&root)
-            .and_then(|url| {
-                let fragment = fragment.trim_start_matches('/');
-                url.join(fragment)
-            })
-            .unwrap()
+        
+        let base_url = Url::from_str(&root).unwrap_or_else(|_| {
+            // Fallback to localhost if API_URL is improperly configured as a relative URL
+            Url::from_str("http://127.0.0.1:8070/").unwrap()
+        });
+
+        let fragment = fragment.trim_start_matches('/');
+        base_url.join(fragment).unwrap()
     }
 
     pub mod user_content {
