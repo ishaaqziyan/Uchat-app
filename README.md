@@ -149,6 +149,22 @@ cargo clippy -p frontend --target wasm32-unknown-unknown
 cargo clippy --workspace --exclude frontend
 ```
 
+### Testing
+
+This project uses [`cargo-nextest`](https://nexte.st/) as a faster, more robust test runner.
+
+1. **Install nextest** (if you haven't already):
+   ```bash
+   cargo install cargo-nextest --locked
+   ```
+
+2. **Run the test suite**:
+   The test suite includes full-stack integration tests (such as simulating a user logging in and creating a post) as well as data validation unit tests. You can run all tests across the workspace with:
+   ```bash
+   cargo nextest run
+   ```
+   *(Note: The `TEST_DATABASE_URL` environment variable in your `.env` must be configured properly to run the integration tests).*
+
 ### Build for Production
 
 To build the project for distribution:
