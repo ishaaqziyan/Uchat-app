@@ -87,3 +87,29 @@ impl UserFacingError for PollChoiceDescriptionError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn headline_validation() {
+        assert!(Headline::new("Great News").is_ok());
+        assert_eq!(Headline::new(""), Err(HeadlineError::Missing));
+        assert_eq!(Headline::new("a".repeat(31)), Err(HeadlineError::TooLong));
+    }
+
+    #[test]
+    fn message_validation() {
+        assert!(Message::new("This is a message.").is_ok());
+        assert_eq!(Message::new(""), Err(MessageError::Missing));
+        assert_eq!(Message::new("a".repeat(101)), Err(MessageError::TooLong));
+    }
+
+    #[test]
+    fn poll_choice_validation() {
+        assert!(PollChoiceDescription::new("Option A").is_ok());
+        assert_eq!(PollChoiceDescription::new(""), Err(PollChoiceDescriptionError::Missing));
+        assert_eq!(PollChoiceDescription::new("a".repeat(81)), Err(PollChoiceDescriptionError::TooLong));
+    }
+}
