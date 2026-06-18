@@ -83,6 +83,7 @@ where
 
 fn make_absolute_url(endpoint: &str) -> reqwest::Url {
     let url = reqwest::Url::parse(crate::ROOT_API_URL).unwrap();
+    let endpoint = endpoint.trim_start_matches('/');
     url.join(endpoint).unwrap()
 }
 
