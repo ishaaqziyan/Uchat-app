@@ -278,4 +278,97 @@ pub mod tests {
 
         Ok(())
     }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn forgot_password() -> Result<()> {
+        use rand::distributions::Alphanumeric;
+        use rand::{thread_rng, Rng};
+        use uchat_endpoint::user::endpoint::{UpdateProfile, ForgotPassword};
+        use uchat_endpoint::Update;
+
+        let state = util::new_state().await;
+
+        let username1: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(20)
+            .map(char::from)
+            .collect();
+        let username2: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(20)
+            .map(char::from)
+            .collect();
+
+        // Create users
+        let create_payload1 = CreateUser {
+            password: Password::new("password")?,
+            username: Username::new(&username1)?,
+        };
+        util::api_request_with_router(crate::router::new_router(state.clone()), CreateUser::URL, create_payload1).await;
+        
+        let create_payload2 = CreateUser {
+            password: Password::new("password")?,
+            username: Username::new(&username2)?,
+        };
+        util::api_request_with_router(crate::router::new_router(state.clone()), CreateUser::URL, create_payload2).await;
+
+        // Login user1
+        let login_payload = uchat_endpoint::user::endpoint::Login {
+            password: Password::new("password")?,
+            username: Username::new(&username1)?,
+        };
+        let response = util::api_request_with_router(crate::router::new_router(state.clone()), uchat_endpoint::user::endpoint::Login::URL, login_payload).await;
+        let response_body = hyper::body::to_bytes(response.into_body()).await?;
+        let login_ok: uchat_endpoint::user::endpoint::LoginOk = serde_json::from_slice(&response_body)?;
+
+        // Set security question
+        let update_profile_payload = UpdateProfile {
+            display_name: Update::NoChange,
+            email: Update::NoChange,
+            password: Update::NoChange,
+            profile_image: Update::NoChange,
+            security_question: Update::Change("question".to_string()),
+            security_answer: Update::Change("answer".to_string()),
+        };
+        let response = util::api_request_auth_with_router(
+            crate::router::new_router(state.clone()),
+            UpdateProfile::URL,
+            update_profile_payload,
+            &login_ok.session_id.to_string(),
+            &login_ok.session_signature,
+        ).await;
+        assert_eq!(StatusCode::OK, response.status());
+
+        // Test forgot password (fails because no chat)
+        let forgot_password_payload = ForgotPassword {
+            username: Username::new(&username1)?,
+            chatted_with_username: Username::new(&username2)?,
+            security_answer: "answer".to_string(),
+            new_password: Password::new("newpassword")?,
+        };
+        let response = util::api_request_with_router(crate::router::new_router(state.clone()), ForgotPassword::URL, forgot_password_payload.clone()).await;
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        // Send a message directly using query
+        {
+            let mut conn = state.db_pool.get().await.unwrap();
+            let user1_id = uchat_query::user::find(&mut conn, &Username::new(&username1).unwrap()).unwrap().id;
+            let user2_id = uchat_query::user::find(&mut conn, &Username::new(&username2).unwrap()).unwrap().id;
+            uchat_query::chat::send_message(&mut conn, user1_id, user2_id, "hello".to_string()).unwrap();
+        }
+
+        // Test forgot password (succeeds now)
+        let response = util::api_request_with_router(crate::router::new_router(state.clone()), ForgotPassword::URL, forgot_password_payload).await;
+        assert_eq!(StatusCode::OK, response.status());
+
+        // Test login with new password
+        let login_payload = uchat_endpoint::user::endpoint::Login {
+            password: Password::new("newpassword")?,
+            username: Username::new(&username1)?,
+        };
+        let response = util::api_request_with_router(crate::router::new_router(state.clone()), uchat_endpoint::user::endpoint::Login::URL, login_payload).await;
+        assert_eq!(StatusCode::OK, response.status());
+
+        Ok(())
+    }
 }

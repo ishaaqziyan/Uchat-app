@@ -114,3 +114,24 @@ pub fn has_chatted(
             None => false,
         })
 }
+
+#[cfg(test)]
+pub mod tests {
+    use crate::test_db::{self, Result};
+    use crate::user::tests::util as test_user;
+
+    #[test]
+    fn test_has_chatted() -> Result<()> {
+        let mut conn = test_db::new_connection();
+        let user1 = test_user::new_user(&mut conn, "user1");
+        let user2 = test_user::new_user(&mut conn, "user2");
+
+        assert_eq!(super::has_chatted(&mut conn, user1.id, user2.id)?, false);
+
+        super::send_message(&mut conn, user1.id, user2.id, "hello".to_string())?;
+
+        assert_eq!(super::has_chatted(&mut conn, user1.id, user2.id)?, true);
+
+        Ok(())
+    }
+}

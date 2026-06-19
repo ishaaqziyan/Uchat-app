@@ -209,4 +209,28 @@ pub mod tests {
             user_query::get(conn, id).unwrap()
         }
     }
+
+    #[test]
+    fn update_security_question() -> crate::test_db::Result<()> {
+        let mut conn = crate::test_db::new_connection();
+        let user = util::new_user(&mut conn, "user1");
+
+        let update = crate::user::UpdateProfileParams {
+            id: user.id,
+            display_name: uchat_endpoint::Update::NoChange,
+            email: uchat_endpoint::Update::NoChange,
+            password_hash: uchat_endpoint::Update::NoChange,
+            profile_image: uchat_endpoint::Update::NoChange,
+            security_question: uchat_endpoint::Update::Change("What is your pet's name?".to_string()),
+            security_answer: uchat_endpoint::Update::Change("Fluffy".to_string()),
+        };
+
+        crate::user::update_profile(&mut conn, update)?;
+
+        let updated_user = crate::user::get(&mut conn, user.id)?;
+        assert_eq!(updated_user.security_question, Some("What is your pet's name?".to_string()));
+        assert_eq!(updated_user.security_answer, Some("Fluffy".to_string()));
+
+        Ok(())
+    }
 }

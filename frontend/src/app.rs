@@ -73,6 +73,7 @@ pub enum Route {
         Login {},
         #[route("/account/forgot-password")]
         ForgotPassword {},
+    #[end_layout]
         
     #[layout(AppLayout)]
         #[route("/home")]
