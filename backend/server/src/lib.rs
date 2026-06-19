@@ -357,6 +357,26 @@ pub mod tests {
             uchat_query::chat::send_message(&mut conn, user1_id, user2_id, "hello".to_string()).unwrap();
         }
 
+        // Test forgot password (fails because wrong security answer)
+        let forgot_password_wrong_answer_payload = ForgotPassword {
+            username: Username::new(&username1)?,
+            chatted_with_username: Username::new(&username2)?,
+            security_answer: "wronganswer".to_string(),
+            new_password: Password::new("newpassword")?,
+        };
+        let response = util::api_request_with_router(crate::router::new_router(state.clone()), ForgotPassword::URL, forgot_password_wrong_answer_payload).await;
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
+        // Test forgot password (fails because chatted_with_username does not exist)
+        let forgot_password_bad_user_payload = ForgotPassword {
+            username: Username::new(&username1)?,
+            chatted_with_username: Username::new("nonexistent123")?,
+            security_answer: "answer".to_string(),
+            new_password: Password::new("newpassword")?,
+        };
+        let response = util::api_request_with_router(crate::router::new_router(state.clone()), ForgotPassword::URL, forgot_password_bad_user_payload).await;
+        assert_eq!(StatusCode::BAD_REQUEST, response.status());
+
         // Test forgot password (succeeds now)
         let response = util::api_request_with_router(crate::router::new_router(state.clone()), ForgotPassword::URL, forgot_password_payload).await;
         assert_eq!(StatusCode::OK, response.status());

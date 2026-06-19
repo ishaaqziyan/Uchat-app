@@ -99,6 +99,24 @@ You will need [Node.js and npm](https://docs.npmjs.com/downloading-and-installin
 cargo install just
 ```
 
+**Available Recipes:**
+
+| Command | Description |
+|---------|-------------|
+| `just init` | Sets up project dependencies and installs npm packages. |
+| `just serve-all` | Runs both the frontend and backend development servers concurrently. |
+| `just serve-pro-all` | Runs the frontend and backend in highly optimized release mode. |
+| `just test` | Runs the test suite using `cargo nextest`. |
+| `just build` | Builds the frontend and backend in release mode for production. |
+| `just check` | Runs `cargo check` for both frontend (WASM) and backend targets. |
+| `just clippy` | Runs the `cargo clippy` linter across the entire codebase. |
+| `just fix` | Auto-fixes standard linting issues across the codebase. |
+| `just db-migrate` | Runs pending database migrations and resets the test database. |
+| `just db-reset` | Wipes and resets the entire PostgreSQL database. |
+| `just db-new-migration <NAME>` | Generates a new blank database migration. |
+| `just doc` | Builds and optionally opens the Rust project documentation. |
+| `just sweep` | Cleans up old cargo build artifacts to free up disk space. |
+
 ## Commands
 
 ### Project Initialization
