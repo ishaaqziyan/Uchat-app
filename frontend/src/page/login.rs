@@ -36,6 +36,8 @@ impl PageState {
 
 #[component]
 pub fn PasswordInput(state: Signal<String>, oninput: EventHandler<FormEvent>) -> Element {
+    let mut show_password = use_signal(|| false);
+
     rsx! {
         div {
             class: "flex flex-col",
@@ -43,14 +45,30 @@ pub fn PasswordInput(state: Signal<String>, oninput: EventHandler<FormEvent>) ->
                 r#for: "password",
                 "Password",
             },
-            input {
-                id: "password",
-                r#type: "password",
-                name: "password",
-                class: "input-field",
-                placeholder: "Password",
-                value: "{state.read()}",
-                oninput: move |ev| oninput.call(ev),
+            div {
+                class: "relative flex flex-row",
+                input {
+                    id: "password",
+                    r#type: if *show_password.read() { "text" } else { "password" },
+                    name: "password",
+                    class: "input-field w-full",
+                    placeholder: "Password",
+                    value: "{state.read()}",
+                    oninput: move |ev| oninput.call(ev),
+                }
+                button {
+                    r#type: "button",
+                    class: "absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 hover:text-white",
+                    onclick: move |_| {
+                        let current = *show_password.read();
+                        show_password.set(!current);
+                    },
+                    if *show_password.read() {
+                        "Hide"
+                    } else {
+                        "Show"
+                    }
+                }
             }
         }
     }
@@ -162,6 +180,12 @@ pub fn Login() -> Element {
     rsx! {
         form {
             class: "flex flex-col gap-5",
+            onsubmit: move |ev| {
+                ev.prevent_default();
+                if page_state.read().can_submit() {
+                    form_onsubmit(ev);
+                }
+            },
 
             KeyedNotificationBox {
                 legend: "Login Errors",
@@ -185,6 +209,12 @@ pub fn Login() -> Element {
             },
 
             RegisterLink {},
+            
+            Link {
+                class: "link text-center text-sm",
+                to: page::ACCOUNT_FORGOT_PASSWORD,
+                "Forgot Password?"
+            }
 
             KeyedNotificationBox {
                 legend: "Form Errors",
@@ -193,12 +223,8 @@ pub fn Login() -> Element {
 
             button {
                 class: "btn {submit_btn_style}",
-                r#type: "button",
+                r#type: "submit",
                 disabled: !page_state.read().can_submit(),
-                onclick: move |ev| {
-                    ev.prevent_default();
-                    form_onsubmit(ev);
-                },
                 "Login"
             }
         }

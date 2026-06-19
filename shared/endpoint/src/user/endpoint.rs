@@ -52,6 +52,8 @@ pub struct GetMyProfileOk {
     pub profile_image: Option<Url>,
     pub user_id: UserId,
     pub unread_notifications: i64,
+    pub security_question: Option<String>,
+    pub security_answer: Option<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -60,6 +62,8 @@ pub struct UpdateProfile {
     pub email: Update<String>,
     pub profile_image: Update<String>,
     pub password: Update<Password>,
+    pub security_question: Update<String>,
+    pub security_answer: Update<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -131,3 +135,14 @@ pub struct GetDirectMessages {
 pub struct GetDirectMessagesOk {
     pub messages: Vec<super::types::DirectMessage>,
 }
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct ForgotPassword {
+    pub username: Username,
+    pub security_answer: String,
+    pub chatted_with_username: Username,
+    pub new_password: Password,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct ForgotPasswordOk;

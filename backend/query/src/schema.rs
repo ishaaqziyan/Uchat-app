@@ -96,6 +96,8 @@ diesel::table! {
         created_at -> Timestamptz,
         profile_image -> Nullable<Text>,
         last_seen -> Nullable<Timestamptz>,
+        security_question -> Nullable<Text>,
+        security_answer -> Nullable<Text>,
     }
 }
 

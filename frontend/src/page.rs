@@ -1,4 +1,5 @@
 pub mod edit_profile; // Page for editing the current user's profile
+pub mod forgot_password; // Forgot password page
 pub mod home; // Home feed and its sub-pages (bookmarked, liked)
 pub mod login; // Login page
 pub mod new_post; // New post creation pages (chat, image, poll)
@@ -7,6 +8,7 @@ pub mod trending; // Trending posts feed page
 pub mod view_profile; // Page for viewing another user's profile
 
 pub use edit_profile::EditProfile;
+pub use forgot_password::ForgotPassword;
 pub use home::{bookmarked::HomeBookmarked, liked::HomeLiked, Home}; // Re-export Home and its sub-pages
 pub use login::Login;
 pub use new_post::*; // Re-export all new post page components (NewChat, NewImage, NewPoll)
@@ -30,6 +32,7 @@ pub mod route {
 
     pub const ACCOUNT_LOGIN: &str = "/account/login";
     pub const ACCOUNT_REGISTER: &str = "/account/register";
+    pub const ACCOUNT_FORGOT_PASSWORD: &str = "/account/forgot-password";
     pub const HOME: &str = "/home";
     pub const HOME_BOOKMARKED: &str = "/home/bookmarked";
     pub const HOME_LIKED: &str = "/home/liked";

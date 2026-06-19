@@ -52,6 +52,8 @@ pub struct User {
     pub created_at: DateTime<Utc>,
     pub profile_image: Option<String>,
     pub last_seen: Option<DateTime<Utc>>,
+    pub security_question: Option<String>,
+    pub security_answer: Option<String>,
 }
 
 pub fn update_last_seen(conn: &mut PgConnection, uid: UserId) -> Result<(), DieselError> {
@@ -82,6 +84,8 @@ pub struct UpdateProfileParams {
     pub email: Update<String>,
     pub password_hash: Update<PasswordHashString>,
     pub profile_image: Update<String>,
+    pub security_question: Update<String>,
+    pub security_answer: Update<String>,
 }
 
 #[derive(AsChangeset, Debug)]
@@ -91,6 +95,8 @@ struct UpdateProfileParamsInternal {
     pub email: Option<Option<String>>,
     pub password_hash: Option<String>,
     pub profile_image: Option<Option<String>>,
+    pub security_question: Option<Option<String>>,
+    pub security_answer: Option<Option<String>>,
 }
 
 pub fn update_profile(
@@ -107,6 +113,8 @@ pub fn update_profile(
             .into_option()
             .map(|s| s.to_string()),
         profile_image: query_params.profile_image.into_nullable(),
+        security_question: query_params.security_question.into_nullable(),
+        security_answer: query_params.security_answer.into_nullable(),
     };
 
     diesel::update(users::table)

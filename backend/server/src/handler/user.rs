@@ -8,6 +8,7 @@ use uchat_endpoint::{
         endpoint::{
             CreateUser, CreateUserOk, FollowUser, FollowUserOk, GetMyProfile, GetMyProfileOk,
             Login, LoginOk, UpdateProfile, UpdateProfileOk, ViewProfile, ViewProfileOk,
+            ForgotPassword, ForgotPasswordOk,
         },
         types::{FollowAction, PublicUserProfile},
     },
@@ -177,6 +178,8 @@ impl AuthorizedApiRequest for GetMyProfile {
                 profile_image: profile_image_url,
                 user_id: user.id,
                 unread_notifications,
+                security_question: user.security_question,
+                security_answer: user.security_answer,
             }),
         ))
     }
@@ -212,6 +215,8 @@ impl AuthorizedApiRequest for UpdateProfile {
             email: payload.email,
             password_hash: password,
             profile_image: payload.profile_image.clone(),
+            security_question: payload.security_question,
+            security_answer: payload.security_answer,
         };
 
         uchat_query::user::update_profile(&mut conn, query_params)?;
@@ -347,6 +352,64 @@ impl AuthorizedApiRequest for uchat_endpoint::user::endpoint::MarkNotificationsA
         Ok((
             StatusCode::OK,
             Json(uchat_endpoint::user::endpoint::MarkNotificationsAsReadOk),
+        ))
+    }
+}
+
+#[async_trait]
+impl PublicApiRequest for ForgotPassword {
+    type Response = (StatusCode, Json<ForgotPasswordOk>);
+    async fn process_request(
+        self,
+        DbConnection(mut conn): DbConnection,
+        _state: AppState,
+    ) -> ApiResult<Self::Response> {
+        let user = uchat_query::user::find(&mut conn, &self.username)
+            .map_err(|_| ServerError::missing_login())?;
+
+        if let Some(ref db_answer) = user.security_answer {
+            if db_answer != &self.security_answer {
+                return Err(ApiError {
+                    code: Some(StatusCode::BAD_REQUEST),
+                    err: color_eyre::Report::msg("Incorrect security answer"),
+                });
+            }
+        } else {
+            return Err(ApiError {
+                code: Some(StatusCode::BAD_REQUEST),
+                err: color_eyre::Report::msg("Security question not set"),
+            });
+        }
+
+        let other_user = uchat_query::user::find(&mut conn, &self.chatted_with_username)
+            .map_err(|_| ApiError {
+                code: Some(StatusCode::BAD_REQUEST),
+                err: color_eyre::Report::msg("Chatted user not found"),
+            })?;
+
+        let has_chatted = uchat_query::chat::has_chatted(&mut conn, user.id, other_user.id)?;
+        if !has_chatted {
+            return Err(ApiError {
+                code: Some(StatusCode::BAD_REQUEST),
+                err: color_eyre::Report::msg("No chat history with this user"),
+            });
+        }
+
+        let new_hash = uchat_crypto::hash_password(&self.new_password)?;
+        let query_params = UpdateProfileParams {
+            id: user.id,
+            display_name: Update::NoChange,
+            email: Update::NoChange,
+            password_hash: Update::Change(new_hash),
+            profile_image: Update::NoChange,
+            security_question: Update::NoChange,
+            security_answer: Update::NoChange,
+        };
+        uchat_query::user::update_profile(&mut conn, query_params)?;
+
+        Ok((
+            StatusCode::OK,
+            Json(ForgotPasswordOk),
         ))
     }
 }

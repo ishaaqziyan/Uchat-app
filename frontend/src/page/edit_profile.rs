@@ -24,6 +24,8 @@ pub struct PageState {
     password: String,
     password_confirmation: String,
     profile_image: Option<PreviewImageData>,
+    security_question: String,
+    security_answer: String,
 }
 
 #[component]
@@ -248,6 +250,54 @@ pub fn EmailInput(page_state: Signal<PageState>) -> Element {
 }
 
 #[component]
+pub fn SecurityQuestionInput(page_state: Signal<PageState>) -> Element {
+    rsx! {
+        div {
+            label {
+                r#for: "security-question",
+                div {
+                    class: "flex flex-row justify-between",
+                    span { "Security Question" },
+                }
+            },
+            input {
+                class: "input-field",
+                id: "security-question",
+                placeholder: "e.g. What is your mother's maiden name?",
+                value: "{page_state.read().security_question}",
+                oninput: move |ev| {
+                    page_state.with_mut(|state| state.security_question = ev.value().clone());
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn SecurityAnswerInput(page_state: Signal<PageState>) -> Element {
+    rsx! {
+        div {
+            label {
+                r#for: "security-answer",
+                div {
+                    class: "flex flex-row justify-between",
+                    span { "Security Answer" },
+                }
+            },
+            input {
+                class: "input-field",
+                id: "security-answer",
+                placeholder: "Your Answer",
+                value: "{page_state.read().security_answer}",
+                oninput: move |ev| {
+                    page_state.with_mut(|state| state.security_answer = ev.value().clone());
+                }
+            }
+        }
+    }
+}
+
+#[component]
 pub fn EditProfile() -> Element {
     let api_client = ApiClient::global();
     let page_state = use_signal(PageState::default);
@@ -273,6 +323,8 @@ pub fn EditProfile() -> Element {
                             state.profile_image = res
                                 .profile_image
                                 .map(|img| PreviewImageData::Remote(img.to_string()));
+                            state.security_question = res.security_question.unwrap_or_default();
+                            state.security_answer = res.security_answer.unwrap_or_default();
                         });
                     }
                     Err(e) => toaster.write().error(
@@ -328,6 +380,25 @@ pub fn EditProfile() -> Element {
                             None => Update::SetNull,
                         }
                     },
+                    security_question: {
+                        let sq = page_state.read().security_question.clone();
+                        if sq.is_empty() {
+                            Update::SetNull
+                        } else {
+                            Update::Change(sq)
+                        }
+                    },
+                    security_answer: {
+                        let sa = page_state.read().security_answer.clone();
+                        let sq = page_state.read().security_question.clone();
+                        if sq.is_empty() {
+                            Update::SetNull
+                        } else if sa.is_empty() {
+                            Update::NoChange
+                        } else {
+                            Update::Change(sa)
+                        }
+                    },
                 }
             };
 
@@ -376,6 +447,8 @@ pub fn EditProfile() -> Element {
             ImageInput { page_state: page_state.clone() },
             DisplayNameInput { page_state: page_state.clone() },
             EmailInput { page_state: page_state.clone() },
+            SecurityQuestionInput { page_state: page_state.clone() },
+            SecurityAnswerInput { page_state: page_state.clone() },
             PasswordInput { state: page_state.clone() },
 
             KeyedNotificationBox { notifications: page_state.clone().read().form_errors.clone() },

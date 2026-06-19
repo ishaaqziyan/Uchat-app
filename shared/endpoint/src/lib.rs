@@ -58,6 +58,7 @@ pub mod app_url {
 // public routes
 route!("/account/create" => user::endpoint::CreateUser);
 route!("/account/login" => user::endpoint::Login);
+route!("/account/forgot_password" => user::endpoint::ForgotPassword);
 
 // authorized routes
 route!("/post/new" => post::endpoint::NewPost);

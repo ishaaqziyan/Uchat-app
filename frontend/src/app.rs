@@ -10,7 +10,7 @@ use crate::elements::{
     Navbar,
 };
 use crate::page::{
-    Chat, Conversations, EditProfile, NewImage, NewPoll, Notifications, Trending, ViewProfile,
+    Chat, Conversations, EditProfile, NewImage, NewPoll, Notifications, Trending, ViewProfile, ForgotPassword,
 };
 use crate::page::{Home, HomeBookmarked, HomeLiked, Login, NewChat, Register};
 pub use crate::prelude::*;
@@ -71,6 +71,8 @@ pub enum Route {
         Register {},
         #[route("/account/login")]
         Login {},
+        #[route("/account/forgot-password")]
+        ForgotPassword {},
         
     #[layout(AppLayout)]
         #[route("/home")]

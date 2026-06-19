@@ -89,3 +89,28 @@ pub fn get_conversations(
     
     Ok(conversations)
 }
+
+pub fn has_chatted(
+    conn: &mut PgConnection,
+    user1: UserId,
+    user2: UserId,
+) -> Result<bool, DieselError> {
+    use crate::schema::direct_messages::dsl::*;
+    use diesel::dsl::count;
+    
+    let u1 = user1.into_inner();
+    let u2 = user2.into_inner();
+    
+    direct_messages
+        .filter(
+            (sender_id.eq(u1).and(receiver_id.eq(u2)))
+            .or(sender_id.eq(u2).and(receiver_id.eq(u1)))
+        )
+        .select(count(id))
+        .get_result(conn)
+        .optional()
+        .map(|n: Option<i64>| match n {
+            Some(n) => n > 0,
+            None => false,
+        })
+}
