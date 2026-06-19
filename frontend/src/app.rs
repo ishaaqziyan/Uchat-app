@@ -142,7 +142,29 @@ pub fn AppLayout() -> Element {
 
 #[component]
 pub fn AuthLayout() -> Element {
+    let mut dark_mode = use_context::<Signal<crate::app::DarkMode>>();
+    
     rsx! {
+        div {
+            class: "absolute top-4 right-4",
+            button {
+                class: "btn dark:bg-slate-600 dark:text-white hover:bg-slate-500 dark:hover:bg-slate-500 text-xs px-2 py-1",
+                onclick: move |_| {
+                    let is_dark = !dark_mode.read().0;
+                    dark_mode.write().0 = is_dark;
+                    if is_dark {
+                        let _ = js_sys::eval("document.documentElement.classList.add('dark')");
+                    } else {
+                        let _ = js_sys::eval("document.documentElement.classList.remove('dark')");
+                    }
+                },
+                if dark_mode.read().0 {
+                    "☀️ Light"
+                } else {
+                    "🌙 Dark"
+                }
+            }
+        }
         main {
             class: "max-w-[var(--content-max-width)]
             min-w-[var(--content-min-width)]

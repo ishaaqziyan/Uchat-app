@@ -232,7 +232,7 @@ pub fn Chat(user_id: UserId) -> Element {
 
             rsx! {
                 div {
-                    class: "flex flex-row justify-between items-center p-3 border-b bg-white rounded-t-md shrink-0 w-full",
+                    class: "flex flex-row justify-between items-center p-3 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 rounded-t-md shrink-0 w-full",
                     div {
                         class: "flex flex-row items-center gap-3 shrink-0",
                         img { class: "w-10 h-10 rounded-full object-cover shrink-0", src: "{profile_img_src}" }
@@ -253,7 +253,7 @@ pub fn Chat(user_id: UserId) -> Element {
             }
         } else {
             rsx! {
-                div { class: "p-3 border-b bg-white rounded-t-md text-center text-gray-500", "Loading chat..." }
+                div { class: "p-3 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 rounded-t-md text-center text-gray-500", "Loading chat..." }
             }
         }
     };
@@ -263,7 +263,7 @@ pub fn Chat(user_id: UserId) -> Element {
             class: "flex flex-col h-[calc(100vh-var(--navbar-height)-120px)]",
             {ChatHeader}
             div {
-                class: "flex-1 overflow-y-auto flex flex-col gap-2 p-2 border-x bg-white",
+                class: "flex-1 overflow-y-auto flex flex-col gap-2 p-2 border-x bg-white/50 backdrop-blur-sm dark:bg-slate-900/50",
                 for msg in messages.read().iter() {
                     if msg.sender_id == my_id {
                         div {
@@ -279,7 +279,7 @@ pub fn Chat(user_id: UserId) -> Element {
                 }
             }
             div {
-                class: "flex flex-row p-2 border rounded-b-md bg-white gap-2",
+                class: "flex flex-row p-2 border rounded-b-md bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 gap-2",
                 input {
                     class: "flex-1 input-field",
                     placeholder: "Type a message...",
