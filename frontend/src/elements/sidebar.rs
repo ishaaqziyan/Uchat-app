@@ -128,8 +128,39 @@ pub fn Sidebar() -> Element {
                     }
                 }
             },
-            a {
+            div {
                 class: "sidebar-navlink mb-auto",
+                div { class: "font-semibold mb-2", "Background Theme" }
+                div {
+                    class: "flex flex-col gap-2",
+                    button {
+                        class: "btn text-xs",
+                        onclick: move |_| {
+                            let _ = js_sys::eval("document.getElementById('app-bg').className = 'mesh-bg-1'");
+                            let _ = js_sys::eval("localStorage.setItem('bg_theme', 'mesh-bg-1')");
+                        },
+                        "Vibrant"
+                    }
+                    button {
+                        class: "btn text-xs",
+                        onclick: move |_| {
+                            let _ = js_sys::eval("document.getElementById('app-bg').className = 'mesh-bg-2'");
+                            let _ = js_sys::eval("localStorage.setItem('bg_theme', 'mesh-bg-2')");
+                        },
+                        "Sunset"
+                    }
+                    button {
+                        class: "btn text-xs",
+                        onclick: move |_| {
+                            let _ = js_sys::eval("document.getElementById('app-bg').className = 'mesh-bg-3'");
+                            let _ = js_sys::eval("localStorage.setItem('bg_theme', 'mesh-bg-3')");
+                        },
+                        "Ocean"
+                    }
+                }
+            }
+            a {
+                class: "sidebar-navlink",
                 onclick: move |_| {
                     sidebar.write().close();
                     let _ = router.push(crate::app::Route::Conversations {});

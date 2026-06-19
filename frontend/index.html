@@ -13,7 +13,13 @@
 </head>
 
 <body>
-  <div class="mesh-bg"></div>
+  <div id="app-bg" class="mesh-bg-1"></div>
+  <script>
+    const theme = localStorage.getItem('bg_theme');
+    if (theme) {
+      document.getElementById('app-bg').className = theme;
+    }
+  </script>
   <div id="main"></div>
 </body>
 
