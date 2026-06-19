@@ -1,5 +1,7 @@
 # uChat
 
+[![Tests](https://github.com/ishaaqziyan/Uchat-app/actions/workflows/test.yml/badge.svg)](https://github.com/ishaaqziyan/Uchat-app/actions/workflows/test.yml)
+
 Uchat is a revolutionary full-stack chat app built completely on [Rust](https://www.rust-lang.org/), while leveraging the capabilities of [WASM](https://webassembly.org/).
 
 <br>
