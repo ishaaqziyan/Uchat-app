@@ -20,6 +20,7 @@ use crate::{
 
 pub mod post;
 pub mod user;
+pub mod chat;
 
 const USER_CONTENT_DIR: &str = "usercontent";
 

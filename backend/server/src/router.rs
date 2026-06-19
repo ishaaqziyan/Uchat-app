@@ -18,7 +18,7 @@ use uchat_endpoint::{
         Bookmark, BookmarkedPosts, Boost, HomePosts, LikedPosts, NewPost, React, TrendingPosts,
         Vote,
     },
-    user::endpoint::{CreateUser, FollowUser, GetMyProfile, Login, UpdateProfile, ViewProfile},
+    user::endpoint::{CreateUser, FollowUser, GetMyProfile, Login, UpdateProfile, ViewProfile, GetNotifications, MarkNotificationsAsRead, SendDirectMessage, GetConversations, GetDirectMessages, ForgotPassword},
     Endpoint,
 };
 
@@ -37,7 +37,8 @@ pub fn new_router(state: AppState) -> axum::Router {
         .route("/", get(move || async { "this is the root page" }))
         .route(&format!("/{img_route}:id"), get(handler::load_image))
         .route(CreateUser::URL, post(with_public_handler::<CreateUser>))
-        .route(Login::URL, post(with_public_handler::<Login>));
+        .route(Login::URL, post(with_public_handler::<Login>))
+        .route(ForgotPassword::URL, post(with_public_handler::<ForgotPassword>));
 
     let authorized_routes = Router::new()
         .route(NewPost::URL, post(with_handler::<NewPost>))
@@ -53,6 +54,11 @@ pub fn new_router(state: AppState) -> axum::Router {
         .route(ViewProfile::URL, post(with_handler::<ViewProfile>))
         .route(FollowUser::URL, post(with_handler::<FollowUser>))
         .route(BookmarkedPosts::URL, post(with_handler::<BookmarkedPosts>))
+        .route(GetNotifications::URL, post(with_handler::<GetNotifications>))
+        .route(MarkNotificationsAsRead::URL, post(with_handler::<MarkNotificationsAsRead>))
+        .route(SendDirectMessage::URL, post(with_handler::<SendDirectMessage>))
+        .route(GetConversations::URL, post(with_handler::<GetConversations>))
+        .route(GetDirectMessages::URL, post(with_handler::<GetDirectMessages>))
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(8 * 1024 * 1024));
 

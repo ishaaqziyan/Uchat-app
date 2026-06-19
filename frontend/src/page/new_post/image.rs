@@ -29,11 +29,11 @@ impl PageState {
     }
 }
 
-#[inline_props]
-pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
-    let toaster = use_toaster(cx);
+#[component]
+pub fn ImageInput(page_state: Signal<PageState>) -> Element {
+    let toaster = use_toaster();
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "image-input",
@@ -44,9 +44,10 @@ pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                 id: "image-input",
                 r#type: "file",
                 accept: "image/*",
-                oninput: |_| {
-                    to_owned![page_state, toaster];
-                    async move {
+                oninput: move |_| {
+                    let mut page_state = page_state.clone();
+                    let mut toaster = toaster.clone();
+                    spawn(async move {
                         use gloo_file::{File, futures::read_as_data_url};
                         use wasm_bindgen::JsCast;
 
@@ -59,15 +60,15 @@ pub fn ImageInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                             Ok(data) => page_state.with_mut(|state| state.image = Some(data)),
                             Err(e) => toaster.write().error(format!("Error loading file: {e}"), chrono::Duration::seconds(5)),
                         }
-                    }
+                    });
                 }
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn ImagePreview(cx: Scope, page_state: UseRef<PageState>) -> Element {
+#[component]
+pub fn ImagePreview(page_state: Signal<PageState>) -> Element {
     let image_data = page_state.read().clone().image;
     let Preview = if let Some(ref image) = image_data {
         rsx! {
@@ -83,16 +84,16 @@ pub fn ImagePreview(cx: Scope, page_state: UseRef<PageState>) -> Element {
         }
     };
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "flex flex-row justify-center",
-            Preview
+            {Preview}
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn CaptionInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
+#[component]
+pub fn CaptionInput(page_state: Signal<PageState>) -> Element {
     use uchat_domain::post::Caption;
 
     let max_chars = Caption::MAX_CHARS;
@@ -102,7 +103,7 @@ pub fn CaptionInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
         page_state.read().caption.len() > max_chars
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "caption",
@@ -120,19 +121,20 @@ pub fn CaptionInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                 id: "caption",
                 value: "{page_state.read().caption}",
                 oninput: move |ev| {
-                    page_state.with_mut(|state| state.caption = ev.data.value.clone());
+                    page_state.with_mut(|state| state.caption = ev.data.value().clone());
                 }
             }
         }
-    })
+    }
 }
 
-pub fn NewImage(cx: Scope) -> Element {
+#[component]
+pub fn NewImage() -> Element {
     let api_client = ApiClient::global();
-    let router = use_router(cx);
-    let toaster = use_toaster(cx);
+    let router = use_navigator();
+    let toaster = use_toaster();
 
-    let page_state = use_ref(cx, PageState::default);
+    let page_state = use_signal(PageState::default);
 
     let form_onsubmit = async_handler!(
         &cx,
@@ -163,7 +165,7 @@ pub fn NewImage(cx: Scope) -> Element {
             match response {
                 Ok(_) => {
                     toaster.write().success("Posted!", Duration::seconds(3));
-                    router.replace_route(page::HOME, None, None);
+                    let _ = router.replace(page::HOME);
                 }
                 Err(e) => {
                     toaster
@@ -176,11 +178,11 @@ pub fn NewImage(cx: Scope) -> Element {
 
     let submit_btn_style = maybe_class!("btn-disabled", !page_state.read().can_submit());
 
-    cx.render(rsx! {
+    rsx! {
         Appbar {
             title: "New Image",
             AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_CHAT, None, None),
+                click_handler: move |_| { let _ = router.replace(page::POST_NEW_CHAT); },
                 img: "/static/icons/icon-messages.svg",
                 label: "Chat",
                 title: "Post a new chat",
@@ -194,13 +196,13 @@ pub fn NewImage(cx: Scope) -> Element {
                 append_class: appbar::BUTTON_SELECTED,
             },
             AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_POLL, None, None),
+                click_handler: move |_| { let _ = router.replace(page::POST_NEW_POLL); },
                 img: "/static/icons/icon-poll.svg",
                 label: "Poll",
                 title: "Post a new poll",
             },
             AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
+                click_handler: move |_| { router.go_back(); },
                 img: "/static/icons/icon-back.svg",
                 label: "Back",
                 title: "Go to the previous page",
@@ -209,8 +211,10 @@ pub fn NewImage(cx: Scope) -> Element {
 
         form {
             class: "flex flex-col gap-4",
-            onsubmit: form_onsubmit,
-            prevent_default: "onsubmit",
+            onsubmit: move |ev| {
+                ev.prevent_default();
+                form_onsubmit(ev);
+            },
             ImageInput { page_state: page_state.clone() },
             ImagePreview { page_state: page_state.clone() },
             CaptionInput { page_state: page_state.clone() },
@@ -221,5 +225,5 @@ pub fn NewImage(cx: Scope) -> Element {
                 "Post"
             }
         }
-    })
+    }
 }

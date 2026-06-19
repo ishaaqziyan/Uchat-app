@@ -15,20 +15,23 @@ pub fn get_session() -> Option<SessionId> {
 pub fn remove_session() {
     let cookie = format_cookie(
         format_kv(uchat_cookie::SESSION_ID, ""),
-        Utc::now() - Duration::days(1),
+        Some(Utc::now() - Duration::days(1)),
     );
-    document().set_cookie(&cookie).unwrap()
-}
-
-pub fn set_session(signature: String, id: SessionId, expires: DateTime<Utc>) {
-    let cookie = format_cookie(format_kv(uchat_cookie::SESSION_ID, id.to_string()), expires);
-
     document().set_cookie(&cookie).unwrap();
 
     let cookie = format_cookie(
-        format_kv(uchat_cookie::SESSION_SIGNATURE, signature),
-        expires,
+        format_kv(uchat_cookie::SESSION_SIGNATURE, ""),
+        Some(Utc::now() - Duration::days(1)),
     );
+    document().set_cookie(&cookie).unwrap();
+}
+
+pub fn set_session(signature: String, id: SessionId, _expires: DateTime<Utc>) {
+    let cookie = format_cookie(format_kv(uchat_cookie::SESSION_ID, id.to_string()), None);
+
+    document().set_cookie(&cookie).unwrap();
+
+    let cookie = format_cookie(format_kv(uchat_cookie::SESSION_SIGNATURE, signature), None);
 
     document().set_cookie(&cookie).unwrap();
 }
@@ -57,11 +60,14 @@ where
     format!("{key}={value}")
 }
 
-fn format_cookie<S: AsRef<str>>(payload: S, expires: DateTime<Utc>) -> String {
-    let expires = format_expiration(expires);
+fn format_cookie<S: AsRef<str>>(payload: S, expires: Option<DateTime<Utc>>) -> String {
     let options = standard_options();
     let payload = payload.as_ref();
 
-    let cookie = format!("{payload}; {expires}; {options}");
-    cookie
+    if let Some(expires) = expires {
+        let expires_str = format_expiration(expires);
+        format!("{payload}; {expires_str}; {options}")
+    } else {
+        format!("{payload}; {options}")
+    }
 }

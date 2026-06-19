@@ -19,3 +19,15 @@ members = [
   "shared/endpoint",
   "tools/project-init",
 ]
+
+# Optimizations to reduce build and binary size
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable Link-Time Optimization
+codegen-units = 1   # Maximize size reduction optimizations
+panic = "abort"     # Remove panic unwinding to reduce binary size
+strip = true        # Strip symbols from the binary
+
+[profile.dev]
+debug = 0           # Disable debug info in development builds to reduce target directory size significantly
+incremental = false # Disable incremental compilation to stop the `target/debug/incremental` folder from generating

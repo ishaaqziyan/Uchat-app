@@ -1,4 +1,4 @@
-use clap::{command, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use color_eyre::{eyre::Context, Help, Result};
 use std::net::SocketAddr;
 use tracing::{debug, error, info};
@@ -60,8 +60,9 @@ async fn run() -> Result<()> {
         }
     }
 
-    debug!(target: "uchat_server", "loading signing keys");
-    let signing_keys = uchat_server::cli::load_keys()?;
+    debug!(target: "uchat_server", "generating new random signing keys for this session");
+    let mut rng = uchat_crypto::new_rng();
+    let (_, signing_keys) = uchat_server::cli::gen_keys(&mut rng)?;
 
     info!(target: "uchat_server", database_url = args.database_url, "connecting to database");
     let db_pool = uchat_query::AsyncConnectionPool::new(&args.database_url)

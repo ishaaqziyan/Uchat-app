@@ -1,35 +1,35 @@
 #![allow(non_snake_case)]
 
-use std::str::FromStr;
-
 use crate::prelude::*;
 use dioxus::prelude::*;
 use uchat_domain::ids::UserId;
 
-pub fn ViewProfile(cx: Scope) -> Element {
+#[component]
+pub fn ViewProfile(user_id: ReadSignal<UserId>) -> Element {
     let api_client = ApiClient::global();
-    let toaster = use_toaster(cx);
-    let router = use_router(cx);
-    let post_manager = use_post_manager(cx);
-    let local_profile = use_local_profile(cx);
+    let toaster = use_toaster();
+    let router = use_navigator();
+    let post_manager = use_post_manager();
+    let local_profile = use_local_profile();
 
-    let profile = use_ref(cx, || None);
+    let profile = use_signal(|| None);
 
-    let user_id = dioxus_router::use_route(cx)
-        .last_segment()
-        .and_then(|id| UserId::from_str(id).ok())
-        .unwrap_or_default();
-
-    use_effect(cx, (&user_id,), |(user_id,)| {
-        to_owned![api_client, post_manager, profile, toaster];
+    let _profile_task = use_resource(move || {
+        let current_user_id = user_id(); // Reactive read
+        let api_client = api_client.clone();
+        let mut post_manager = post_manager.clone();
+        let mut profile = profile.clone();
+        let mut toaster = toaster.clone();
         async move {
             use uchat_endpoint::user::endpoint::{ViewProfile, ViewProfileOk};
-            let request = ViewProfile { for_user: user_id };
+            let request = ViewProfile {
+                for_user: current_user_id,
+            };
             post_manager.write().clear();
             let response = fetch_json!(<ViewProfileOk>, api_client, request);
             match response {
                 Ok(res) => {
-                    profile.with_mut(|profile| *profile = Some(res.profile));
+                    profile.write().replace(res.profile);
                     post_manager.write().populate(res.posts.into_iter());
                 }
                 Err(e) => toaster.write().error(
@@ -49,7 +49,7 @@ pub fn ViewProfile(cx: Scope) -> Element {
         };
 
         let request = FollowUser {
-            user_id,
+            user_id: user_id(),
             action: match am_following {
                 true => FollowAction::Unfollow,
                 false => FollowAction::Follow,
@@ -78,40 +78,46 @@ pub fn ViewProfile(cx: Scope) -> Element {
                 let profile_image = profile
                     .profile_image
                     .map(|url| url.to_string())
-                    .unwrap_or_else(|| "".to_string());
+                    .unwrap_or_else(|| "/static/icons/uchat.png".to_string());
 
                 let follow_button_text = match profile.am_following {
                     true => "Unfollow",
                     false => "Follow",
                 };
 
-                let FollowButton = local_profile.read().user_id.map(|id| {
+                let FollowButton = local_profile.read().user_id.and_then(|id| {
                     if id == profile.id {
                         None
                     } else {
-                        cx.render(rsx! {
-                            button {
-                                class: "btn",
-                                onclick: follow_onclick,
-                                "{follow_button_text}"
+                        let msg_router = router.clone();
+                        let target_user_id = profile.id;
+                        Some(rsx! {
+                            div {
+                                class: "flex flex-row gap-2 justify-center",
+                                button { class: "btn flex-1", onclick: follow_onclick, "{follow_button_text}" }
+                                button {
+                                    class: "btn flex-1 bg-blue-500",
+                                    onclick: move |_| {
+                                        let _ = msg_router.push(crate::app::Route::Chat { user_id: target_user_id });
+                                    },
+                                    "Message"
+                                }
                             }
                         })
                     }
                 });
 
                 rsx! {
-                    div {
-                        class: "flex flex-col gap-3",
-                        div {
-                            class: "flex flex-row justify-center",
+                    div { class: "flex flex-col gap-3",
+                        div { class: "flex flex-row justify-center",
                             img {
                                 class: "profile-portrait-lg",
                                 src: "{profile_image}",
                             }
-                        },
-                        div { "Handle: {profile.handle}" },
-                        div { "Name: {display_name} "},
-                        FollowButton
+                        }
+                        div { "Handle: {profile.handle}" }
+                        div { "Name: {display_name} " }
+                        {FollowButton}
                     }
                 }
             }
@@ -121,24 +127,20 @@ pub fn ViewProfile(cx: Scope) -> Element {
 
     let Posts = post_manager.read().all_to_public();
 
-    cx.render(rsx! {
-        Appbar {
-            title: "View Profile",
+    rsx! {
+        Appbar { title: "View Profile",
             AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
+                click_handler: move |_| {
+                    router.go_back();
+                },
                 img: "/static/icons/icon-back.svg",
                 label: "Back",
                 title: "Go to the previous page",
             }
-        },
-        ProfileSection,
-        div {
-            class: "font-bold text-center my-6",
-            "Posts"
-        },
-        hr {
-            class: "h-px my-6 bg-gray-200 border-0",
-        },
-        Posts.into_iter()
-    })
+        }
+        {ProfileSection}
+        div { class: "font-bold text-center my-6", "Posts" }
+        hr { class: "h-px my-6 bg-gray-200 border-0" }
+        {Posts.into_iter()}
+    }
 }

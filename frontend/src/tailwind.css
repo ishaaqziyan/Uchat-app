@@ -4,43 +4,140 @@
 
 :root {
   --appbar-height: 3.5rem;
-  --navbar-height: 3.8rem;
+  --navbar-height: 4rem;
   --content-min-width: 300px;
-  --content-max-width: 576px;
+  --content-max-width: 768px;
   --sidebar-width: 250px;
+}
+
+@layer base {
+  body {
+    @apply text-slate-900 dark:text-slate-100 transition-colors duration-300;
+  }
+
+}
+
+.mesh-bg-1, .mesh-bg-2, .mesh-bg-3 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  background-color: #f8fafc; /* bg-slate-50 equivalent */
+  transition: background-color 300ms;
+}
+
+html.dark .mesh-bg-1, html.dark .mesh-bg-2, html.dark .mesh-bg-3 {
+  background-color: #020617; /* bg-slate-950 equivalent */
+}
+
+.mesh-bg-1::before, .mesh-bg-1::after,
+.mesh-bg-2::before, .mesh-bg-2::after,
+.mesh-bg-3::before, .mesh-bg-3::after {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background-size: 100% 100%;
+  pointer-events: none;
+  filter: blur(60px);
+}
+
+/* Mesh 1: Vibrant */
+.mesh-bg-1::before {
+  background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 80% 20%, rgba(219, 39, 119, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 20% 80%, rgba(37, 99, 235, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.4) 0%, transparent 40%);
+  animation: morph 20s ease-in-out infinite alternate;
+}
+
+.mesh-bg-1::after {
+  background: radial-gradient(circle at 30% 70%, rgba(139, 92, 246, 0.4) 0%, transparent 50%),
+              radial-gradient(circle at 70% 30%, rgba(236, 72, 153, 0.4) 0%, transparent 50%);
+  animation: morph-reverse 25s ease-in-out infinite alternate;
+  opacity: 0.9;
+}
+
+/* Mesh 2: Sunset */
+.mesh-bg-2::before {
+  background: radial-gradient(circle at 40% 60%, rgba(249, 115, 22, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 80% 20%, rgba(234, 179, 8, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 90% 90%, rgba(168, 85, 247, 0.4) 0%, transparent 40%);
+  animation: morph 18s ease-in-out infinite alternate;
+}
+
+.mesh-bg-2::after {
+  background: radial-gradient(circle at 20% 30%, rgba(245, 158, 11, 0.4) 0%, transparent 50%),
+              radial-gradient(circle at 70% 60%, rgba(225, 29, 72, 0.4) 0%, transparent 50%);
+  animation: morph-reverse 22s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+
+/* Mesh 3: Ocean */
+.mesh-bg-3::before {
+  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.4) 0%, transparent 40%);
+  animation: morph 22s ease-in-out infinite alternate;
+}
+
+.mesh-bg-3::after {
+  background: radial-gradient(circle at 30% 70%, rgba(14, 165, 233, 0.4) 0%, transparent 50%),
+              radial-gradient(circle at 70% 30%, rgba(34, 197, 94, 0.4) 0%, transparent 50%);
+  animation: morph-reverse 20s ease-in-out infinite alternate;
+  opacity: 0.9;
+}
+
+@keyframes morph {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.3); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes morph-reverse {
+  0% { transform: rotate(360deg) scale(1.2); }
+  50% { transform: rotate(180deg) scale(0.8); }
+  100% { transform: rotate(0deg) scale(1.2); }
 }
 
 @layer components {
   .actionbar-icon {
-    @apply w-8 h-8;
+    @apply w-8 h-8 dark:invert;
   }
 
   .btn {
-    @apply px-4 py-2 rounded font-semibold text-sm bg-slate-600 shadow-sm text-white;
+    @apply px-4 py-2 rounded font-semibold text-sm bg-slate-600 shadow-sm text-white transition-colors duration-300 dark:bg-slate-500 dark:hover:bg-slate-400;
   }
 
   .input-field {
-    @apply w-full border-2 rounded border-slate-400;
+    @apply w-full border-2 rounded border-slate-400 bg-white/70 backdrop-blur-sm dark:bg-slate-800/70 dark:text-white dark:border-slate-600 transition-colors duration-300;
   }
 
   .fieldset {
-    @apply p-3 border-2 border-solid border-slate-300;
+    @apply p-3 border-2 border-solid border-slate-300 dark:border-slate-600 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-lg transition-colors duration-300;
   }
 
   .btn-disabled {
-    @apply bg-slate-300 cursor-not-allowed;
+    @apply bg-slate-300/80 cursor-not-allowed dark:bg-slate-700/80 dark:text-slate-500;
   }
 
   .navbar-bg-color {
-    @apply bg-slate-600;
+    @apply bg-slate-600/90 backdrop-blur-md dark:bg-slate-950/90 transition-colors duration-300;
   }
 
   .navbar-border-color {
-    @apply border-slate-300;
+    @apply border-slate-300 dark:border-slate-800 transition-colors duration-300;
   }
 
   .err-text-color {
-    @apply text-red-700;
+    @apply text-red-700 dark:text-red-400;
   }
 
   .profile-portrait {
@@ -51,15 +148,11 @@
     @apply object-cover rounded-md w-28 h-28;
   }
 
-  .fieldset {
-    @apply p-3 border-2 border-solid border-slate-300;
-  }
-
   .sidebar-navlink {
-    @apply cursor-pointer px-3 py-5 block transition duration-300 text-white border-b border-slate-500;
+    @apply cursor-pointer px-3 py-5 block transition duration-300 text-slate-900 border-b border-slate-300 dark:text-slate-200 dark:border-slate-700;
   }
 
   .link {
-    @apply cursor-pointer text-blue-600 underline;
+    @apply cursor-pointer text-blue-600 underline dark:text-blue-400;
   }
 }

@@ -72,4 +72,15 @@ serve-pro-frontend:
 
 # run production API server
 serve-pro-api:
-    cd target/release && ./api
+    cargo run --release -p uchat_server
+
+# run prod all
+serve-pro-all:
+    just serve-pro-frontend &
+    just serve-pro-api
+
+# clean up old unused build artifacts to free disk space
+# note: requires cargo-sweep installed (cargo install cargo-sweep)
+sweep:
+    cargo sweep --time 14
+    cargo sweep --toolchains

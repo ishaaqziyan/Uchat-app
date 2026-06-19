@@ -35,9 +35,18 @@ pub mod app_url {
     pub const API_URL: &str = std::env!("API_URL");
 
     pub fn domain_and(fragment: &str) -> Url {
-        Url::from_str(API_URL)
-            .and_then(|url| url.join(fragment))
-            .unwrap()
+        let mut root = API_URL.to_string();
+        if !root.ends_with('/') {
+            root.push('/');
+        }
+        
+        let base_url = Url::from_str(&root).unwrap_or_else(|_| {
+            // Fallback to localhost if API_URL is improperly configured as a relative URL
+            Url::from_str("http://127.0.0.1:8070/").unwrap()
+        });
+
+        let fragment = fragment.trim_start_matches('/');
+        base_url.join(fragment).unwrap()
     }
 
     pub mod user_content {
@@ -49,6 +58,7 @@ pub mod app_url {
 // public routes
 route!("/account/create" => user::endpoint::CreateUser);
 route!("/account/login" => user::endpoint::Login);
+route!("/account/forgot_password" => user::endpoint::ForgotPassword);
 
 // authorized routes
 route!("/post/new" => post::endpoint::NewPost);
@@ -63,7 +73,12 @@ route!("/posts/bookmarked" => post::endpoint::BookmarkedPosts);
 route!("/profile/me" => user::endpoint::GetMyProfile);
 route!("/profile/update" => user::endpoint::UpdateProfile);
 route!("/profile/view" => user::endpoint::ViewProfile);
+route!("/notifications" => user::endpoint::GetNotifications);
+route!("/notifications/mark_read" => user::endpoint::MarkNotificationsAsRead);
 route!("/user/follow" => user::endpoint::FollowUser);
+route!("/dm/send" => user::endpoint::SendDirectMessage);
+route!("/dm/conversations" => user::endpoint::GetConversations);
+route!("/dm/messages" => user::endpoint::GetDirectMessages);
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum Update<T> {

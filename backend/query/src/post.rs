@@ -54,7 +54,7 @@ pub fn new(conn: &mut PgConnection, post: Post) -> Result<PostId, DieselError> {
         diesel::insert_into(schema::posts::table)
             .values(&post)
             .execute(conn)?;
-        match serde_json::from_value::<EndpointContent>(post.content.0) {
+        let result = match serde_json::from_value::<EndpointContent>(post.content.0) {
             Ok(EndpointContent::Poll(poll)) => {
                 for choice in &poll.choices {
                     use schema::poll_choices::{self, columns as col};
@@ -67,10 +67,24 @@ pub fn new(conn: &mut PgConnection, post: Post) -> Result<PostId, DieselError> {
                         ))
                         .execute(conn)?;
                 }
-                Ok(post.id)
+                post.id
             }
-            _ => Ok(post.id),
+            _ => post.id,
+        };
+
+        if let Some(reply_to_id) = post.reply_to {
+            if let Ok(parent_post) = get(conn, reply_to_id) {
+                let _ = crate::notification::create_notification(
+                    conn, 
+                    parent_post.user_id, 
+                    post.user_id, 
+                    3, 
+                    Some(post.id)
+                );
+            }
         }
+
+        Ok(result)
     })
 }
 
@@ -183,8 +197,21 @@ pub fn react(conn: &mut PgConnection, reaction: Reaction) -> Result<(), DieselEr
             reactions::like_status.eq(&reaction.like_status),
             reactions::reaction.eq(&reaction.reaction),
         ))
-        .execute(conn)
-        .map(|_| ())
+        .execute(conn)?;
+        
+    if reaction.like_status == 1 {
+        if let Ok(post) = get(conn, reaction.post_id) {
+            let _ = crate::notification::create_notification(
+                conn,
+                post.user_id,
+                reaction.user_id,
+                4,
+                Some(reaction.post_id),
+            );
+        }
+    }
+    
+    Ok(())
 }
 
 pub fn get_reaction(
@@ -393,6 +420,10 @@ pub fn get_home_posts(conn: &mut PgConnection, user_id: UserId) -> Result<Vec<Po
     let order = posts::time_posted.desc();
     let limit = 30;
 
+    let on_schedule2 = posts::time_posted.lt(Utc::now());
+    let public_only2 = posts::direct_message_to.is_null();
+    let order2 = posts::time_posted.desc();
+
     followers::table
         .filter(followers::user_id.eq(uid))
         .inner_join(posts::table.on(followers::follows.eq(posts::user_id)))
@@ -410,6 +441,15 @@ pub fn get_home_posts(conn: &mut PgConnection, user_id: UserId) -> Result<Vec<Po
                 .filter(public_only)
                 .select(Post::as_select())
                 .order(order)
+                .limit(limit),
+        )
+        .union(
+            posts::table
+                .filter(posts::user_id.eq(uid))
+                .filter(on_schedule2)
+                .filter(public_only2)
+                .select(Post::as_select())
+                .order(order2)
                 .limit(limit),
         )
         .get_results(conn)

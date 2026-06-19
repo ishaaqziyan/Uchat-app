@@ -3,17 +3,17 @@
 use crate::prelude::*;
 use dioxus::prelude::*;
 
-#[inline_props]
-pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
-    let router = use_router(cx);
+#[component]
+pub fn NewPostPopup(hide: Signal<bool>) -> Element {
+    let router = use_navigator();
 
-    let hide_class = maybe_class!("hidden", *hide.get());
+    let hide_class = maybe_class!("hidden", *hide.read());
 
     const BUTTON_CLASS: &str = "grid grid-cols-[20px_1fr] gap-4 pl-4
                                 justify-center items-center
                                 w-full h-12
                                 border-y navbar-border-color";
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "flex flex-col
                     absolute right-0 bottom-[var(--navbar-height)]
@@ -22,7 +22,7 @@ pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    router.navigate_to(page::POST_NEW_POLL);
+                    let _ = router.push(crate::app::Route::NewPoll {});
                     hide.set(true);
                 },
                 img {
@@ -34,7 +34,7 @@ pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    router.navigate_to(page::POST_NEW_IMAGE);
+                    let _ = router.push(crate::app::Route::NewImage {});
                     hide.set(true);
                 },
 
@@ -47,7 +47,7 @@ pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
             div {
                 class: BUTTON_CLASS,
                 onclick: move |_| {
-                    router.navigate_to(page::POST_NEW_CHAT);
+                    let _ = router.push(crate::app::Route::NewChat {});
                     hide.set(true);
                 },
                 img {
@@ -57,63 +57,63 @@ pub fn NewPostPopup(cx: Scope, hide: UseState<bool>) -> Element {
                 "Chat"
             }
         }
-    })
+    }
 }
 
-#[derive(Props)]
-pub struct NavButtonProps<'a> {
-    img: &'a str,
-    label: &'a str,
-    onclick: EventHandler<'a, MouseEvent>,
+#[component]
+pub fn NavButton(
+    img: String,
+    label: String,
+    onclick: EventHandler<MouseEvent>,
     highlight: Option<bool>,
-    children: Element<'a>,
-}
+    children: Element,
+) -> Element {
+    let selected_bgcolor = maybe_class!("bg-slate-500", matches!(highlight, Some(true)));
 
-pub fn NavButton<'a>(cx: Scope<'a, NavButtonProps<'a>>) -> Element {
-    let selected_bgcolor = maybe_class!("bg-slate-500", matches!(cx.props.highlight, Some(true)));
-
-    cx.render(rsx! {
+    rsx! {
         button {
             class: "cursor-pointer flex flex-col items-center justify-center h-full {selected_bgcolor}",
-            onclick: move |ev| cx.props.onclick.call(ev),
+            onclick: move |ev| onclick.call(ev),
             img {
                 class: "invert",
-                src: cx.props.img,
+                src: "{img}",
                 width: "25px",
                 height: "25px",
             },
             div {
                 class: "text-sm text-white",
-                cx.props.label
+                "{label}"
             },
-            &cx.props.children
+            {children}
         }
-    })
+    }
 }
 
-pub fn Navbar(cx: Scope) -> Element {
-    let hide_new_post_popup = use_state(cx, || true);
-    let router = use_router(cx);
-    let route = use_route(cx);
+#[component]
+pub fn Navbar() -> Element {
+    let mut hide_new_post_popup = use_signal(|| true);
+    let router = use_navigator();
+    let route = use_route::<crate::app::Route>();
 
-    let hide_navbar = use_state(cx, || false);
+    let hide_navbar = use_signal(|| false);
 
-    let current_route = route.url().path().to_string();
+    let current_route = route.to_string();
 
-    use_effect(cx, (&current_route,), |(current_route,)| {
-        to_owned![hide_navbar];
-        async move {
+    use_effect(move || {
+        let mut hide_navbar = hide_navbar.clone();
+        let current_route = current_route.clone();
+        spawn(async move {
             let should_hide =
                 current_route == page::ACCOUNT_LOGIN || current_route == page::ACCOUNT_REGISTER;
             hide_navbar.set(should_hide);
-        }
+        });
     });
 
-    if *hide_navbar.get() {
-        return None;
+    if *hide_navbar.read() {
+        return rsx! {};
     }
 
-    cx.render(rsx! {
+    rsx! {
         nav {
             class: "max-w-[var(--content-max-width)] h-[var(--navbar-height)]
                 fixed bottom-0 left-0 right-0 mx-auto
@@ -124,23 +124,23 @@ pub fn Navbar(cx: Scope) -> Element {
                     img: "/static/icons/icon-home.svg",
                     label: "Home",
                     // onclick: |_| (),
-                    onclick: move |_| router.navigate_to(page::HOME),
+                    onclick: move |_| { let _ = router.push(crate::app::Route::Home {}); },
                 },
                 NavButton {
                     img: "/static/icons/icon-trending.svg",
                     label: "Trending",
-                    onclick: move |_| router.navigate_to(page::POSTS_TRENDING),
+                    onclick: move |_| { let _ = router.push(crate::app::Route::Trending {}); },
                 }
                 NavButton {
                     img: "/static/icons/icon-new-post.svg",
                     label: "Post",
                     onclick: move |_| {
-                        let is_hidden = *hide_new_post_popup.get();
+                        let is_hidden = *hide_new_post_popup.read();
                         hide_new_post_popup.set(!is_hidden);
-                    }
+                    },
                     NewPostPopup { hide: hide_new_post_popup.clone() }
                 }
             }
         }
-    })
+    }
 }

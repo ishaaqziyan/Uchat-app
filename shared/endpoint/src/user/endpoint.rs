@@ -39,6 +39,7 @@ pub struct LoginOk {
     pub email: Option<String>,
     pub profile_image: Option<Url>,
     pub user_id: UserId,
+    pub unread_notifications: i64,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -50,6 +51,9 @@ pub struct GetMyProfileOk {
     pub email: Option<String>,
     pub profile_image: Option<Url>,
     pub user_id: UserId,
+    pub unread_notifications: i64,
+    pub security_question: Option<String>,
+    pub security_answer: Option<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -58,6 +62,8 @@ pub struct UpdateProfile {
     pub email: Update<String>,
     pub profile_image: Update<String>,
     pub password: Update<Password>,
+    pub security_question: Update<String>,
+    pub security_answer: Update<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -86,3 +92,57 @@ pub struct FollowUser {
 pub struct FollowUserOk {
     pub status: FollowAction,
 }
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetNotifications;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetNotificationsOk {
+    pub notifications: Vec<super::types::Notification>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct MarkNotificationsAsRead;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct MarkNotificationsAsReadOk;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SendDirectMessage {
+    pub receiver_id: UserId,
+    pub content: String,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SendDirectMessageOk {
+    pub message_id: uchat_domain::ids::DirectMessageId,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetConversations;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetConversationsOk {
+    pub conversations: Vec<super::types::Conversation>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetDirectMessages {
+    pub other_user_id: UserId,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct GetDirectMessagesOk {
+    pub messages: Vec<super::types::DirectMessage>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct ForgotPassword {
+    pub username: Username,
+    pub security_answer: String,
+    pub chatted_with_username: Username,
+    pub new_password: Password,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct ForgotPasswordOk;

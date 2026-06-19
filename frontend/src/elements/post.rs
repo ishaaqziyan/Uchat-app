@@ -5,8 +5,7 @@ use crate::{
     prelude::*,
 };
 use dioxus::prelude::*;
-use dioxus_router::RouterContext;
-use fermi::{use_atom_ref, UseAtomRef};
+
 use indexmap::IndexMap;
 use uchat_domain::ids::{PostId, UserId};
 use uchat_endpoint::post::types::PublicPost;
@@ -15,8 +14,8 @@ pub mod actionbar;
 pub mod content;
 pub mod quick_respond;
 
-pub fn use_post_manager(cx: &ScopeState) -> &UseAtomRef<PostManager> {
-    use_atom_ref(cx, crate::app::POSTMANAGER)
+pub fn use_post_manager() -> Signal<PostManager> {
+    use_context::<Signal<PostManager>>()
 }
 
 #[derive(Default)]
@@ -59,12 +58,47 @@ impl PostManager {
         self.posts.remove(post_id);
     }
 
-    pub fn all_to_public<'a, 'b>(&self) -> Vec<LazyNodes<'a, 'b>> {
+    pub fn all_to_public(&self) -> Vec<Element> {
         self.posts
             .iter()
             .map(|(&id, _)| {
                 rsx! {
                     div {
+                        key: "{id.to_string()}",
+                        PublicPostEntry {
+                            post_id: id
+                        }
+                    }
+                }
+            })
+            .collect()
+    }
+
+    pub fn bookmarked_to_public(&self) -> Vec<Element> {
+        self.posts
+            .iter()
+            .filter(|(_, post)| post.bookmarked)
+            .map(|(&id, _)| {
+                rsx! {
+                    div {
+                        key: "{id.to_string()}",
+                        PublicPostEntry {
+                            post_id: id
+                        }
+                    }
+                }
+            })
+            .collect()
+    }
+
+    pub fn liked_to_public(&self) -> Vec<Element> {
+        self.posts
+            .iter()
+            .filter(|(_, post)| post.like_status == uchat_endpoint::post::types::LikeStatus::Like)
+            .map(|(&id, _)| {
+                rsx! {
+                    div {
+                        key: "{id.to_string()}",
                         PublicPostEntry {
                             post_id: id
                         }
@@ -76,40 +110,59 @@ impl PostManager {
 }
 
 pub fn view_profile_onclick(
-    router: &RouterContext,
+    router: dioxus::router::Navigator,
     user_id: UserId,
-) -> impl FnMut(MouseEvent) + '_ {
+) -> impl FnMut(MouseEvent) + 'static {
     sync_handler!([router], move |_| {
-        let route = crate::page::route::profile_view(user_id);
-        router.navigate_to(&route)
-    })
-}
-
-#[inline_props]
-pub fn ProfileImage<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
-    let router = use_router(cx);
-
-    let poster_info = &post.by_user;
-
-    let profile_img_src = &poster_info
-        .profile_image
-        .as_ref()
-        .map(|url| url.as_str())
-        .unwrap_or_else(|| "");
-
-    cx.render(rsx! {
-        div {
-            img {
-                class: "profile-portrait cursor-pointer",
-                onclick: view_profile_onclick(router, post.by_user.id),
-                src: "{profile_img_src}",
-            }
+        let route = crate::app::Route::ViewProfile { user_id };
+        {
+            router.push(route);
         }
     })
 }
 
-#[inline_props]
-pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
+#[component]
+pub fn ProfileImage(post_id: PostId) -> Element {
+    let post_manager = use_post_manager();
+    let router = use_navigator();
+
+    let post_read = post_manager.read();
+    let post = match post_read.get(&post_id) {
+        Some(p) => p,
+        None => return rsx! {},
+    };
+
+    let poster_info = &post.by_user;
+
+    let profile_img_src = poster_info
+        .profile_image
+        .as_ref()
+        .map(|url| url.as_str())
+        .filter(|url| !url.is_empty())
+        .unwrap_or_else(|| "/static/icons/uchat.png");
+
+    rsx! {
+        div {
+            img {
+                class: "profile-portrait cursor-pointer",
+                onclick: view_profile_onclick(router.clone(), post.by_user.id),
+                src: "{profile_img_src}",
+            }
+        }
+    }
+}
+
+#[component]
+pub fn Header(post_id: PostId) -> Element {
+    let post_manager = use_post_manager();
+    let router = use_navigator();
+
+    let post_read = post_manager.read();
+    let post = match post_read.get(&post_id) {
+        Some(p) => p,
+        None => return rsx! {},
+    };
+
     let (post_date, post_time) = {
         let date = post.time_posted.format("%Y-%m-%d");
         let time = post.time_posted.format("%H:%M:%S");
@@ -123,12 +176,12 @@ pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
 
     let handle = &post.by_user.handle;
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "flex flex-row justify-between",
             div {
                 class: "cursor-pointer",
-                onclick: move |_| (),
+                onclick: view_profile_onclick(router.clone(), post.by_user.id),
                 div { "{display_name} "},
                 div {
                     class: "font-light",
@@ -141,34 +194,34 @@ pub fn Header<'a>(cx: Scope<'a>, post: &'a PublicPost) -> Element {
                 div { "{post_time}" },
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn PublicPostEntry(cx: Scope, post_id: PostId) -> Element {
-    let post_manager = use_post_manager(cx);
-    let _router = use_router(cx);
+#[component]
+pub fn PublicPostEntry(post_id: PostId) -> Element {
+    let post_manager = use_post_manager();
+    let _router = use_navigator();
 
-    let this_post = {
-        let post = post_manager.read().get(post_id).unwrap().clone();
-        use_state(cx, || post)
-    };
+    let post_exists = post_manager.read().get(&post_id).is_some();
 
-    cx.render(rsx! {
+    if !post_exists {
+        return rsx! {};
+    }
+
+    rsx! {
         div {
-            key: "{this_post.id.to_string()}",
             class: "grid grid-cols-[50px_1fr] gap-2 mb-4",
             ProfileImage {
-                post: this_post,
+                post_id: post_id,
             }
             div {
                 class: "flex flex-col gap-3",
-                Header { post: this_post },
+                Header { post_id: post_id },
                 // reply to
-                Content { post: this_post },
-                Actionbar { post_id: this_post.id },
+                Content { post_id: post_id },
+                Actionbar { post_id: post_id },
                 hr {},
             }
         }
-    })
+    }
 }
