@@ -1,3 +1,4 @@
+#![allow(non_local_definitions)]
 #[cfg(feature = "query")]
 #[macro_use]
 extern crate diesel_derive_newtype;

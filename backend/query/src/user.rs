@@ -51,6 +51,20 @@ pub struct User {
     pub handle: String,
     pub created_at: DateTime<Utc>,
     pub profile_image: Option<String>,
+    pub last_seen: Option<DateTime<Utc>>,
+    pub security_question: Option<String>,
+    pub security_answer: Option<String>,
+}
+
+pub fn update_last_seen(conn: &mut PgConnection, uid: UserId) -> Result<(), DieselError> {
+    use crate::schema::users::dsl::*;
+    
+    diesel::update(users)
+        .filter(id.eq(uid.into_inner()))
+        .set(last_seen.eq(chrono::Utc::now()))
+        .execute(conn)?;
+        
+    Ok(())
 }
 
 pub fn get(conn: &mut PgConnection, user_id: UserId) -> Result<User, DieselError> {
@@ -70,6 +84,8 @@ pub struct UpdateProfileParams {
     pub email: Update<String>,
     pub password_hash: Update<PasswordHashString>,
     pub profile_image: Update<String>,
+    pub security_question: Update<String>,
+    pub security_answer: Update<String>,
 }
 
 #[derive(AsChangeset, Debug)]
@@ -79,6 +95,8 @@ struct UpdateProfileParamsInternal {
     pub email: Option<Option<String>>,
     pub password_hash: Option<String>,
     pub profile_image: Option<Option<String>>,
+    pub security_question: Option<Option<String>>,
+    pub security_answer: Option<Option<String>>,
 }
 
 pub fn update_profile(
@@ -95,6 +113,8 @@ pub fn update_profile(
             .into_option()
             .map(|s| s.to_string()),
         profile_image: query_params.profile_image.into_nullable(),
+        security_question: query_params.security_question.into_nullable(),
+        security_answer: query_params.security_answer.into_nullable(),
     };
 
     diesel::update(users::table)
@@ -113,9 +133,11 @@ pub fn follow(conn: &mut PgConnection, user_id: UserId, follow: UserId) -> Resul
             .values((user_id.eq(uid), follows.eq(fid)))
             .on_conflict((user_id, follows))
             .do_nothing()
-            .execute(conn)
-            .map(|_| ())
+            .execute(conn)?;
     }
+
+    let _ = crate::notification::create_notification(conn, fid, uid, 1, None);
+    Ok(())
 }
 
 pub fn unfollow(
@@ -127,7 +149,7 @@ pub fn unfollow(
     let fid = stop_following;
     {
         use crate::schema::followers::dsl::*;
-        diesel::delete(followers)
+        let res = diesel::delete(followers)
             .filter(user_id.eq(uid))
             .filter(follows.eq(fid))
             .execute(conn)
@@ -137,7 +159,12 @@ pub fn unfollow(
                 } else {
                     DeleteStatus::NotFound
                 }
-            })
+            });
+        
+        if let Ok(DeleteStatus::Deleted) = res {
+            let _ = crate::notification::create_notification(conn, fid, uid, 2, None);
+        }
+        res
     }
 }
 
@@ -181,5 +208,29 @@ pub mod tests {
             let id = user_query::new(conn, hash, handle).unwrap();
             user_query::get(conn, id).unwrap()
         }
+    }
+
+    #[test]
+    fn update_security_question() -> crate::test_db::Result<()> {
+        let mut conn = crate::test_db::new_connection();
+        let user = util::new_user(&mut conn, "user1");
+
+        let update = crate::user::UpdateProfileParams {
+            id: user.id,
+            display_name: uchat_endpoint::Update::NoChange,
+            email: uchat_endpoint::Update::NoChange,
+            password_hash: uchat_endpoint::Update::NoChange,
+            profile_image: uchat_endpoint::Update::NoChange,
+            security_question: uchat_endpoint::Update::Change("What is your pet's name?".to_string()),
+            security_answer: uchat_endpoint::Update::Change("Fluffy".to_string()),
+        };
+
+        crate::user::update_profile(&mut conn, update)?;
+
+        let updated_user = crate::user::get(&mut conn, user.id)?;
+        assert_eq!(updated_user.security_question, Some("What is your pet's name?".to_string()));
+        assert_eq!(updated_user.security_answer, Some("Fluffy".to_string()));
+
+        Ok(())
     }
 }

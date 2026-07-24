@@ -83,3 +83,42 @@ impl UserFacingError for EmailError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn valid_username() {
+        assert!(Username::new("john_doe").is_ok());
+    }
+
+    #[test]
+    fn invalid_username() {
+        assert_eq!(Username::new(""), Err(UsernameError::Missing));
+        assert_eq!(Username::new("ab"), Err(UsernameError::TooShort));
+        let long_name = "a".repeat(31);
+        assert_eq!(Username::new(long_name), Err(UsernameError::TooLong));
+    }
+
+    #[test]
+    fn valid_password() {
+        assert!(Password::new("secure_password").is_ok());
+    }
+
+    #[test]
+    fn invalid_password() {
+        assert!(matches!(Password::new(""), Err(PasswordError::Missing)));
+        assert!(matches!(Password::new("short"), Err(PasswordError::TooShort)));
+    }
+
+    #[test]
+    fn email_validation() {
+        assert!(Email::new("test@example.com").is_ok());
+        assert!(Email::new("user.name+tag@domain.co.uk").is_ok());
+        
+        assert_eq!(Email::new("invalid"), Err(EmailError::Invalid));
+        assert_eq!(Email::new("test@"), Err(EmailError::Invalid));
+        assert_eq!(Email::new("@example.com"), Err(EmailError::Invalid));
+    }
+}

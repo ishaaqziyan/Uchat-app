@@ -1,0 +1,23 @@
+[build]
+  # Netlify automatically runs `npm install` when it sees package.json.
+  # This command installs Rust, adds the WebAssembly target, installs Trunk, and builds the frontend.
+  command = "touch .env && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source \"$HOME/.cargo/env\" && rustup target add wasm32-unknown-unknown && cargo install --locked trunk && trunk --config Trunk-release.toml build"
+  # The output directory defined in Trunk-release.toml
+  publish = "target/dist"
+
+[build.environment]
+  NODE_ENV = "production"
+
+# Proxy API requests to Render backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://uchat-app.onrender.com/:splat"
+  status = 200
+  force = true
+
+# Single Page Application (SPA) routing
+# This redirects all requests to index.html so the Rust frontend router can handle the URL
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

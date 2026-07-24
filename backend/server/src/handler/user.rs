@@ -8,6 +8,7 @@ use uchat_endpoint::{
         endpoint::{
             CreateUser, CreateUserOk, FollowUser, FollowUserOk, GetMyProfile, GetMyProfileOk,
             Login, LoginOk, UpdateProfile, UpdateProfileOk, ViewProfile, ViewProfileOk,
+            ForgotPassword, ForgotPasswordOk,
         },
         types::{FollowAction, PublicUserProfile},
     },
@@ -27,7 +28,7 @@ use crate::{
 
 use super::{save_image, AuthorizedApiRequest, PublicApiRequest};
 
-fn profile_id_to_url(id: &str) -> Url {
+pub fn profile_id_to_url(id: &str) -> Url {
     use uchat_endpoint::app_url::{self, user_content};
     app_url::domain_and(user_content::ROOT)
         .join(user_content::IMAGES)
@@ -44,6 +45,10 @@ pub fn to_public(
     session: Option<&UserSession>,
     user: User,
 ) -> ApiResult<PublicUserProfile> {
+    let am_following = match session {
+        Some(session) => uchat_query::user::is_following(conn, session.user_id, user.id)?,
+        None => false,
+    };
     Ok(PublicUserProfile {
         id: user.id,
         display_name: user
@@ -52,12 +57,8 @@ pub fn to_public(
         handle: user.handle,
         profile_image: user.profile_image.as_ref().map(|id| profile_id_to_url(id)),
         created_at: user.created_at,
-        am_following: {
-            match session {
-                Some(session) => uchat_query::user::is_following(conn, session.user_id, user.id)?,
-                None => false,
-            }
-        },
+        am_following,
+        last_seen: user.last_seen,
     })
 }
 
@@ -135,6 +136,7 @@ impl PublicApiRequest for Login {
         let (session, signature, duration) = new_session(&state, &mut conn, user.id)?;
 
         let profile_image_url = user.profile_image.as_ref().map(|id| profile_id_to_url(id));
+        let unread_notifications = uchat_query::notification::get_unread_count(&mut conn, user.id).unwrap_or(0);
 
         Ok((
             StatusCode::OK,
@@ -146,6 +148,7 @@ impl PublicApiRequest for Login {
                 email: user.email,
                 profile_image: profile_image_url,
                 user_id: user.id,
+                unread_notifications,
             }),
         ))
     }
@@ -160,7 +163,10 @@ impl AuthorizedApiRequest for GetMyProfile {
         session: UserSession,
         _state: AppState,
     ) -> ApiResult<Self::Response> {
+        let _ = uchat_query::user::update_last_seen(&mut conn, session.user_id);
+        
         let user = uchat_query::user::get(&mut conn, session.user_id)?;
+        let unread_notifications = uchat_query::notification::get_unread_count(&mut conn, session.user_id).unwrap_or(0);
 
         let profile_image_url = user.profile_image.as_ref().map(|id| profile_id_to_url(id));
 
@@ -171,6 +177,9 @@ impl AuthorizedApiRequest for GetMyProfile {
                 email: user.email,
                 profile_image: profile_image_url,
                 user_id: user.id,
+                unread_notifications,
+                security_question: user.security_question,
+                security_answer: user.security_answer,
             }),
         ))
     }
@@ -206,6 +215,8 @@ impl AuthorizedApiRequest for UpdateProfile {
             email: payload.email,
             password_hash: password,
             profile_image: payload.profile_image.clone(),
+            security_question: payload.security_question,
+            security_answer: payload.security_answer,
         };
 
         uchat_query::user::update_profile(&mut conn, query_params)?;
@@ -283,6 +294,122 @@ impl AuthorizedApiRequest for FollowUser {
             Json(FollowUserOk {
                 status: self.action,
             }),
+        ))
+    }
+}
+
+#[async_trait]
+impl AuthorizedApiRequest for uchat_endpoint::user::endpoint::GetNotifications {
+    type Response = (StatusCode, Json<uchat_endpoint::user::endpoint::GetNotificationsOk>);
+    async fn process_request(
+        self,
+        DbConnection(mut conn): DbConnection,
+        session: UserSession,
+        _state: AppState,
+    ) -> ApiResult<Self::Response> {
+        let notifications = uchat_query::notification::get_notifications(&mut conn, session.user_id)?
+            .into_iter()
+            .map(|(n, u)| {
+                let kind = match n.kind {
+                    1 => uchat_endpoint::user::types::NotificationKind::Follow,
+                    2 => uchat_endpoint::user::types::NotificationKind::Unfollow,
+                    3 => uchat_endpoint::user::types::NotificationKind::Comment,
+                    4 => uchat_endpoint::user::types::NotificationKind::Reaction,
+                    _ => uchat_endpoint::user::types::NotificationKind::DirectMessage,
+                };
+                uchat_endpoint::user::types::Notification {
+                    id: n.id,
+                    user_id: n.user_id.into(),
+                    actor_id: n.actor_id.into(),
+                    actor_handle: u.handle,
+                    actor_name: u.display_name,
+                    kind,
+                    post_id: n.post_id.map(|id| id.into()),
+                    is_read: n.is_read,
+                    created_at: n.created_at,
+                }
+            })
+            .collect();
+
+        Ok((
+            StatusCode::OK,
+            Json(uchat_endpoint::user::endpoint::GetNotificationsOk { notifications }),
+        ))
+    }
+}
+
+#[async_trait]
+impl AuthorizedApiRequest for uchat_endpoint::user::endpoint::MarkNotificationsAsRead {
+    type Response = (StatusCode, Json<uchat_endpoint::user::endpoint::MarkNotificationsAsReadOk>);
+    async fn process_request(
+        self,
+        DbConnection(mut conn): DbConnection,
+        session: UserSession,
+        _state: AppState,
+    ) -> ApiResult<Self::Response> {
+        uchat_query::notification::mark_all_as_read(&mut conn, session.user_id)?;
+
+        Ok((
+            StatusCode::OK,
+            Json(uchat_endpoint::user::endpoint::MarkNotificationsAsReadOk),
+        ))
+    }
+}
+
+#[async_trait]
+impl PublicApiRequest for ForgotPassword {
+    type Response = (StatusCode, Json<ForgotPasswordOk>);
+    async fn process_request(
+        self,
+        DbConnection(mut conn): DbConnection,
+        _state: AppState,
+    ) -> ApiResult<Self::Response> {
+        let user = uchat_query::user::find(&mut conn, &self.username)
+            .map_err(|_| ServerError::missing_login())?;
+
+        if let Some(ref db_answer) = user.security_answer {
+            if db_answer != &self.security_answer {
+                return Err(ApiError {
+                    code: Some(StatusCode::BAD_REQUEST),
+                    err: color_eyre::Report::msg("Incorrect security answer"),
+                });
+            }
+        } else {
+            return Err(ApiError {
+                code: Some(StatusCode::BAD_REQUEST),
+                err: color_eyre::Report::msg("Security question not set"),
+            });
+        }
+
+        let other_user = uchat_query::user::find(&mut conn, &self.chatted_with_username)
+            .map_err(|_| ApiError {
+                code: Some(StatusCode::BAD_REQUEST),
+                err: color_eyre::Report::msg("Chatted user not found"),
+            })?;
+
+        let has_chatted = uchat_query::chat::has_chatted(&mut conn, user.id, other_user.id)?;
+        if !has_chatted {
+            return Err(ApiError {
+                code: Some(StatusCode::BAD_REQUEST),
+                err: color_eyre::Report::msg("No chat history with this user"),
+            });
+        }
+
+        let new_hash = uchat_crypto::hash_password(&self.new_password)?;
+        let query_params = UpdateProfileParams {
+            id: user.id,
+            display_name: Update::NoChange,
+            email: Update::NoChange,
+            password_hash: Update::Change(new_hash),
+            profile_image: Update::NoChange,
+            security_question: Update::NoChange,
+            security_answer: Update::NoChange,
+        };
+        uchat_query::user::update_profile(&mut conn, query_params)?;
+
+        Ok((
+            StatusCode::OK,
+            Json(ForgotPasswordOk),
         ))
     }
 }

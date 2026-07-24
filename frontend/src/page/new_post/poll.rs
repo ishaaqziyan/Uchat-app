@@ -66,8 +66,8 @@ impl PageState {
     }
 }
 
-#[inline_props]
-pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
+#[component]
+pub fn HeadlineInput(page_state: Signal<PageState>) -> Element {
     let max_chars = PollHeadline::MAX_CHARS;
 
     let wrong_len = maybe_class!(
@@ -75,7 +75,7 @@ pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
         page_state.read().headline.len() > max_chars || page_state.read().headline.is_empty()
     );
 
-    cx.render(rsx! {
+    rsx! {
         div {
             label {
                 r#for: "headline",
@@ -93,15 +93,15 @@ pub fn HeadlineInput(cx: Scope, page_state: UseRef<PageState>) -> Element {
                 id: "headline",
                 value: "{page_state.read().headline}",
                 oninput: move |ev| {
-                    page_state.with_mut(|state| state.headline = ev.data.value.clone());
+                    page_state.with_mut(|state| state.headline = ev.data.value().clone());
                 }
             }
         }
-    })
+    }
 }
 
-#[inline_props]
-pub fn PollChoices(cx: Scope, page_state: UseRef<PageState>) -> Element {
+#[component]
+pub fn PollChoices(page_state: Signal<PageState>) -> Element {
     let choices = page_state
         .read()
         .poll_choices
@@ -122,7 +122,7 @@ pub fn PollChoices(cx: Scope, page_state: UseRef<PageState>) -> Element {
                             class: "input-field",
                             placeholder: "Choice Description",
                             oninput: move |ev| {
-                                page_state.with_mut(|state| state.replace_choice(key, &ev.data.value))
+                                page_state.with_mut(|state| state.replace_choice(key, &ev.data.value()))
                             },
                             value: "{choice}",
                         }
@@ -132,8 +132,8 @@ pub fn PollChoices(cx: Scope, page_state: UseRef<PageState>) -> Element {
                         }
                         button {
                             class: "btn p-0 h-full bg-red-700",
-                            prevent_default: "onclick",
-                            onclick: move |_| {
+                            onclick: move |ev| {
+                                ev.prevent_default();
                                 page_state.with_mut(|state| state.poll_choices.remove(&key));
                             },
                             "X"
@@ -141,37 +141,38 @@ pub fn PollChoices(cx: Scope, page_state: UseRef<PageState>) -> Element {
                     }
                 }
             }
-        }).collect::<Vec<LazyNodes>>();
+        }).collect::<Vec<Element>>();
 
-    cx.render(rsx! {
+    rsx! {
         div {
             class: "flex flex-col gap-2",
             "Poll Choices",
             ol {
                 class: "list-decimal ml-4 flex flex-col gap-2",
-                choices.into_iter()
+                {choices.into_iter()}
             },
             div {
                 class: "flex flex-row justify-end",
                 button {
                     class: "btn w-12",
-                    prevent_default: "onclick",
-                    onclick: move |_| {
+                    onclick: move |ev| {
+                        ev.prevent_default();
                         page_state.with_mut(|state| state.push_choice(""))
                     },
                     "+"
                 }
             }
         }
-    })
+    }
 }
 
-pub fn NewPoll(cx: Scope) -> Element {
+#[component]
+pub fn NewPoll() -> Element {
     let api_client = ApiClient::global();
-    let router = use_router(cx);
-    let toaster = use_toaster(cx);
+    let router = use_navigator();
+    let toaster = use_toaster();
 
-    let page_state = use_ref(cx, PageState::default);
+    let page_state = use_signal(PageState::default);
 
     let form_onsubmit = async_handler!(
         &cx,
@@ -209,7 +210,7 @@ pub fn NewPoll(cx: Scope) -> Element {
             match response {
                 Ok(_) => {
                     toaster.write().success("Posted!", Duration::seconds(3));
-                    router.replace_route(page::HOME, None, None);
+                    let _ = router.replace(page::HOME);
                 }
                 Err(e) => {
                     toaster
@@ -222,17 +223,17 @@ pub fn NewPoll(cx: Scope) -> Element {
 
     let submit_btn_style = maybe_class!("btn-disabled", !page_state.read().can_submit());
 
-    cx.render(rsx! {
+    rsx! {
         Appbar {
             title: "New Poll",
             AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_CHAT, None, None),
+                click_handler: move |_| { let _ = router.replace(page::POST_NEW_CHAT); },
                 img: "/static/icons/icon-messages.svg",
                 label: "Chat",
                 title: "Post a new chat",
             },
             AppbarImgButton {
-                click_handler: move |_| router.replace_route(page::POST_NEW_IMAGE, None, None),
+                click_handler: move |_| { let _ = router.replace(page::POST_NEW_IMAGE); },
                 img: "/static/icons/icon-image.svg",
                 label: "Image",
                 title: "Post a new image",
@@ -246,7 +247,7 @@ pub fn NewPoll(cx: Scope) -> Element {
                 append_class: appbar::BUTTON_SELECTED,
             },
             AppbarImgButton {
-                click_handler: move |_| router.pop_route(),
+                click_handler: move |_| { router.go_back(); },
                 img: "/static/icons/icon-back.svg",
                 label: "Back",
                 title: "Go to the previous page",
@@ -256,8 +257,10 @@ pub fn NewPoll(cx: Scope) -> Element {
 
         form {
             class: "flex flex-col gap-4",
-            onsubmit: form_onsubmit,
-            prevent_default: "onsubmit",
+            onsubmit: move |ev| {
+                ev.prevent_default();
+                form_onsubmit(ev);
+            },
             HeadlineInput { page_state: page_state.clone() },
             PollChoices { page_state: page_state.clone() },
             button {
@@ -267,5 +270,5 @@ pub fn NewPoll(cx: Scope) -> Element {
                 "Post"
             }
         }
-    })
+    }
 }

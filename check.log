@@ -1,0 +1,381 @@
+    Checking uchat_endpoint v0.1.0 (/home/iz/Documents/Uchat-app/shared/endpoint)
+    Checking frontend v0.1.0 (/home/iz/Documents/Uchat-app/frontend)
+error: visibility `pub` is not followed by an item
+  --> frontend/src/app.rs:17:1
+   |
+17 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/app.rs:16:1
+   |
+14 | / /// Init component — runs on app startup to fetch the current user's profile.
+15 | | /// If the profile fetch fails (e.g. not logged in), it redirects to the login page.
+   | |____________________________________________________________________________________- other attributes here
+16 |   #[component]
+   |   ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/elements/keyed_notification_box.rs:36:1
+   |
+36 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/elements/keyed_notification_box.rs:35:1
+   |
+35 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/elements/post.rs:89:1
+   |
+89 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/elements/post.rs:88:1
+   |
+88 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/elements/sidebar.rs:31:1
+   |
+31 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/elements/sidebar.rs:30:1
+   |
+30 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/page/edit_profile.rs:30:1
+   |
+30 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/page/edit_profile.rs:29:1
+   |
+29 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/page/home.rs:11:1
+   |
+11 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/page/home.rs:10:1
+   |
+10 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/page/login.rs:38:1
+   |
+38 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/page/login.rs:37:1
+   |
+37 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/page/new_post/chat.rs:31:1
+   |
+31 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/page/new_post/chat.rs:30:1
+   |
+30 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/page/new_post/image.rs:33:1
+   |
+33 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/page/new_post/image.rs:32:1
+   |
+32 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/page/new_post/poll.rs:70:1
+   |
+70 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/page/new_post/poll.rs:69:1
+   |
+69 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/page/register.rs:36:1
+   |
+36 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+  --> frontend/src/page/register.rs:35:1
+   |
+35 | #[component]
+   | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+ --> frontend/src/page/trending.rs:8:1
+  |
+8 | pub #[component]
+  | ^^^ the visibility
+  |
+  = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+ --> frontend/src/page/trending.rs:7:1
+  |
+6 | /// Trending page component — fetches and displays trending posts from the API.
+  | ------------------------------------------------------------------------------- other attributes here
+7 | #[component]
+  | ^^^^^^^^^^^^
+
+error: visibility `pub` is not followed by an item
+  --> frontend/src/page/view_profile.rs:10:1
+   |
+10 | pub #[component]
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item after attributes
+ --> frontend/src/page/view_profile.rs:9:1
+  |
+9 | #[component]
+  | ^^^^^^^^^^^^
+
+error: Attributes must be separated by commas
+       = help: Did you forget a comma?
+   --> frontend/src/elements/navbar.rs:136:21
+    |
+136 |                     onclick: move |_| {
+    |                     ^^^^^^^
+
+error: Components must have a body
+       = help: Components must have a body, for example `Component {}`
+   --> frontend/src/elements/toaster.rs:131:17
+    |
+131 |                 ToastElements,
+    |                 ^^^^^^^^^^^^^
+
+error[E0432]: unresolved import `dioxus_router`
+  --> frontend/src/main.rs:48:13
+   |
+48 |     pub use dioxus_router::{use_route, use_navigator};
+   |             ^^^^^^^^^^^^^ use of unresolved module or unlinked crate `dioxus_router`
+   |
+   = help: if you wanted to use a crate named `dioxus_router`, use `cargo add dioxus_router` to add it to your `Cargo.toml`
+
+error[E0425]: cannot find type `UseState` in this scope
+ --> frontend/src/elements/navbar.rs:7:27
+  |
+7 | pub fn NewPostPopup(hide: UseState<bool>) -> Element {
+  |                           ^^^^^^^^
+  |
+help: `Signal` has a name defined in the doc alias attribute as `UseState`
+  |
+7 - pub fn NewPostPopup(hide: UseState<bool>) -> Element {
+7 + pub fn NewPostPopup(hide: Signal<bool>) -> Element {
+  |
+
+warning: unused import: `crate::util::api_client::fetch_json`
+  --> frontend/src/main.rs:37:13
+   |
+37 |     pub use crate::util::api_client::fetch_json;
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::util::ApiClient`
+  --> frontend/src/main.rs:38:13
+   |
+38 |     pub use crate::util::ApiClient;
+   |             ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `async_handler` and `sync_handler`
+  --> frontend/src/main.rs:39:27
+   |
+39 |     pub use crate::util::{async_handler, maybe_class, sync_handler};
+   |                           ^^^^^^^^^^^^^               ^^^^^^^^^^^^
+
+warning: unused imports: `AppbarImgButton`, `Appbar`, and `self`
+  --> frontend/src/main.rs:41:39
+   |
+41 |     pub use crate::elements::appbar::{self, Appbar, AppbarImgButton};
+   |                                       ^^^^  ^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused import: `LocalProfile`
+  --> frontend/src/main.rs:42:65
+   |
+42 | ...rofile::{use_local_profile, LocalProfile};
+   |                                ^^^^^^^^^^^^
+
+warning: unused import: `crate::elements::toaster::use_toaster`
+  --> frontend/src/main.rs:46:13
+   |
+46 |     pub use crate::elements::toaster::use_toaster;
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0282]: type annotations needed
+   --> frontend/src/elements/navbar.rs:96:9
+    |
+ 96 |     let route = use_route();
+    |         ^^^^^
+...
+100 |     let current_route = route.url().path().to_string();
+    |                         ----- type must be known at this point
+    |
+help: consider giving `route` an explicit type
+    |
+ 96 |     let route: /* Type */ = use_route();
+    |              ++++++++++++
+
+error[E0308]: mismatched types
+   --> frontend/src/elements/navbar.rs:104:9
+    |
+104 | / ...   async move {
+105 | | ...       let should_hide =
+106 | | ...           current_route == page::ACCOUNT_LOGIN || current_route =...
+107 | | ...       hide_navbar.set(should_hide);
+108 | | ...   }
+    | |_______^ expected `()`, found `async` block
+    |
+    = note:  expected unit type `()`
+            found `async` block `{async block@frontend/src/elements/navbar.rs:104:9: 104:19}`
+
+error[E0599]: the method `get` exists for struct `dioxus::prelude::Signal<bool>`, but its trait bounds were not satisfied
+   --> frontend/src/elements/navbar.rs:111:21
+    |
+111 |     if *hide_navbar.get() {
+    |                     ^^^
+    |
+   ::: /home/iz/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/ops/function.rs:76:1
+    |
+ 76 | pub const trait Fn<Args: Tuple>: [const] FnMut<Args> {
+    | ---------------------------------------------------- doesn't satisfy `<_ as Readable>::Target = Vec<_>`, `_: ReadableVecExt<_>`, `_: Readable` or `dyn std::ops::Fn() -> bool: Sized`
+    |
+   ::: /home/iz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dioxus-signals-0.6.3/src/signal.rs:18:1
+    |
+ 18 | pub struct Signal<T: 'static, S: Storage<SignalData<T>> = UnsyncStorage> {
+    | ------------------------------------------------------------------------ doesn't satisfy `<_ as Readable>::Target = Vec<_>` or `_: ReadableVecExt<_>`
+    |
+    = note: the following trait bounds were not satisfied:
+            `<dioxus::prelude::Signal<bool> as dioxus::prelude::Readable>::Target = Vec<_>`
+            which is required by `dioxus::prelude::Signal<bool>: dioxus::prelude::ReadableVecExt<_>`
+            `<dyn std::ops::Fn() -> bool as dioxus::prelude::Readable>::Target = Vec<_>`
+            which is required by `dyn std::ops::Fn() -> bool: dioxus::prelude::ReadableVecExt<_>`
+            `dyn std::ops::Fn() -> bool: Sized`
+            which is required by `dyn std::ops::Fn() -> bool: dioxus::prelude::ReadableVecExt<_>`
+            `dyn std::ops::Fn() -> bool: dioxus::prelude::Readable`
+            which is required by `dyn std::ops::Fn() -> bool: dioxus::prelude::ReadableVecExt<_>`
+
+error[E0308]: mismatched types
+   --> frontend/src/elements/navbar.rs:112:16
+    |
+ 93 | pub fn Navbar() -> Element {
+    |                    ------- expected `Result<VNode, dioxus::prelude::RenderError>` because of return type
+...
+112 |         return None;
+    |                ^^^^ expected `Result<VNode, RenderError>`, found `Option<_>`
+    |
+    = note: expected enum `Result<VNode, dioxus::prelude::RenderError>`
+               found enum `std::option::Option<_>`
+
+error[E0599]: the method `get` exists for struct `dioxus::prelude::Signal<bool>`, but its trait bounds were not satisfied
+   --> frontend/src/elements/navbar.rs:137:62
+    |
+137 |                         let is_hidden = *hide_new_post_popup.get();
+    |                                                              ^^^
+    |
+   ::: /home/iz/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/ops/function.rs:76:1
+    |
+ 76 | pub const trait Fn<Args: Tuple>: [const] FnMut<Args> {
+    | ---------------------------------------------------- doesn't satisfy `<_ as Readable>::Target = Vec<_>`, `_: ReadableVecExt<_>`, `_: Readable` or `dyn std::ops::Fn() -> bool: Sized`
+    |
+   ::: /home/iz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dioxus-signals-0.6.3/src/signal.rs:18:1
+    |
+ 18 | pub struct Signal<T: 'static, S: Storage<SignalData<T>> = UnsyncStorage> {
+    | ------------------------------------------------------------------------ doesn't satisfy `<_ as Readable>::Target = Vec<_>` or `_: ReadableVecExt<_>`
+    |
+    = note: the following trait bounds were not satisfied:
+            `<dioxus::prelude::Signal<bool> as dioxus::prelude::Readable>::Target = Vec<_>`
+            which is required by `dioxus::prelude::Signal<bool>: dioxus::prelude::ReadableVecExt<_>`
+            `<dyn std::ops::Fn() -> bool as dioxus::prelude::Readable>::Target = Vec<_>`
+            which is required by `dyn std::ops::Fn() -> bool: dioxus::prelude::ReadableVecExt<_>`
+            `dyn std::ops::Fn() -> bool: Sized`
+            which is required by `dyn std::ops::Fn() -> bool: dioxus::prelude::ReadableVecExt<_>`
+            `dyn std::ops::Fn() -> bool: dioxus::prelude::Readable`
+            which is required by `dyn std::ops::Fn() -> bool: dioxus::prelude::ReadableVecExt<_>`
+
+error[E0277]: `Component<_>` is not implemented for `Map<Iter<'_, usize, Toast>, ...>`
+   --> frontend/src/elements/toaster.rs:131:17
+    |
+124 | /     rsx! {
+125 | |         div {
+126 | |             class: "fixed bottom-[var(--navbar-height)]
+127 | |                     w-screen
+...   |
+131 | |                 ToastElements,
+    | |                 ^^^^^^^^^^^^^ Component
+...   |
+134 | |     }
+    | |_____- required by a bound introduced by this call
+    |
+    = help: the trait `dioxus::prelude::ComponentFunction<_, _>` is not implemented for `Map<Iter<'_, usize, Toast>, ...>`
+    = note: Components are functions in the form `fn() -> Element`, `fn(props: Properties) -> Element`, or `#[component] fn(partial_eq1: u32, partial_eq2: u32) -> Element`.
+    = note: You may have forgotten to add `#[component]` to your function to automatically implement the `ComponentFunction` trait.
+note: required by a bound in `dioxus::prelude::fc_to_builder`
+   --> /home/iz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dioxus-core-0.6.3/src/properties.rs:110:36
+    |
+110 | ...er<P, M>(_: impl ComponentFunction<P, M>) -> <P as Properties>::Builder
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `fc_to_builder`
+    = note: the full name for the type has been written to '/home/iz/Documents/Uchat-app/target/wasm32-unknown-unknown/debug/deps/frontend-aaf253dc08b9cd62.long-type-15727654499266708817.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+Some errors have detailed explanations: E0277, E0282, E0308, E0425, E0432, E0599.
+For more information about an error, try `rustc --explain E0277`.
+warning: `frontend` (bin "frontend") generated 6 warnings
+error: could not compile `frontend` (bin "frontend") due to 36 previous errors; 6 warnings emitted
