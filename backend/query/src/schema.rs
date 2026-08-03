@@ -98,6 +98,19 @@ diesel::table! {
         last_seen -> Nullable<Timestamptz>,
         security_question -> Nullable<Text>,
         security_answer -> Nullable<Text>,
+        eth_address -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    wallet_nonces (id) {
+        id -> Uuid,
+        eth_address -> Text,
+        nonce -> Text,
+        message -> Text,
+        expires_at -> Timestamptz,
+        consumed -> Bool,
+        created_at -> Timestamptz,
     }
 }
 
@@ -135,5 +148,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     posts,
     reactions,
     users,
+    wallet_nonces,
     web,
 );
