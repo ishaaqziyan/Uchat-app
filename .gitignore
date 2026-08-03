@@ -17,3 +17,4 @@ node_modules
 *.pdb
 
 .env
+private_key.base64
