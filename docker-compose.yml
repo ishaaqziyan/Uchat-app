@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: uchat
       POSTGRES_DB: uchat
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - uchat_pgdata:/var/lib/postgresql/data
     healthcheck:
