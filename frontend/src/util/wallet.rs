@@ -59,6 +59,37 @@ export async function eth_personal_sign(message, address) {
         params: [message, address],
     });
 }
+
+const MAINNET_CHAIN_ID = '0x1';
+
+export async function eth_ensure_mainnet() {
+    if (!selected) {
+        await discover();
+        selected = pickProvider();
+    }
+    if (!selected) {
+        throw new Error('No Ethereum wallet detected');
+    }
+
+    const chainId = await selected.request({ method: 'eth_chainId' });
+    if (chainId.toLowerCase() === MAINNET_CHAIN_ID) {
+        return;
+    }
+
+    try {
+        await selected.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: MAINNET_CHAIN_ID }],
+        });
+    } catch (e) {
+        throw new Error('WRONG_NETWORK');
+    }
+
+    const newChainId = await selected.request({ method: 'eth_chainId' });
+    if (newChainId.toLowerCase() !== MAINNET_CHAIN_ID) {
+        throw new Error('WRONG_NETWORK');
+    }
+}
 "#)]
 extern "C" {
     #[wasm_bindgen(catch)]
@@ -69,6 +100,9 @@ extern "C" {
 
     #[wasm_bindgen(catch)]
     async fn eth_personal_sign(message: String, address: String) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(catch)]
+    async fn eth_ensure_mainnet() -> Result<JsValue, JsValue>;
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -81,6 +115,9 @@ pub enum WalletError {
 
     #[error("Wallet returned an unexpected response")]
     UnexpectedResponse,
+
+    #[error("Please switch your wallet to Ethereum Mainnet to continue.")]
+    WrongNetwork,
 }
 
 fn js_error_to_string(err: JsValue) -> String {
@@ -108,10 +145,21 @@ pub async fn connect() -> Result<String, WalletError> {
         }
     })?;
 
-    account
+    let address = account
         .as_string()
         .map(|address| address.to_lowercase())
-        .ok_or(WalletError::UnexpectedResponse)
+        .ok_or(WalletError::UnexpectedResponse)?;
+
+    eth_ensure_mainnet().await.map_err(|e| {
+        let message = js_error_to_string(e);
+        if message.contains("WRONG_NETWORK") {
+            WalletError::WrongNetwork
+        } else {
+            WalletError::Request(message)
+        }
+    })?;
+
+    Ok(address)
 }
 
 /// Prompts the wallet to sign `message` as `address` via `personal_sign`, returning the
