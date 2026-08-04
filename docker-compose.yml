@@ -33,6 +33,7 @@ services:
       "
 
   backend:
+    image: uchat-backend:ci
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -49,6 +50,7 @@ services:
         condition: service_completed_successfully
 
   frontend:
+    image: uchat-frontend:ci
     build:
       context: .
       dockerfile: frontend/Dockerfile
