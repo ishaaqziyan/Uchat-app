@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: uchat
       POSTGRES_DB: uchat
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - uchat_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -27,8 +27,8 @@ services:
         condition: service_healthy
     command: >
       bash -c "
-        apt-get update && apt-get install -y --no-install-recommends libpq-dev pkg-config &&
-        cargo install diesel_cli --no-default-features --features postgres &&
+        apt-get update && apt-get install -y --no-install-recommends libpq-dev curl &&
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/diesel-rs/diesel/releases/download/v2.3.11/diesel_cli-installer.sh | sh &&
         diesel migration run
       "
 

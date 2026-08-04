@@ -138,16 +138,4 @@ diesel::joinable!(reactions -> users (user_id));
 diesel::joinable!(web -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    bookmarks,
-    boosts,
-    direct_messages,
-    followers,
-    notifications,
-    poll_choices,
-    poll_votes,
-    posts,
-    reactions,
-    users,
-    wallet_nonces,
-    web,
-);
+    bookmarks,boosts,direct_messages,followers,notifications,poll_choices,poll_votes,posts,reactions,users,wallet_nonces,web,);

@@ -43,7 +43,9 @@ jobs:
       uses: Swatinem/rust-cache@v2
 
     - name: Install Diesel CLI
-      run: cargo install diesel_cli --no-default-features --features postgres
+      run: |
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends libpq-dev
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/diesel-rs/diesel/releases/download/v2.3.11/diesel_cli-installer.sh | sh
 
     - name: Install cargo-nextest
       uses: taiki-e/install-action@nextest
