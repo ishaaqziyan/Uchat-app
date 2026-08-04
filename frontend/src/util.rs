@@ -1,5 +1,6 @@
 pub mod api_client;
 pub mod cookie;
+pub mod wallet;
 pub use api_client::ApiClient;
 
 use serde::Deserialize;

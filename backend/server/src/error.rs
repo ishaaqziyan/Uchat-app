@@ -29,6 +29,18 @@ impl ServerError {
     pub fn account_exists() -> Self {
         Self::Login((StatusCode::CONFLICT, "Account already exists".to_string()))
     }
+    pub fn invalid_signature() -> Self {
+        Self::Login((
+            StatusCode::UNAUTHORIZED,
+            "Invalid wallet signature".to_string(),
+        ))
+    }
+    pub fn nonce_expired() -> Self {
+        Self::Login((
+            StatusCode::BAD_REQUEST,
+            "Sign-in request expired, please try again".to_string(),
+        ))
+    }
 }
 
 pub fn err_response<T: Into<String>>(code: StatusCode, msg: T) -> Response {

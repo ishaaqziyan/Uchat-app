@@ -2,6 +2,8 @@ pub mod password;
 
 pub mod sign;
 
+pub mod wallet;
+
 pub use password::{hash_password, verify_password};
 
 pub fn new_rng() -> rand::rngs::StdRng {

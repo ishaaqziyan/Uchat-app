@@ -59,6 +59,8 @@ pub mod app_url {
 route!("/account/create" => user::endpoint::CreateUser);
 route!("/account/login" => user::endpoint::Login);
 route!("/account/forgot_password" => user::endpoint::ForgotPassword);
+route!("/account/wallet/nonce" => user::endpoint::WalletNonceRequest);
+route!("/account/wallet/login" => user::endpoint::WalletLogin);
 
 // authorized routes
 route!("/post/new" => post::endpoint::NewPost);

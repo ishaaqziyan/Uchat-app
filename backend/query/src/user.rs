@@ -54,6 +54,7 @@ pub struct User {
     pub last_seen: Option<DateTime<Utc>>,
     pub security_question: Option<String>,
     pub security_answer: Option<String>,
+    pub eth_address: Option<String>,
 }
 
 pub fn update_last_seen(conn: &mut PgConnection, uid: UserId) -> Result<(), DieselError> {
