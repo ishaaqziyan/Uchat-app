@@ -67,3 +67,50 @@ jobs:
 
     - name: Run Tests
       run: cargo nextest run
+
+  docker:
+    name: Docker Build & Smoke Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build and start containers
+      run: docker compose up --build -d
+
+    - name: Wait for backend
+      run: |
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:8070/account/wallet/nonce -X POST \
+            -H 'content-type: application/json' \
+            -d '{"address":"0x0102030405060708090a0b0c0d0e0f1011121314"}' > /dev/null; then
+            echo "backend is up"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "backend failed to become healthy"
+        docker compose logs
+        exit 1
+
+    - name: Wait for frontend
+      run: |
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:8080/ > /dev/null; then
+            echo "frontend is up"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "frontend failed to become healthy"
+        docker compose logs
+        exit 1
+
+    - name: Dump logs on failure
+      if: failure()
+      run: docker compose logs
+
+    - name: Tear down
+      if: always()
+      run: docker compose down -v

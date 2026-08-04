@@ -4,6 +4,8 @@
 
 Uchat is a revolutionary full-stack chat app built completely on [Rust](https://www.rust-lang.org/), while leveraging the capabilities of [WASM](https://webassembly.org/).
 
+**Ethereum wallet connect is live** — sign up or log in with MetaMask (or any [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963)-compatible wallet) via sign-in-with-Ethereum, no password required. Ethereum Mainnet only; the app prompts a network switch if a different chain is detected.
+
 <br>
 
 ![Uchat App Screenshot](https://github.com/ishaaqziyan/Uchat-app/assets/98882071/0c0621f0-cb36-4634-9790-e6a0a240f235)
