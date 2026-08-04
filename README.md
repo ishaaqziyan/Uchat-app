@@ -88,6 +88,18 @@ After the `.env` is ready, run this command to create the database:
 diesel setup
 ```
 
+### Generating `API_PRIVATE_KEY`
+
+The server needs an RSA private key (used to sign session tokens). Generate one with the built-in CLI subcommand:
+
+```bash
+cargo run --bin api -- gen-key
+```
+
+This writes a base64-encoded key to `private_key.base64` in the current directory. Copy its contents into your `.env` as the value for `API_PRIVATE_KEY`.
+
+> **Note:** If `API_PRIVATE_KEY` is not set, the server will generate an ephemeral key on startup and log a warning — existing sessions will not survive a restart. Set the variable for persistent sessions.
+
 ### npm & Tailwind CSS
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for utility classes.
