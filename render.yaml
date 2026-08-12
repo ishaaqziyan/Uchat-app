@@ -4,7 +4,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     region: oregon
     healthCheckPath: /
     envVars:
