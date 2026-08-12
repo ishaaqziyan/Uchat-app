@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use color_eyre::{eyre::Context, Help, Result};
 use std::net::SocketAddr;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
@@ -60,9 +60,18 @@ async fn run() -> Result<()> {
         }
     }
 
-    debug!(target: "uchat_server", "generating new random signing keys for this session");
-    let mut rng = uchat_crypto::new_rng();
-    let (_, signing_keys) = uchat_server::cli::gen_keys(&mut rng)?;
+    let signing_keys = match uchat_server::cli::load_keys() {
+        Ok(keys) => {
+            info!(target: "uchat_server", "loaded signing key from API_PRIVATE_KEY");
+            keys
+        }
+        Err(_) => {
+            warn!(target: "uchat_server", "API_PRIVATE_KEY not set, generating ephemeral signing key for this session — existing sessions will not survive a restart");
+            let mut rng = uchat_crypto::new_rng();
+            let (_, keys) = uchat_server::cli::gen_keys(&mut rng)?;
+            keys
+        }
+    };
 
     info!(target: "uchat_server", database_url = args.database_url, "connecting to database");
     let db_pool = uchat_query::AsyncConnectionPool::new(&args.database_url)

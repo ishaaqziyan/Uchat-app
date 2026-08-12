@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: uchat
+      POSTGRES_PASSWORD: uchat
+      POSTGRES_DB: uchat
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - uchat_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uchat -d uchat"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    image: rust:1-bookworm
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      DATABASE_URL: postgres://uchat:uchat@postgres/uchat
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      bash -c "
+        apt-get update && apt-get install -y --no-install-recommends libpq-dev curl &&
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/diesel-rs/diesel/releases/download/v2.3.11/diesel_cli-installer.sh | sh &&
+        diesel migration run
+      "
+
+  backend:
+    image: uchat-backend:ci
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        API_URL: http://localhost:8070/
+    environment:
+      API_DATABASE_URL: postgres://uchat:uchat@postgres/uchat
+      API_BIND: 0.0.0.0:8070
+      FRONTEND_URL: http://localhost:8080
+    ports:
+      - "8070:8070"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    image: uchat-frontend:ci
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        API_URL: http://localhost:8070/
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  uchat_pgdata:

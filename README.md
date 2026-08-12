@@ -4,6 +4,8 @@
 
 Uchat is a revolutionary full-stack chat app built completely on [Rust](https://www.rust-lang.org/), while leveraging the capabilities of [WASM](https://webassembly.org/).
 
+**Ethereum wallet connect is live** — sign up or log in with MetaMask (or any [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963)-compatible wallet) via sign-in-with-Ethereum, no password required. Ethereum Mainnet only; the app prompts a network switch if a different chain is detected.
+
 <br>
 
 ![Uchat App Screenshot](https://github.com/ishaaqziyan/Uchat-app/assets/98882071/0c0621f0-cb36-4634-9790-e6a0a240f235)
@@ -87,6 +89,18 @@ After the `.env` is ready, run this command to create the database:
 ```bash
 diesel setup
 ```
+
+### Generating `API_PRIVATE_KEY`
+
+The server needs an RSA private key (used to sign session tokens). Generate one with the built-in CLI subcommand:
+
+```bash
+cargo run --bin api -- gen-key
+```
+
+This writes a base64-encoded key to `private_key.base64` in the current directory. Copy its contents into your `.env` as the value for `API_PRIVATE_KEY`.
+
+> **Note:** If `API_PRIVATE_KEY` is not set, the server will generate an ephemeral key on startup and log a warning — existing sessions will not survive a restart. Set the variable for persistent sessions.
 
 ### npm & Tailwind CSS
 

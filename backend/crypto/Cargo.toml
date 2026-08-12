@@ -8,10 +8,13 @@ edition = "2021"
 [dependencies]
 argon2 = "0.5.0"
 base64 = "0.21.0"
+hex = "0.4"
+k256 = { version = "0.13", features = ["ecdsa"] }
 password-hash = { version = "0.5.0", features = ["std"] }
 rand = "0.8.5"
 rand_core = { version = "0.6.4", features = ["std"] }
 rmp-serde = "1.1.1"
 rsa = { version = "0.8.2", features = ["sha2", "serde"] }
+sha3 = "0.10"
 thiserror = "1.0.38"
 tracing = { version = "0.1.37", features = ["attributes"] }

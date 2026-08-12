@@ -1,0 +1,13 @@
+name = "uchat-frontend"
+pages_build_output_dir = "target/dist"
+
+[build]
+command = """
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+  && . $HOME/.cargo/env \
+  && rustup target add wasm32-unknown-unknown \
+  && cargo install trunk --locked \
+  && npm install \
+  && echo "API_URL = \\"$API_URL\\"" > .env \
+  && trunk build --release --config Trunk-release.toml
+"""

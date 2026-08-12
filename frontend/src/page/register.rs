@@ -15,6 +15,7 @@ pub struct PageState {
     username: Signal<String>,
     password: Signal<String>,
     form_errors: KeyedNotifications,
+    server_messages: KeyedNotifications,
 }
 
 impl PageState {
@@ -23,6 +24,7 @@ impl PageState {
             username: use_signal(String::new).clone(),
             password: use_signal(String::new).clone(),
             form_errors: KeyedNotifications::default(),
+            server_messages: KeyedNotifications::default(),
         }
     }
     pub fn can_submit(&self) -> bool {
@@ -153,6 +155,83 @@ pub fn Register() -> Element {
         }
     );
 
+    let wallet_onclick = async_handler!(
+        &cx,
+        [api_client, page_state, router, local_profile],
+        move |_| async move {
+            use uchat_domain::EthAddress;
+            use uchat_endpoint::user::endpoint::{
+                LoginOk, WalletLogin, WalletNonceRequest, WalletNonceRequestOk,
+            };
+
+            let address = match crate::util::wallet::connect().await {
+                Ok(address) => address,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("wallet", e.to_string()));
+                    return;
+                }
+            };
+
+            let eth_address = match EthAddress::new(address.clone()) {
+                Ok(eth_address) => eth_address,
+                Err(_) => {
+                    page_state.with_mut(|state| {
+                        state
+                            .server_messages
+                            .set("wallet", "Wallet returned an invalid address")
+                    });
+                    return;
+                }
+            };
+
+            let nonce_request = WalletNonceRequest {
+                address: eth_address.clone(),
+            };
+            let message = match fetch_json!(<WalletNonceRequestOk>, api_client, nonce_request) {
+                Ok(res) => res.message,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("wallet", e.to_string()));
+                    return;
+                }
+            };
+
+            let signature = match crate::util::wallet::sign(&address, &message).await {
+                Ok(signature) => signature,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("wallet", e.to_string()));
+                    return;
+                }
+            };
+
+            let wallet_login = WalletLogin {
+                address: eth_address,
+                message,
+                signature,
+            };
+            let response = fetch_json!(<LoginOk>, api_client, wallet_login);
+            match response {
+                Ok(res) => {
+                    crate::util::cookie::set_session(
+                        res.session_signature,
+                        res.session_id,
+                        res.session_expires,
+                    );
+                    local_profile.write().image = res.profile_image;
+                    local_profile.write().user_id = Some(res.user_id);
+                    local_profile.write().unread_notifications = res.unread_notifications;
+                    {
+                        router.push(page::HOME);
+                    }
+                }
+                Err(e) => page_state
+                    .with_mut(|state| state.server_messages.set("wallet", e.to_string())),
+            }
+        }
+    );
+
     let username_oninput = sync_handler!([page_state], move |ev: FormEvent| {
         if let Err(e) = uchat_domain::Username::new(&ev.value()) {
             page_state.with_mut(|state| state.form_errors.set("bad-username", e.formatted_error()));
@@ -183,6 +262,11 @@ pub fn Register() -> Element {
                 }
             },
 
+            KeyedNotificationBox {
+                legend: "Signup Errors",
+                notifications: page_state.read().server_messages.clone(),
+            },
+
             img {
                 src: "/static/icons/uchat.png",
                 alt: "Logo",
@@ -198,6 +282,14 @@ pub fn Register() -> Element {
                 state: page_state.read().password.clone(),
                 oninput: password_oninput,
             },
+
+            button {
+                class: "btn",
+                r#type: "button",
+                onclick: wallet_onclick,
+                "Sign Up with Wallet"
+            }
+
             LoginLink {},
             KeyedNotificationBox {
                 legend: "Form Errors",

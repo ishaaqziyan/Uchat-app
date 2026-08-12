@@ -18,7 +18,7 @@ use uchat_endpoint::{
         Bookmark, BookmarkedPosts, Boost, HomePosts, LikedPosts, NewPost, React, TrendingPosts,
         Vote,
     },
-    user::endpoint::{CreateUser, FollowUser, GetMyProfile, Login, UpdateProfile, ViewProfile, GetNotifications, MarkNotificationsAsRead, SendDirectMessage, GetConversations, GetDirectMessages, ForgotPassword},
+    user::endpoint::{CreateUser, FollowUser, GetMyProfile, Login, UpdateProfile, ViewProfile, GetNotifications, MarkNotificationsAsRead, SendDirectMessage, GetConversations, GetDirectMessages, ForgotPassword, WalletLogin, WalletNonceRequest},
     Endpoint,
 };
 
@@ -38,7 +38,9 @@ pub fn new_router(state: AppState) -> axum::Router {
         .route(&format!("/{img_route}:id"), get(handler::load_image))
         .route(CreateUser::URL, post(with_public_handler::<CreateUser>))
         .route(Login::URL, post(with_public_handler::<Login>))
-        .route(ForgotPassword::URL, post(with_public_handler::<ForgotPassword>));
+        .route(ForgotPassword::URL, post(with_public_handler::<ForgotPassword>))
+        .route(WalletNonceRequest::URL, post(with_public_handler::<WalletNonceRequest>))
+        .route(WalletLogin::URL, post(with_public_handler::<WalletLogin>));
 
     let authorized_routes = Router::new()
         .route(NewPost::URL, post(with_handler::<NewPost>))

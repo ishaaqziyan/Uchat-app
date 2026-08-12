@@ -1,0 +1,8 @@
+target/
+dist/
+frontend/dist/
+node_modules/
+usercontent/
+.env
+*.log
+.git/

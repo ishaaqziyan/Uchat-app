@@ -1,6 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@source "../index.html";
+@source "./**/*.{html,rs,scss}";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --appbar-height: 3.5rem;

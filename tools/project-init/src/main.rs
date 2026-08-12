@@ -149,9 +149,9 @@ fn main() {
         },
         // New tailwindcss dependency added here
         Dependency {
-            name: "tailwindcss@3.4.17",
+            name: "tailwindcss",
             locate: Box::new(|| exists(exe::TAILWINDCSS)),
-            install: vec![Install::Cmd(command!("npm install tailwindcss@3.4.17"))],
+            install: vec![Install::Cmd(command!("npm install tailwindcss"))],
         },
         Dependency {
             name: "just",
