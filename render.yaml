@@ -7,9 +7,9 @@ services:
     plan: starter
     region: oregon
     healthCheckPath: /
-    dockerBuildArgs:
-      API_URL: https://uchat-backend.onrender.com/
     envVars:
+      - key: API_URL
+        value: https://uchat-backend.onrender.com/
       - key: API_BIND
         value: 0.0.0.0:8070
       - key: API_DATABASE_URL
