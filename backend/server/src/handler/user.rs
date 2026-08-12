@@ -9,7 +9,8 @@ use uchat_endpoint::{
         endpoint::{
             CreateUser, CreateUserOk, FollowUser, FollowUserOk, GetMyProfile, GetMyProfileOk,
             Login, LoginOk, UpdateProfile, UpdateProfileOk, ViewProfile, ViewProfileOk,
-            ForgotPassword, ForgotPasswordOk, WalletLogin, WalletNonceRequest,
+            ForgotPassword, ForgotPasswordOk, SolanaWalletLogin, SolanaWalletNonceRequest,
+            SolanaWalletNonceRequestOk, WalletLogin, WalletNonceRequest,
             WalletNonceRequestOk,
         },
         types::{FollowAction, PublicUserProfile},
@@ -469,6 +470,85 @@ impl PublicApiRequest for WalletLogin {
 
                 let user_id =
                     uchat_query::wallet::create_wallet_user(&mut conn, &address, password_hash)?;
+                uchat_query::user::get(&mut conn, user_id)?
+            }
+        };
+
+        let (session, signature, duration) = new_session(&state, &mut conn, user.id)?;
+
+        let profile_image_url = user.profile_image.as_ref().map(|id| profile_id_to_url(id));
+        let unread_notifications =
+            uchat_query::notification::get_unread_count(&mut conn, user.id).unwrap_or(0);
+
+        Ok((
+            StatusCode::OK,
+            Json(LoginOk {
+                session_id: session.id,
+                session_expires: Utc::now() + duration,
+                session_signature: signature.0,
+                display_name: user.display_name,
+                email: user.email,
+                profile_image: profile_image_url,
+                user_id: user.id,
+                unread_notifications,
+            }),
+        ))
+    }
+}
+
+#[async_trait]
+impl PublicApiRequest for SolanaWalletNonceRequest {
+    type Response = (StatusCode, Json<SolanaWalletNonceRequestOk>);
+    async fn process_request(
+        self,
+        DbConnection(mut conn): DbConnection,
+        _state: AppState,
+    ) -> ApiResult<Self::Response> {
+        let address = self.address.as_ref().to_string();
+
+        let mut rng = uchat_crypto::new_rng();
+        let nonce = uchat_crypto::wallet::generate_nonce(&mut rng);
+        let issued_at = Utc::now().to_rfc3339();
+        let message = uchat_crypto::wallet::build_siwe_message(&address, &nonce, &issued_at);
+
+        uchat_query::wallet::create_nonce_solana(&mut conn, &address, &nonce, &message)?;
+
+        Ok((StatusCode::OK, Json(SolanaWalletNonceRequestOk { message })))
+    }
+}
+
+#[async_trait]
+impl PublicApiRequest for SolanaWalletLogin {
+    type Response = (StatusCode, Json<LoginOk>);
+    async fn process_request(
+        self,
+        DbConnection(mut conn): DbConnection,
+        state: AppState,
+    ) -> ApiResult<Self::Response> {
+        let address = self.address.as_ref().to_string();
+
+        uchat_crypto::wallet::verify_solana_signature(&address, &self.message, &self.signature)
+            .map_err(|_| ServerError::invalid_signature())?;
+
+        let nonce_ok =
+            uchat_query::wallet::consume_nonce_solana(&mut conn, &address, &self.message)?;
+        if !nonce_ok {
+            return Err(ServerError::nonce_expired().into());
+        }
+
+        let user = match uchat_query::wallet::find_by_solana_address(&mut conn, &address)? {
+            Some(user) => user,
+            None => {
+                let mut rng = uchat_crypto::new_rng();
+                let random_password: [u8; 32] = rng.gen();
+                let random_password = uchat_crypto::encode_base64(random_password);
+                let password_hash = uchat_crypto::hash_password(random_password)?;
+
+                let user_id = uchat_query::wallet::create_wallet_user_solana(
+                    &mut conn,
+                    &address,
+                    password_hash,
+                )?;
                 uchat_query::user::get(&mut conn, user_id)?
             }
         };

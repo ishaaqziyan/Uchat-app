@@ -9,7 +9,7 @@ pub mod user;
 pub mod wallet;
 
 pub use user::{Password, Username};
-pub use wallet::EthAddress;
+pub use wallet::{EthAddress, SolanaAddress};
 
 pub trait UserFacingError {
     fn formatted_error(&self) -> &'static str;

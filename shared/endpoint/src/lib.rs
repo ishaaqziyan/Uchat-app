@@ -61,6 +61,8 @@ route!("/account/login" => user::endpoint::Login);
 route!("/account/forgot_password" => user::endpoint::ForgotPassword);
 route!("/account/wallet/nonce" => user::endpoint::WalletNonceRequest);
 route!("/account/wallet/login" => user::endpoint::WalletLogin);
+route!("/account/wallet/solana/nonce" => user::endpoint::SolanaWalletNonceRequest);
+route!("/account/wallet/solana/login" => user::endpoint::SolanaWalletLogin);
 
 // authorized routes
 route!("/post/new" => post::endpoint::NewPost);

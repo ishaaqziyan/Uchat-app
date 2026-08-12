@@ -14,6 +14,7 @@ use crate::{
 pub struct PageState {
     username: Signal<String>,
     password: Signal<String>,
+    magic_email: Signal<String>,
     form_errors: KeyedNotifications,
     server_messages: KeyedNotifications,
 }
@@ -23,6 +24,7 @@ impl PageState {
         Self {
             username: use_signal(String::new).clone(),
             password: use_signal(String::new).clone(),
+            magic_email: use_signal(String::new).clone(),
             form_errors: KeyedNotifications::default(),
             server_messages: KeyedNotifications::default(),
         }
@@ -232,6 +234,168 @@ pub fn Register() -> Element {
         }
     );
 
+    let solana_wallet_onclick = async_handler!(
+        &cx,
+        [api_client, page_state, router, local_profile],
+        move |_| async move {
+            use uchat_domain::SolanaAddress;
+            use uchat_endpoint::user::endpoint::{
+                LoginOk, SolanaWalletLogin, SolanaWalletNonceRequest, SolanaWalletNonceRequestOk,
+            };
+
+            let address = match crate::util::solana::connect().await {
+                Ok(address) => address,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("wallet", e.to_string()));
+                    return;
+                }
+            };
+
+            let solana_address = match SolanaAddress::new(address.clone()) {
+                Ok(solana_address) => solana_address,
+                Err(_) => {
+                    page_state.with_mut(|state| {
+                        state
+                            .server_messages
+                            .set("wallet", "Wallet returned an invalid address")
+                    });
+                    return;
+                }
+            };
+
+            let nonce_request = SolanaWalletNonceRequest {
+                address: solana_address.clone(),
+            };
+            let message = match fetch_json!(<SolanaWalletNonceRequestOk>, api_client, nonce_request)
+            {
+                Ok(res) => res.message,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("wallet", e.to_string()));
+                    return;
+                }
+            };
+
+            let signature = match crate::util::solana::sign(&message).await {
+                Ok(signature) => signature,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("wallet", e.to_string()));
+                    return;
+                }
+            };
+
+            let wallet_login = SolanaWalletLogin {
+                address: solana_address,
+                message,
+                signature,
+            };
+            let response = fetch_json!(<LoginOk>, api_client, wallet_login);
+            match response {
+                Ok(res) => {
+                    crate::util::cookie::set_session(
+                        res.session_signature,
+                        res.session_id,
+                        res.session_expires,
+                    );
+                    local_profile.write().image = res.profile_image;
+                    local_profile.write().user_id = Some(res.user_id);
+                    local_profile.write().unread_notifications = res.unread_notifications;
+                    {
+                        router.push(page::HOME);
+                    }
+                }
+                Err(e) => page_state
+                    .with_mut(|state| state.server_messages.set("wallet", e.to_string())),
+            }
+        }
+    );
+
+    let magic_onclick = async_handler!(
+        &cx,
+        [api_client, page_state, router, local_profile],
+        move |_| async move {
+            use uchat_domain::SolanaAddress;
+            use uchat_endpoint::user::endpoint::{
+                LoginOk, SolanaWalletLogin, SolanaWalletNonceRequest, SolanaWalletNonceRequestOk,
+            };
+
+            let email = page_state.read().magic_email.read().clone();
+
+            let address = match crate::util::magic::login_with_email(&email).await {
+                Ok(address) => address,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("magic", e.to_string()));
+                    return;
+                }
+            };
+
+            let solana_address = match SolanaAddress::new(address.clone()) {
+                Ok(solana_address) => solana_address,
+                Err(_) => {
+                    page_state.with_mut(|state| {
+                        state
+                            .server_messages
+                            .set("magic", "Magic returned an invalid address")
+                    });
+                    return;
+                }
+            };
+
+            let nonce_request = SolanaWalletNonceRequest {
+                address: solana_address.clone(),
+            };
+            let message = match fetch_json!(<SolanaWalletNonceRequestOk>, api_client, nonce_request)
+            {
+                Ok(res) => res.message,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("magic", e.to_string()));
+                    return;
+                }
+            };
+
+            let signature = match crate::util::magic::sign(&message).await {
+                Ok(signature) => signature,
+                Err(e) => {
+                    page_state
+                        .with_mut(|state| state.server_messages.set("magic", e.to_string()));
+                    return;
+                }
+            };
+
+            let wallet_login = SolanaWalletLogin {
+                address: solana_address,
+                message,
+                signature,
+            };
+            let response = fetch_json!(<LoginOk>, api_client, wallet_login);
+            match response {
+                Ok(res) => {
+                    crate::util::cookie::set_session(
+                        res.session_signature,
+                        res.session_id,
+                        res.session_expires,
+                    );
+                    local_profile.write().image = res.profile_image;
+                    local_profile.write().user_id = Some(res.user_id);
+                    local_profile.write().unread_notifications = res.unread_notifications;
+                    {
+                        router.push(page::HOME);
+                    }
+                }
+                Err(e) => page_state
+                    .with_mut(|state| state.server_messages.set("magic", e.to_string())),
+            }
+        }
+    );
+
+    let magic_email_oninput = sync_handler!([page_state], move |ev: FormEvent| {
+        page_state.with_mut(|state| state.magic_email.set(ev.value().clone()));
+    });
+
     let username_oninput = sync_handler!([page_state], move |ev: FormEvent| {
         if let Err(e) = uchat_domain::Username::new(&ev.value()) {
             page_state.with_mut(|state| state.form_errors.set("bad-username", e.formatted_error()));
@@ -288,6 +452,28 @@ pub fn Register() -> Element {
                 r#type: "button",
                 onclick: wallet_onclick,
                 "Sign Up with Wallet"
+            }
+
+            button {
+                class: "btn",
+                r#type: "button",
+                onclick: solana_wallet_onclick,
+                "Sign Up with Solana Wallet"
+            }
+
+            input {
+                r#type: "email",
+                class: "input",
+                placeholder: "Email (Magic sign-in)",
+                value: "{page_state.read().magic_email}",
+                oninput: magic_email_oninput,
+            },
+
+            button {
+                class: "btn",
+                r#type: "button",
+                onclick: magic_onclick,
+                "Sign Up with Email"
             }
 
             LoginLink {},

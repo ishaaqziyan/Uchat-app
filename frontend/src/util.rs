@@ -1,5 +1,7 @@
 pub mod api_client;
 pub mod cookie;
+pub mod magic;
+pub mod solana;
 pub mod wallet;
 pub use api_client::ApiClient;
 
