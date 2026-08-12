@@ -1,2 +1,2 @@
 name = "uchat-frontend"
-pages_build_output_dir = "target/dist"
+pages_build_output_dir = "dist"

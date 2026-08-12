@@ -1,6 +1,6 @@
 [build]
 target = "frontend/index.html"
-dist = "target/dist"
+dist = "dist"
 release = true
 
 [[hooks]]
