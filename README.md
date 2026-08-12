@@ -8,7 +8,7 @@ Uchat is a revolutionary full-stack chat app built completely on [Rust](https://
 
 <br>
 
-![Uchat App Screenshot](https://github.com/ishaaqziyan/Uchat-app/assets/98882071/0c0621f0-cb36-4634-9790-e6a0a240f235)
+<img width="1915" height="881" alt="Image" src="https://github.com/user-attachments/assets/9ce1fadf-3b2b-42ca-b579-26e838c0618a" />
 
 <br>
 
