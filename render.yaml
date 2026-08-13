@@ -17,4 +17,4 @@ services:
       - key: API_PRIVATE_KEY
         sync: false
       - key: FRONTEND_URL
-        value: https://uchat.pages.dev
+        value: https://uchat-rust.netlify.app

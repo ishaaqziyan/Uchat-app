@@ -11,7 +11,7 @@
 # Proxy API requests to Render backend
 [[redirects]]
   from = "/api/*"
-  to = "https://uchat-app.onrender.com/:splat"
+  to = "https://uchat-backend.onrender.com/:splat"
   status = 200
   force = true
 
