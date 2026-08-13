@@ -25,6 +25,25 @@ impl UserFacingError for EthAddressError {
     }
 }
 
+fn is_valid_solana_address(address: &str) -> bool {
+    match bs58::decode(address).into_vec() {
+        Ok(bytes) => bytes.len() == 32,
+        Err(_) => false,
+    }
+}
+
+#[nutype(validate(with = is_valid_solana_address))]
+#[derive(AsRef, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct SolanaAddress(String);
+
+impl UserFacingError for SolanaAddressError {
+    fn formatted_error(&self) -> &'static str {
+        match self {
+            SolanaAddressError::Invalid => "Wallet address is not a valid Solana address.",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -44,6 +63,20 @@ mod tests {
         assert_eq!(
             EthAddress::new("0x123"),
             Err(EthAddressError::Invalid)
+        );
+    }
+
+    #[test]
+    fn valid_solana_address() {
+        assert!(SolanaAddress::new("11111111111111111111111111111111").is_ok());
+    }
+
+    #[test]
+    fn invalid_solana_address() {
+        assert_eq!(SolanaAddress::new(""), Err(SolanaAddressError::Invalid));
+        assert_eq!(
+            SolanaAddress::new("not-base58!!"),
+            Err(SolanaAddressError::Invalid)
         );
     }
 }

@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use uchat_domain::{ids::*, EthAddress, Password, Username};
+use uchat_domain::{ids::*, EthAddress, Password, SolanaAddress, Username};
 use url::Url;
 
 use crate::{post::types::PublicPost, Update};
@@ -160,6 +160,23 @@ pub struct WalletNonceRequestOk {
 #[derive(Clone, Deserialize, Serialize)]
 pub struct WalletLogin {
     pub address: EthAddress,
+    pub message: String,
+    pub signature: String,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SolanaWalletNonceRequest {
+    pub address: SolanaAddress,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SolanaWalletNonceRequestOk {
+    pub message: String,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SolanaWalletLogin {
+    pub address: SolanaAddress,
     pub message: String,
     pub signature: String,
 }

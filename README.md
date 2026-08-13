@@ -290,6 +290,8 @@ We recommend using [Neon.tech](https://neon.tech/) for a Serverless PostgreSQL d
 1. Connect your repository to Netlify. Netlify will automatically detect the `netlify.toml` file and its build configuration.
 2. Go to **Site Settings > Environment Variables** and add:
    - `API_URL`: `https://your-backend-app.onrender.com/` *(Make sure to include the trailing slash if required by your API client)*
-3. Trigger a manual deploy in the **Deploys** tab to ensure the environment variable is injected during the build process.
+   - `MAGIC_PUBLISHABLE_KEY`: *(Your Magic.link publishable key, required at build time for login to work)*
+3. Trigger a manual deploy in the **Deploys** tab to ensure the environment variables are injected during the build process.
+4. Once deployed, copy the Netlify site URL and set it as `FRONTEND_URL` on the Render backend (Environment Variables tab), without a trailing slash. The backend rejects all requests via CORS until this matches exactly.
 
 *(Note: The `netlify.toml` file is configured to create an empty `.env` file during the build process to satisfy the `load_dotenv!()` macro requirements without needing to commit your secrets).*

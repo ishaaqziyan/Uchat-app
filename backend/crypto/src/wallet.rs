@@ -1,3 +1,4 @@
+use ed25519_dalek::{Signature as SolanaSignature, Verifier, VerifyingKey as SolanaVerifyingKey};
 use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 use rand_core::{CryptoRng, RngCore};
 use sha3::{Digest, Keccak256};
@@ -15,6 +16,15 @@ pub enum Error {
 
     #[error("signature error: {0}")]
     SignatureError(#[from] k256::ecdsa::Error),
+
+    #[error("invalid base58 encoding")]
+    InvalidBase58,
+
+    #[error("solana address must decode to a 32-byte public key")]
+    InvalidPublicKeyLength,
+
+    #[error("invalid solana signature")]
+    InvalidSolanaSignature,
 }
 
 /// Generates a random nonce for a sign-in-with-ethereum challenge.
@@ -66,6 +76,37 @@ pub fn recover_address(message: &str, signature_hex: &str) -> Result<String, Err
     let address_hash = Keccak256::digest(&pubkey_bytes[1..]);
 
     Ok(format!("0x{}", hex::encode(&address_hash[12..])))
+}
+
+/// Verifies that `signature_b58` (base58-encoded, 64 bytes) over `message` was produced by
+/// the ed25519 keypair whose public key is `address_b58` (base58-encoded, 32 bytes) — the
+/// same scheme Solana wallets (Phantom, Solflare, Magic's embedded wallet) use for
+/// `signMessage`. Returns `Ok(())` on a valid signature, `Err` otherwise.
+pub fn verify_solana_signature(
+    address_b58: &str,
+    message: &str,
+    signature_b58: &str,
+) -> Result<(), Error> {
+    let pubkey_bytes = bs58::decode(address_b58)
+        .into_vec()
+        .map_err(|_| Error::InvalidBase58)?;
+    let pubkey_bytes: [u8; 32] = pubkey_bytes
+        .try_into()
+        .map_err(|_| Error::InvalidPublicKeyLength)?;
+    let verifying_key =
+        SolanaVerifyingKey::from_bytes(&pubkey_bytes).map_err(|_| Error::InvalidPublicKeyLength)?;
+
+    let sig_bytes = bs58::decode(signature_b58)
+        .into_vec()
+        .map_err(|_| Error::InvalidBase58)?;
+    let sig_bytes: [u8; 64] = sig_bytes
+        .try_into()
+        .map_err(|_| Error::InvalidSolanaSignature)?;
+    let signature = SolanaSignature::from_bytes(&sig_bytes);
+
+    verifying_key
+        .verify(message.as_bytes(), &signature)
+        .map_err(|_| Error::InvalidSolanaSignature)
 }
 
 #[cfg(test)]
@@ -122,5 +163,38 @@ mod tests {
             format!("0x{}", hex::encode(&address_hash[12..]))
         };
         assert_ne!(recovered, other_signer);
+    }
+
+    #[test]
+    fn verifies_solana_signature() {
+        use ed25519_dalek::{Signer, SigningKey};
+
+        let mut rng = crate::new_rng();
+        let mut secret = [0u8; 32];
+        rng.fill_bytes(&mut secret);
+        let signing_key = SigningKey::from_bytes(&secret);
+        let address = bs58::encode(signing_key.verifying_key().to_bytes()).into_string();
+
+        let message = build_siwe_message(&address, "abc123", "2026-08-12T00:00:00Z");
+        let signature = signing_key.sign(message.as_bytes());
+        let signature_b58 = bs58::encode(signature.to_bytes()).into_string();
+
+        assert!(verify_solana_signature(&address, &message, &signature_b58).is_ok());
+    }
+
+    #[test]
+    fn rejects_mismatched_solana_signature() {
+        use ed25519_dalek::{Signer, SigningKey};
+
+        let mut rng = crate::new_rng();
+        let mut secret = [0u8; 32];
+        rng.fill_bytes(&mut secret);
+        let signing_key = SigningKey::from_bytes(&secret);
+        let address = bs58::encode(signing_key.verifying_key().to_bytes()).into_string();
+
+        let signature = signing_key.sign(b"the signed message");
+        let signature_b58 = bs58::encode(signature.to_bytes()).into_string();
+
+        assert!(verify_solana_signature(&address, "a different message", &signature_b58).is_err());
     }
 }

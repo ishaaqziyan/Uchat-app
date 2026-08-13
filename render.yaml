@@ -4,12 +4,12 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     region: oregon
     healthCheckPath: /
-    dockerBuildArgs:
-      API_URL: https://uchat-backend.onrender.com/
     envVars:
+      - key: API_URL
+        value: https://uchat-backend.onrender.com/
       - key: API_BIND
         value: 0.0.0.0:8070
       - key: API_DATABASE_URL
@@ -17,4 +17,4 @@ services:
       - key: API_PRIVATE_KEY
         sync: false
       - key: FRONTEND_URL
-        value: https://uchat.pages.dev
+        value: https://uchat-rust.netlify.app

@@ -18,7 +18,7 @@ use uchat_endpoint::{
         Bookmark, BookmarkedPosts, Boost, HomePosts, LikedPosts, NewPost, React, TrendingPosts,
         Vote,
     },
-    user::endpoint::{CreateUser, FollowUser, GetMyProfile, Login, UpdateProfile, ViewProfile, GetNotifications, MarkNotificationsAsRead, SendDirectMessage, GetConversations, GetDirectMessages, ForgotPassword, WalletLogin, WalletNonceRequest},
+    user::endpoint::{CreateUser, FollowUser, GetMyProfile, Login, UpdateProfile, ViewProfile, GetNotifications, MarkNotificationsAsRead, SendDirectMessage, GetConversations, GetDirectMessages, ForgotPassword, SolanaWalletLogin, SolanaWalletNonceRequest, WalletLogin, WalletNonceRequest},
     Endpoint,
 };
 
@@ -40,7 +40,9 @@ pub fn new_router(state: AppState) -> axum::Router {
         .route(Login::URL, post(with_public_handler::<Login>))
         .route(ForgotPassword::URL, post(with_public_handler::<ForgotPassword>))
         .route(WalletNonceRequest::URL, post(with_public_handler::<WalletNonceRequest>))
-        .route(WalletLogin::URL, post(with_public_handler::<WalletLogin>));
+        .route(WalletLogin::URL, post(with_public_handler::<WalletLogin>))
+        .route(SolanaWalletNonceRequest::URL, post(with_public_handler::<SolanaWalletNonceRequest>))
+        .route(SolanaWalletLogin::URL, post(with_public_handler::<SolanaWalletLogin>));
 
     let authorized_routes = Router::new()
         .route(NewPost::URL, post(with_handler::<NewPost>))

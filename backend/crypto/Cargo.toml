@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 argon2 = "0.5.0"
 base64 = "0.21.0"
+bs58 = "0.5"
+ed25519-dalek = "2"
 hex = "0.4"
 k256 = { version = "0.13", features = ["ecdsa"] }
 password-hash = { version = "0.5.0", features = ["std"] }

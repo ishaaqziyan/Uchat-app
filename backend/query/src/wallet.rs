@@ -65,6 +65,95 @@ pub fn find_by_eth_address(
         .map_err(QueryError::from)
 }
 
+pub fn create_nonce_solana(
+    conn: &mut PgConnection,
+    address: &str,
+    nonce: &str,
+    message: &str,
+) -> Result<(), QueryError> {
+    use crate::schema::wallet_nonces::{self, columns};
+
+    diesel::insert_into(wallet_nonces::table)
+        .values((
+            columns::id.eq(Uuid::new_v4()),
+            columns::solana_address.eq(address),
+            columns::nonce.eq(nonce),
+            columns::message.eq(message),
+            columns::expires_at.eq(Utc::now() + chrono::Duration::minutes(NONCE_TTL_MINUTES)),
+        ))
+        .execute(conn)?;
+
+    Ok(())
+}
+
+pub fn consume_nonce_solana(
+    conn: &mut PgConnection,
+    address: &str,
+    signed_message: &str,
+) -> Result<bool, QueryError> {
+    use crate::schema::wallet_nonces::dsl::*;
+
+    let rowcount = diesel::update(wallet_nonces)
+        .filter(solana_address.eq(address))
+        .filter(message.eq(signed_message))
+        .filter(consumed.eq(false))
+        .filter(expires_at.gt(Utc::now()))
+        .set(consumed.eq(true))
+        .execute(conn)?;
+
+    Ok(rowcount > 0)
+}
+
+pub fn find_by_solana_address(
+    conn: &mut PgConnection,
+    address: &str,
+) -> Result<Option<User>, QueryError> {
+    use crate::schema::users::dsl::*;
+
+    users
+        .filter(solana_address.eq(address))
+        .get_result(conn)
+        .optional()
+        .map_err(QueryError::from)
+}
+
+/// Creates a new account for a wallet address that has just completed sign-in-with-solana
+/// for the first time. `password_hash` is the hash of a random password nobody knows, since
+/// wallet-only accounts authenticate exclusively via signature, not password.
+pub fn create_wallet_user_solana(
+    conn: &mut PgConnection,
+    address: &str,
+    password_hash: PasswordHashString,
+) -> Result<UserId, QueryError> {
+    use crate::schema::users::{self, columns};
+
+    let user_id = UserId::new();
+
+    for attempt in 0..5 {
+        let handle = wallet_handle(address, attempt);
+        let result = diesel::insert_into(users::table)
+            .values((
+                columns::id.eq(user_id),
+                columns::password_hash.eq(password_hash.as_str()),
+                columns::handle.eq(&handle),
+                columns::solana_address.eq(address),
+            ))
+            .execute(conn);
+
+        match result {
+            Ok(_) => return Ok(user_id),
+            Err(e) => {
+                let err = QueryError::from(e);
+                if !matches!(err, QueryError::UniqueViolation) {
+                    return Err(err);
+                }
+            }
+        }
+    }
+
+    Err(QueryError::UniqueViolation)
+}
+
 fn wallet_handle(address: &str, attempt: u32) -> String {
     let short = format!("{}..{}", &address[..6], &address[address.len() - 4..]);
     if attempt == 0 {
